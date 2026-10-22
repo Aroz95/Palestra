@@ -1,101 +1,87 @@
-# Palestra — Scheda Total Body
+# Palestra — diario di allenamento e alimentazione
 
-Web app (React + Vite + Tailwind CSS) per seguire la scheda di allenamento **Total Body** in palestra, direttamente dal telefono: segni le serie fatte, modifichi al volo pesi e ripetizioni e usi il cronometro e il timer di recupero.
+Web app (React + Vite + Tailwind CSS) per il telefono: programmi con schede A/B, sedute in sala pesi con timer, nuoto, misure corporee, piano alimentare, progressi e report. Funziona senza rete e senza account: i dati restano nel browser.
 
-I dati per ora sono salvati nel **localStorage** del browser (nessun server, nessun account).
+Principio guida: registrare ciò che è stato **realmente fatto**, senza confondere programmi, valori misurati, stime e obiettivi.
 
 ## Funzionalità
 
-- **Modalità allenamento (sequenziale)** — pulsante **▶ Inizia allenamento** nella seduta
-  - Schermo intero, un passo alla volta: riscaldamento → esercizi in ordine → defaticamento.
-  - Per ogni esercizio: serie da fare (quelle fatte vengono scalate e barrate), carico e ripetizioni della serie corrente modificabili con − / + (la modifica vale anche per le serie successive con lo stesso valore).
-  - Grande pulsante **⏱ Serie fatta**: segna la serie, la toglie da quelle da fare e avvia il **recupero di 1 minuto**, mostrato a tutto schermo e che **si ferma da solo** a fine tempo (suono + vibrazione). Poi trovi già la serie successiva pronta.
-  - Finite le serie si passa da soli all'esercizio successivo; durante il recupero vedi già cosa ti aspetta.
-  - Plank e tapis roulant: **▶ Avvia** fa partire il conto alla rovescia del tempo previsto; a fine tempo la serie/attività si segna da sola.
-  - −15 s / +15 s / salta recupero, annulla ultima serie, passo precedente/successivo o salto diretto a un esercizio.
-  - Tempo totale sempre visibile in alto; schermo tenuto acceso (dove il browser lo supporta).
-  - A fine allenamento: riepilogo e salvataggio della durata.
-- **Seduta in corso**
-  - Riscaldamento e defaticamento (tapis roulant): minuti, velocità, spunta “fatto”, distanza stimata.
-  - Esercizi in sala pesi con una riga per serie: carico e ripetizioni modificabili con **− / +** o digitandoli, pulsante **✓** per segnare la serie come fatta.
-  - Aggiungi / togli serie, “Tutte fatte”, note per esercizio, aggiunta di esercizi dalla scheda o liberi.
-  - Esercizi a tempo (es. Plank): pulsante **▶ Avvia** che fa partire il conto alla rovescia della serie.
-  - Avanzamento (serie completate), ripetizioni, volume e minuti di cardio calcolati in automatico.
-  - Durata della seduta, con la possibilità di prenderla dal cronometro.
-- **Cronometro** sempre visibile in alto: avvia / pausa / riprendi / azzera e **giri**. Parte da solo alla prima serie spuntata.
-- **Timer di recupero**: 1 minuto dopo ogni serie (modificabile per esercizio nella *Scheda*), preset da 30 s a 2 min, ±15 s, suono e vibrazione; si ferma da solo a fine tempo.
-- Cronometro e recupero sono basati su timestamp: continuano a contare anche se ricarichi la pagina o lo schermo si spegne.
-- **Storico** delle sedute con riepilogo (serie, ripetizioni, volume, plank, cardio, durata).
-  Ogni seduta si può **esportare in JSON** (`palestra-seduta-AAAA-MM-GG.json`, con riepilogo + dati completi) e reimportare da *Opzioni → Importa*, che la aggiunge allo storico senza toccare il resto.
-- **Scheda** modificabile: esercizi, serie/ripetizioni/carico predefiniti, incremento dei pulsanti +/−, recupero, manubri “per mano”, ordine degli esercizi, riscaldamento e defaticamento.
-- **Nuova seduta**: viene creata dalla scheda riprendendo serie e carichi dell’ultima volta in cui hai fatto ciascun esercizio.
-- **Backup**: esporta / importa i dati in JSON, cancellazione di tutti i dati.
+### Oggi
+Attività previste dal calendario con stato (prevista, in corso, completata, saltata, rinviata) e azioni **Avvia / Salta / Rinvia**; accesso rapido alle schede, attività libera, nuoto, nuova misura, prossimo pasto del piano attivo.
 
-### Primo avvio
+### Allenamenti
+- **Schede**: più programmi (uno principale), schede A/B con esercizi, serie, range di ripetizioni, carico suggerito, RIR obiettivo, recupero, attrezzo (macchina, cavo, manubri per mano, corpo libero…), variante e istruzioni. Duplica, archivia, riordina, esporta. Le modifiche a una scheda già usata creano una **nuova revisione**: le sedute svolte conservano gli obiettivi del momento.
+- **Calendario** settimanale configurabile (es. lun A, mar nuoto, gio B, ven nuoto), anche con più attività nello stesso giorno. Le ricorrenze generano attività previste, mai sedute svolte.
+- **Seduta di sala pesi**: obiettivo ed eseguito separati per ogni serie; RIR, RPE, fastidio e note facoltativi; suggerimenti di progressione non prescrittivi; orari di inizio/fine con durata calcolata, correzione manuale e segnalazione delle incoerenze; sensazioni e recupero; stima facoltativa delle calorie (intervallo, metodo dichiarato, attive vs totali) o valore da orologio.
+- **Modalità allenamento** sequenziale a schermo intero: grande pulsante **⏱ Serie fatta**, recupero (predefinito 1 minuto) che si ferma da solo, RIR rapido durante il recupero, esercizi a tempo che si segnano a fine conto alla rovescia, schermo sempre acceso.
+- **Nuoto**: vasca 25/50 m o personalizzata, blocchi nel formato `(200+100+2×75)×2`, distanza **prevista**, **misurata** e **stimata** (intervallo) sempre separate; passo e vasche marcati come stima quando la distanza non è misurata; tecnica (presa, bracciata, spalle, respirazione).
+- **Storico** unificato palestra + nuoto con filtri ed esportazione di ogni seduta.
 
-Al primo avvio l'app è **vuota**: nessuna scheda e nessuna seduta. Crea la tua scheda nella sezione **Scheda** (esercizi, serie, ripetizioni, carichi, recupero, riscaldamento e defaticamento), oppure tocca **Carica esempio “Total Body”** e modificalo.
+### Alimentazione
+Piani importati in JSON o creati a mano: consultazione per giorno e pasto, alternative, giorni di allenamento/riposo, nutrienti solo se dichiarati (altrimenti “ND”), bozza vs validato da un professionista, revisioni, duplicazione, archiviazione. Diario facoltativo dei pasti (seguito / modificato / saltato).
 
-I dati già salvati nel browser non vengono toccati dagli aggiornamenti dell'app: scheda, seduta in corso e storico restano come sono.
+### Progressi
+Periodi 7/30/90 giorni, mese, anno o personalizzato, con confronto rispetto al periodo precedente: frequenza e aderenza al calendario, serie/ripetizioni/volume/RIR, record solo su esercizi confrontabili, grafico per esercizio, nuoto (misurato e stimato separati), peso con media mobile a 7 giorni, girovita e addome, alimentazione, calorie. **Report** in JSON e CSV con scelta delle sezioni e del dettaglio, anteprima ed esclusione delle note personali.
 
-> Il volume è nominale (ripetizioni × carico, i manubri “per mano” contano ×2): è indicativo e non direttamente comparabile tra macchine diverse.
+### Altro
+Profilo e obiettivi (con storico delle modifiche, senza notifiche o promesse), misure corporee (girovita e addome distinti), **Importa**, **Esporta**, impostazioni del timer, stato dell’archivio e privacy.
 
-## Sviluppo locale
+## Import / export
+
+Un’unica schermata **Altro → Importa** accetta file JSON (anche incollati come testo): backup, programmi A/B, sedute, nuotate, piani alimentari, misure. Prima di salvare mostra un’anteprima (es. “1 programma, 2 schede”) con errori e avvisi indicati per campo. Per ogni elemento già presente si sceglie **salta / aggiorna / copia**. L’importazione è atomica (con un errore non viene modificato nulla), si può annullare l’ultima importazione e scaricarne il log. La sostituzione completa è possibile solo da backup, con doppia conferma e copia di sicurezza.
+
+Lo schema dei file è pubblico e stabile: **[docs/SCHEMA.md](docs/SCHEMA.md)**, con esempi validati in **[docs/examples/](docs/examples/)**. Puoi passarli a ChatGPT come modello per generare programmi o piani alimentari importabili. Restano importabili anche i file delle versioni precedenti.
+
+## Dati, privacy e aggiornamenti
+
+- I dati sono salvati in **IndexedDB** nel browser; timer e preferenze in localStorage. Nessun server, nessun tracciamento, nessun invio a terzi.
+- Gli errori di salvataggio (es. spazio esaurito) sono mostrati in un avviso con il pulsante per esportare subito un backup.
+- **Aggiornamento dalla versione precedente**: al primo avvio i dati della versione 2 (localStorage `palestra:data`) vengono migrati al nuovo modello; la vecchia chiave **non viene cancellata** e una copia è salvata in IndexedDB (scaricabile da *Altro → Opzioni*). La vecchia scheda diventa la “Scheda A” del programma principale; sedute, note, carichi per mano, velocità e durate sono conservati, senza inventare orari mai registrati.
+- I dati restano solo sul dispositivo: per cambiare telefono usa *Altro → Esporta → Backup* e poi *Importa*.
+
+| Chiave | Dove | Contenuto |
+|---|---|---|
+| `state` | IndexedDB `palestra` | tutti i dati (schema v3) |
+| `legacy-snapshot` | IndexedDB `palestra` | copia dei dati v2 prima della migrazione |
+| `palestra:data` | localStorage | dati v2 originali (mai cancellati) |
+| `palestra:stopwatch`, `palestra:rest` | localStorage | stato di cronometro e recupero |
+| `palestra:tab`, `palestra:subtabs`, `palestra:workout-mode` | localStorage | preferenze di navigazione |
+
+## Sviluppo
 
 Requisiti: Node.js 20+ (consigliato 22).
 
 ```bash
 npm install
-npm run dev       # server di sviluppo su http://localhost:5173
+npm run dev       # http://localhost:5173
+npm test          # test automatici (Vitest)
 npm run build     # build di produzione in dist/
-npm run preview   # anteprima della build
+npm run preview
 ```
+
+I test coprono migrazioni v1/v2 → v3, persistenza, statistiche e durate, nuoto, import (legacy, duplicati, errori con percorso, atomicità), roundtrip di backup ed export, report e gli esempi documentati.
 
 ## Pubblicazione su GitHub Pages
 
-Il workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) compila l’app e la pubblica su GitHub Pages a ogni push su `main` (o `master`), oppure manualmente da *Actions → Deploy su GitHub Pages → Run workflow*.
+Il workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) esegue i test, compila e pubblica a ogni push su `main`/`master` (o manualmente da *Actions*). Configurazione una tantum: *Settings → Pages → Source: GitHub Actions*. L’app è su `https://<utente>.github.io/<repository>/`. Dal telefono: *Condividi → Aggiungi a schermata Home*.
 
-Configurazione una tantum:
-
-1. Su GitHub apri **Settings → Pages**.
-2. In **Build and deployment → Source** scegli **GitHub Actions**.
-3. Fai push sul branch principale: al termine del workflow l’app è disponibile su
-   `https://<utente>.github.io/<repository>/` (es. `https://aroz95.github.io/palestra/`).
-
-In `vite.config.js` il `base` è relativo (`./`), quindi la build funziona con qualsiasi nome di repository senza modifiche.
-
-Suggerimento: dal telefono apri il sito e usa **“Aggiungi a schermata Home”** per averlo come un’app.
-
-## Dati e localStorage
-
-| Chiave               | Contenuto                                    |
-|----------------------|----------------------------------------------|
-| `palestra:data`      | scheda, sedute, seduta attiva, impostazioni  |
-| `palestra:stopwatch` | stato del cronometro                         |
-| `palestra:rest`      | stato del timer di recupero / a tempo        |
-| `palestra:workout-mode` | modalità allenamento aperta o chiusa      |
-
-I dati restano solo nel browser/dispositivo in cui li hai inseriti: cancellando i dati del sito si perdono. Usa **Opzioni → Esporta backup** ogni tanto e **Importa backup** per spostarli su un altro dispositivo.
-
-## Struttura del progetto
+## Struttura
 
 ```
 src/
-├── App.jsx                  # stato principale, navigazione a schede
-├── data/defaultData.js      # scheda Total Body e sedute iniziali
+├── App.jsx                     # navigazione (Oggi, Allenamenti, Alimentazione, Progressi, Altro)
+├── schema/                     # modello v3: costanti, factory, migrazioni, esempio
 ├── lib/
-│   ├── storage.js           # hook useLocalStorage
-│   ├── stats.js             # calcolo riepiloghi e formattazione
-│   └── useTimers.js         # cronometro + timer di recupero
-└── components/
-    ├── TimerBar.jsx         # barra cronometro/recupero
-    ├── WorkoutMode.jsx      # modalità allenamento sequenziale
-    ├── SessionView.jsx      # seduta in corso
-    ├── ExerciseCard.jsx     # esercizio con le sue serie
-    ├── CardioList.jsx       # riscaldamento / defaticamento
-    ├── HistoryView.jsx      # storico sedute
-    ├── TemplateView.jsx     # modifica della scheda
-    ├── SettingsView.jsx     # opzioni, backup
-    └── Stepper.jsx          # campo numerico con − / +
+│   ├── persist.js, db.js       # IndexedDB, migrazione, gestione errori di salvataggio
+│   ├── import/                 # import manager: validazione, normalizzazione, anteprima, applicazione
+│   ├── report/                 # aggregazioni per periodo, report JSON/CSV, esportazioni tipizzate
+│   ├── actions.js              # operazioni sullo stato
+│   ├── calendar.js             # occorrenze e aderenza
+│   ├── stats.js, swim.js, energy.js, dates.js
+│   └── useTimers.js            # cronometro e conti alla rovescia
+└── components/                 # viste e componenti
+docs/SCHEMA.md, docs/examples/  # schema pubblico ed esempi
+tests/                          # Vitest
 ```
 
-Per passare in futuro a un backend basta sostituire `useLocalStorage` in `App.jsx` con una sorgente dati remota mantenendo la stessa forma dei dati.
+Non ancora incluso (fasi successive del documento di analisi): report PDF, promemoria, import assistito da testo/PDF, sincronizzazione tra dispositivi.

@@ -15,7 +15,9 @@ export function periodSessions(state, period) {
 
 function minutes(list) {
   const d = list.map((s) => sessionDuration(s).min)
-  return { value: sum(d.filter((x) => x != null)), missing: d.filter((x) => x == null).length }
+  const known = d.filter((x) => x != null)
+  // null = nessuna durata registrata (diverso da 0 minuti)
+  return { value: known.length ? sum(known) : list.length ? null : 0, missing: d.length - known.length }
 }
 
 export function aggregateTraining(state, period) {

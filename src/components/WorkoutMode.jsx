@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import Stepper from './Stepper'
-import { fmtClock, fmtNum, sessionStats } from '../lib/stats'
-import { DEFAULT_REST } from '../data/defaultData'
+import { fmtClock, fmtNum, strengthStats as sessionStats, hasPendingSets, minutesBetweenSafe } from '../lib/stats'
+import { DEFAULT_REST } from '../schema/constants'
+import { toLocalISO } from '../lib/dates'
+import { targetText } from './ExerciseCard'
+import { autoStart } from '../lib/actions'
 
 // Sequenza dei passi: riscaldamento → esercizi → defaticamento
 export function buildSteps(session) {
@@ -14,12 +17,13 @@ export function buildSteps(session) {
 
 const isDone = (step) => (step.kind === 'cardio' ? step.item.done : step.item.sets.every((s) => s.done))
 
-// Ci sono ancora serie di pesi da fare? (serve per decidere se avviare il recupero)
-export function hasPendingSets(session) {
-  return session.exercises.some((ex) => ex.sets.some((s) => !s.done))
-}
+export { hasPendingSets }
 
-export default function WorkoutMode({ session, onChange, timers, onClose }) {
+// La prima attività registrata fissa l'orario di inizio della seduta
+const withStart = autoStart
+
+export default function WorkoutMode({ session, onChange: save, timers, onClose, hintFor }) {
+  const onChange = (s) => save(s.exercises.some((e) => e.sets.some((x) => x.done)) || [...s.warmup, ...s.cooldown].some((c) => c.done) ? withStart(s) : s)
   const steps = buildSteps(session)
   const [currentId, setCurrentId] = useState(() => steps.find((s) => !isDone(s))?.id ?? null)
   const idx = steps.findIndex((s) => s.id === currentId)
@@ -46,6 +50,15 @@ export default function WorkoutMode({ session, onChange, timers, onClose }) {
     onChange({ ...session, [key]: session[key].map((c) => (c.id === item.id ? item : c)) })
   }
 
+  // Ultima serie completata: il RIR si può indicare durante il recupero anche se si è già passati all'esercizio successivo
+  const [lastDone, setLastDone] = useState(null)
+  const lastEx = session.exercises.find((e) => e.id === lastDone?.exId)
+  const lastSet = lastEx?.sets[lastDone.idx]?.done ? lastEx.sets[lastDone.idx] : null
+  const rirPrompt =
+    lastSet && lastEx.type !== 'time'
+      ? { value: lastSet.rir, name: lastEx.name, onChange: (rir) => setExercise({ ...lastEx, sets: lastEx.sets.map((s, j) => (j === lastDone.idx ? { ...s, rir } : s)) }) }
+      : null
+
   const working = timers.rest.active && timers.rest.kind === 'work'
   const resting = timers.rest.active && timers.rest.kind !== 'work'
 
@@ -58,8 +71,9 @@ export default function WorkoutMode({ session, onChange, timers, onClose }) {
     const i = ex.sets.findIndex((s) => !s.done)
     if (i < 0) return
     ensureStopwatch()
-    const updated = { ...ex, sets: ex.sets.map((s, j) => (j === i ? { ...s, done: true } : s)) }
+    const updated = { ...ex, sets: ex.sets.map((s, j) => (j === i ? { ...s, done: true, at: toLocalISO() } : s)) }
     setExercise(updated)
+    setLastDone({ exId: ex.id, idx: i })
     const nextSession = { ...session, exercises: session.exercises.map((e) => (e.id === ex.id ? updated : e)) }
     if (hasPendingSets(nextSession)) timers.startRest(ex.rest ?? DEFAULT_REST, 'Recupero')
     else timers.stopRest()
@@ -70,7 +84,7 @@ export default function WorkoutMode({ session, onChange, timers, onClose }) {
     const i = ex.sets.findIndex((s) => !s.done)
     if (i < 0) return
     ensureStopwatch()
-    timers.startRest(Number(ex.sets[i].reps) || 30, `${ex.name} — serie ${i + 1}`, {
+    timers.startRest(Number(ex.sets[i].durationSec) || 30, `${ex.name} — serie ${i + 1}`, {
       kind: 'work',
       target: { type: 'set', sessionId: session.id, exId: ex.id, setIdx: i },
     })
@@ -88,7 +102,7 @@ export default function WorkoutMode({ session, onChange, timers, onClose }) {
     const i = ex.sets.map((s) => s.done).lastIndexOf(true)
     if (i < 0) return
     timers.stopRest()
-    setExercise({ ...ex, sets: ex.sets.map((s, j) => (j === i ? { ...s, done: false } : s)) })
+    setExercise({ ...ex, sets: ex.sets.map((s, j) => (j === i ? { ...s, done: false, at: null } : s)) })
   }
 
   const go = (dir) => {
@@ -141,6 +155,8 @@ export default function WorkoutMode({ session, onChange, timers, onClose }) {
               onComplete={() => completeSet(step.item)}
               onStartTimed={() => startTimedSet(step.item)}
               onUndo={() => undoLast(step.item)}
+              hint={hintFor?.(step.item)}
+              rirPrompt={rirPrompt}
             />
           ) : (
             <CardioStep
@@ -174,12 +190,13 @@ export default function WorkoutMode({ session, onChange, timers, onClose }) {
   )
 }
 
-function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onStartTimed, onUndo }) {
+function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onStartTimed, onUndo, hint, rirPrompt }) {
   const isTime = ex.type === 'time'
   const i = ex.sets.findIndex((s) => !s.done)
   const cur = i >= 0 ? ex.sets[i] : null
   const left = ex.sets.filter((s) => !s.done).length
   const rest = ex.rest ?? DEFAULT_REST
+  const target = targetText(ex)
 
   // Modifica la serie corrente; le serie successive con lo stesso valore vengono aggiornate insieme
   const editCurrent = (field, value) => {
@@ -196,6 +213,12 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
         {resting && cur && <div className="text-xs font-semibold uppercase tracking-wider text-sky-400">Prossima serie</div>}
         <h1 className="text-2xl font-bold text-white">{ex.name}</h1>
         <p className="text-sm text-slate-400">{ex.group}</p>
+        {target && (
+          <p className="mt-1 text-sm text-sky-300">
+            Obiettivo: <span className="text-slate-200">{target}</span>
+          </p>
+        )}
+        {hint && <p className="mt-1 text-xs text-amber-300/90">{hint}</p>}
       </div>
 
       {/* Serie: quelle fatte vengono scalate */}
@@ -236,19 +259,43 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
               onChange={(v) => editCurrent('weight', v)}
             />
           )}
-          <Stepper label={isTime ? 'Secondi' : 'Ripetizioni'} value={cur.reps} step={isTime ? 5 : 1} onChange={(v) => editCurrent('reps', v)} />
+          {isTime ? (
+            <Stepper label="Secondi" value={cur.durationSec} step={5} onChange={(v) => editCurrent('durationSec', v)} />
+          ) : (
+            <Stepper label="Ripetizioni eseguite" value={cur.reps} step={1} onChange={(v) => editCurrent('reps', v)} />
+          )}
         </div>
       )}
 
       <div className="flex flex-1 flex-col items-center justify-center py-6">
         {resting ? (
-          <Countdown timers={timers} color="sky" title="Recupero" />
+          <>
+            <Countdown timers={timers} color="sky" title="Recupero" />
+            {rirPrompt && (
+              <div className="mt-4 text-center">
+                <div className="mb-1 text-xs text-slate-400">RIR della serie appena fatta · {rirPrompt.name} (facoltativo)</div>
+                <div className="flex justify-center gap-1">
+                  {[0, 1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => rirPrompt.onChange(rirPrompt.value === n ? null : n)}
+                      aria-pressed={rirPrompt.value === n}
+                      aria-label={`RIR ${n}`}
+                      className={`h-10 w-10 rounded-lg text-sm font-semibold ${rirPrompt.value === n ? 'bg-sky-400 text-slate-950' : 'bg-slate-800 text-slate-300'}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         ) : working ? (
           <Countdown timers={timers} color="amber" title="In corso" />
         ) : cur ? (
           <BigButton onClick={isTime ? onStartTimed : onComplete} color={isTime ? 'amber' : 'emerald'}>
             <span className="text-5xl">{isTime ? '▶' : '⏱'}</span>
-            <span className="mt-2 text-xl font-extrabold uppercase">{isTime ? `Avvia ${cur.reps}s` : 'Serie fatta'}</span>
+            <span className="mt-2 text-xl font-extrabold uppercase">{isTime ? `Avvia ${cur.durationSec}s` : 'Serie fatta'}</span>
             <span className="mt-1 text-sm font-medium opacity-80">
               {isTime ? 'si segna da sola a fine tempo' : `poi recupero ${fmtClock(rest * 1000)}`}
             </span>
@@ -387,11 +434,15 @@ function StepPicker({ steps, currentId, onPick }) {
 }
 
 function Finished({ stats, timers, session, onChange, onClose }) {
-  const minutes = Math.round(timers.elapsed / 60000)
+  const endedAt = session.endedAt ?? toLocalISO()
+  const fromTimes = minutesBetweenSafe(session.startedAt, endedAt)
+  const minutes = fromTimes ?? Math.round(timers.elapsed / 60000)
   const save = () => {
     timers.pauseStopwatch()
     timers.stopRest()
-    if (minutes > 0) onChange({ ...session, durationMin: minutes })
+    const patch = { status: 'completed', endedAt: session.startedAt ? endedAt : session.endedAt }
+    if (session.durationSource !== 'manual' && minutes > 0) Object.assign(patch, { durationMin: minutes, durationSource: fromTimes != null ? 'computed' : 'stopwatch' })
+    onChange({ ...session, ...patch })
     onClose()
   }
   return (

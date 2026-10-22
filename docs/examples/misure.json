@@ -1,0 +1,8 @@
+{
+  "type": "palestra-body-measurements",
+  "schemaVersion": 3,
+  "measurements": [
+    { "date": "2026-10-20", "weightKg": 75.4, "source": "manual" },
+    { "date": "2026-10-22", "time": "07:30", "weightKg": 75, "waistCm": 90, "abdomenCm": 100, "notes": "A digiuno" }
+  ]
+}

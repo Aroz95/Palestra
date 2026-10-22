@@ -1,0 +1,43 @@
+{
+  "type": "palestra-program",
+  "schemaVersion": 3,
+  "id": "program-2026-autunno",
+  "name": "Ricomposizione + nuoto",
+  "description": "Esempio di programma con due schede e calendario settimanale",
+  "validFrom": "2026-11-02",
+  "workoutTemplates": [
+    {
+      "id": "full-body-a",
+      "label": "A",
+      "name": "Full Body A",
+      "revision": 1,
+      "estimatedMinutes": 75,
+      "warmup": [{ "name": "Tapis roulant", "minutes": 10, "speed": 5.5 }],
+      "exercises": [
+        { "id": "leg-press", "name": "Leg Press", "group": "Gambe / glutei", "type": "reps", "equipment": "machine", "sets": 2, "repMin": 10, "repMax": 12, "suggestedWeightKg": 60, "perHand": false, "targetRir": 3, "restSeconds": 120 },
+        { "id": "incline-chest-press", "name": "Incline Chest Press", "group": "Pettorali", "type": "reps", "equipment": "machine", "sets": 2, "repMin": 10, "repMax": 12, "suggestedWeightKg": 20, "targetRir": 3, "restSeconds": 90 },
+        { "id": "plank", "name": "Plank", "group": "Core", "type": "time", "equipment": "bodyweight", "sets": 2, "durationSec": 30, "restSeconds": 60 }
+      ],
+      "cooldown": [{ "name": "Tapis roulant", "minutes": 5, "speed": 5 }]
+    },
+    {
+      "id": "full-body-b",
+      "label": "B",
+      "name": "Full Body B",
+      "revision": 1,
+      "estimatedMinutes": 70,
+      "exercises": [
+        { "id": "leg-curl", "name": "Leg Curl", "group": "Femorali", "type": "reps", "equipment": "machine", "sets": 2, "repMin": 10, "repMax": 12, "suggestedWeightKg": 20, "targetRir": 3, "restSeconds": 90 },
+        { "id": "pulldown", "name": "Technogym Pulldown Machine", "group": "Dorsali", "type": "reps", "equipment": "machine", "sets": 2, "repMin": 10, "repMax": 12, "suggestedWeightKg": 20, "targetRir": 3, "restSeconds": 90 },
+        { "id": "curl-manubri", "name": "Curl con manubri", "group": "Bicipiti", "type": "reps", "equipment": "dumbbell", "perHand": true, "step": 1, "sets": 2, "repMin": 10, "repMax": 12, "suggestedWeightKg": 8, "targetRir": 2, "restSeconds": 60 }
+      ]
+    }
+  ],
+  "weeklySchedule": [
+    { "weekday": 1, "kind": "strength", "templateId": "full-body-a" },
+    { "weekday": 2, "kind": "swim", "swimPlan": { "poolLengthM": 25, "style": "Stile libero", "plannedBlocks": [{ "text": "500" }, { "text": "(200+100+2×75)×2" }, { "text": "(100+100+2×75)×3" }] } },
+    { "weekday": 3, "kind": "rest", "label": "Recupero o nuoto leggero" },
+    { "weekday": 4, "kind": "strength", "templateId": "full-body-b" },
+    { "weekday": 5, "kind": "swim" }
+  ]
+}

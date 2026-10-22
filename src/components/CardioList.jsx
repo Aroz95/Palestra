@@ -1,6 +1,6 @@
 import Stepper from './Stepper'
 import { fmtNum } from '../lib/stats'
-import { uid } from '../data/defaultData'
+import { uid } from '../schema/factories'
 
 export default function CardioList({ title, items, onChange }) {
   const update = (id, patch) => onChange(items.map((c) => (c.id === id ? { ...c, ...patch } : c)))

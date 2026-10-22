@@ -37,6 +37,11 @@ export function strengthStats(session) {
   return r
 }
 
+export function minutesBetweenSafe(a, b) {
+  const m = minutesBetween(a, b)
+  return m != null && m > 0 && m < 24 * 60 ? m : null
+}
+
 // Compatibilità con i componenti esistenti
 export const sessionStats = strengthStats
 

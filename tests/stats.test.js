@@ -94,3 +94,12 @@ describe('stima energia', () => {
     expect(bodyWeightAt(m, '2026-10-01')).toBeNull()
   })
 })
+
+describe('orario di inizio', () => {
+  it('non viene inventato per le sedute migrate, ma lo stato passa a "in corso"', async () => {
+    const { autoStart } = await import('../src/lib/actions')
+    const legacy = autoStart({ status: 'planned', startedAt: null, origin: 'legacy-v2' })
+    expect(legacy).toMatchObject({ startedAt: null, status: 'in_progress' })
+    expect(autoStart({ status: 'planned', startedAt: null }).startedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+  })
+})

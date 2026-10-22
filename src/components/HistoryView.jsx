@@ -1,70 +1,65 @@
-import { fmtDate, fmtNum, sessionStats } from '../lib/stats'
+import { useState } from 'react'
+import { Chip, Empty, Segmented } from './ui'
+import { fmtNum, fmtRange, strengthStats, sessionDuration } from '../lib/stats'
+import { swimDistances } from '../lib/swim'
+import { fmtDateShort } from '../lib/dates'
+import { SESSION_STATUS } from '../schema/constants'
+import { exportSession, fileNames } from '../lib/report'
 import { downloadJSON } from '../lib/download'
-import { SCHEMA_VERSION } from '../data/defaultData'
 
-// Esporta una singola seduta in JSON, con un riepilogo leggibile
-function exportSession(s) {
-  const st = sessionStats(s)
-  downloadJSON(`palestra-seduta-${s.date}.json`, {
-    type: 'palestra-seduta',
-    version: SCHEMA_VERSION,
-    exportedAt: new Date().toISOString(),
-    summary: {
-      seriePesi: st.sets,
-      ripetizioni: st.reps,
-      volumeKg: Math.round(st.volume),
-      plank: { serie: st.timeSets, secondi: st.timeSeconds },
-      cardioMinuti: st.cardioMin,
-      cardioKm: Math.round(st.cardioKm * 100) / 100,
-      durataMinuti: s.durationMin ?? null,
-    },
-    session: s,
-  })
-}
-
-export default function HistoryView({ sessions, activeId, onOpen, onDelete, onNewSession }) {
-  const sorted = [...sessions].sort((a, b) => b.date.localeCompare(a.date))
+export default function HistoryView({ state, onOpen, onDelete }) {
+  const [kind, setKind] = useState('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const list = state.sessions
+    .filter((s) => (kind === 'all' || s.kind === kind) && (!from || s.date >= from) && (!to || s.date <= to))
+    .sort((a, b) => (b.date + (b.startedAt ?? '')).localeCompare(a.date + (a.startedAt ?? '')))
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Storico</h1>
-        <button onClick={onNewSession} className="btn bg-emerald-500 text-slate-950">+ Nuova seduta</button>
+      <Segmented
+        value={kind}
+        onChange={setKind}
+        options={[
+          { id: 'all', label: 'Tutte' },
+          { id: 'strength', label: 'Palestra' },
+          { id: 'swim', label: 'Nuoto' },
+        ]}
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <label className="text-xs text-slate-400">
+          Dal
+          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 w-full rounded-xl bg-slate-800 px-2 py-1.5 text-sm text-slate-100 [color-scheme:dark]" />
+        </label>
+        <label className="text-xs text-slate-400">
+          Al
+          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 w-full rounded-xl bg-slate-800 px-2 py-1.5 text-sm text-slate-100 [color-scheme:dark]" />
+        </label>
       </div>
-      {sorted.length === 0 && <p className="py-8 text-center text-slate-400">Nessuna seduta registrata.</p>}
-      {sorted.map((s) => {
-        const st = sessionStats(s)
+      <p className="px-1 text-xs text-slate-500">{list.length} sedute</p>
+      {list.length === 0 && <Empty>Nessuna seduta registrata con questi filtri.</Empty>}
+      {list.map((s) => {
+        const d = sessionDuration(s)
         return (
-          <div
-            key={s.id}
-            className={`rounded-2xl border p-4 ${s.id === activeId ? 'border-emerald-600 bg-slate-900' : 'border-slate-800 bg-slate-900'}`}
-          >
+          <div key={s.id} className={`rounded-2xl border p-4 ${s.id === state.activeSessionId ? 'border-emerald-600 bg-slate-900' : 'border-slate-800 bg-slate-900'}`}>
             <button onClick={() => onOpen(s.id)} className="block w-full text-left">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="font-semibold capitalize text-white">
-                  {fmtDate(s.date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                </span>
-                {s.id === activeId && <span className="text-xs font-semibold text-emerald-400">In corso</span>}
+                <span className="font-semibold capitalize text-white">{fmtDateShort(s.date)}</span>
+                <Chip>{SESSION_STATUS[s.status]}</Chip>
               </div>
-              <div className="text-sm text-slate-400">{s.title}</div>
-              <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
-                <Chip>{st.sets} serie pesi</Chip>
-                <Chip>{fmtNum(st.reps, 0)} rip.</Chip>
-                <Chip>{fmtNum(st.volume, 0)} kg</Chip>
-                {st.timeSets > 0 && <Chip>Plank {st.timeSets} × · {st.timeSeconds}s</Chip>}
-                <Chip>
-                  Cardio {fmtNum(st.cardioMin)} min · {fmtNum(st.cardioKm, 2)} km
-                </Chip>
-                {s.durationMin ? <Chip>Durata {s.durationMin} min</Chip> : null}
+              <div className="text-sm text-slate-400">
+                {s.kind === 'swim' ? '🏊 Nuoto' : '🏋️ Palestra'} · {s.title || '—'}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {s.kind === 'swim' ? <SwimChips s={s} /> : <StrengthChips s={s} />}
+                {d.min != null && <Chip>{d.min} min</Chip>}
+                {s.energy?.activeKcal && <Chip className="bg-amber-500/20 text-amber-200">{fmtRange(s.energy.activeKcal, 0, 'kcal attive')}{s.energy.source === 'estimate' ? ' (stima)' : ''}</Chip>}
               </div>
             </button>
             <div className="mt-3 flex gap-2">
               <button onClick={() => onOpen(s.id)} className="btn-ghost text-sm">Apri</button>
-              <button onClick={() => exportSession(s)} className="btn-ghost text-sm">Esporta JSON</button>
-              <button
-                onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete(s.id)}
-                className="ml-auto rounded-xl px-3 py-2 text-sm text-rose-400 active:bg-rose-950"
-              >
+              <button onClick={() => downloadJSON(fileNames.session(s), exportSession(s))} className="btn-ghost text-sm">Esporta JSON</button>
+              <button onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete(s.id)} className="ml-auto rounded-xl px-3 py-2 text-sm text-rose-400 active:bg-rose-950">
                 Elimina
               </button>
             </div>
@@ -72,12 +67,34 @@ export default function HistoryView({ sessions, activeId, onOpen, onDelete, onNe
         )
       })}
       <p className="px-1 text-xs text-slate-500">
-        Il volume è nominale (ripetizioni × carico; manubri contati ×2): indicativo e non direttamente comparabile tra macchine.
+        Volume nominale (ripetizioni × carico; manubri ×2): indicativo e non confrontabile tra macchine diverse.
       </p>
     </div>
   )
 }
 
-function Chip({ children }) {
-  return <span className="rounded-full bg-slate-800 px-2 py-0.5 text-slate-300">{children}</span>
+function StrengthChips({ s }) {
+  const st = strengthStats(s)
+  return (
+    <>
+      <Chip>{st.sets} serie</Chip>
+      <Chip>{fmtNum(st.reps, 0)} rip.</Chip>
+      <Chip>{fmtNum(st.volume, 0)} kg{st.volumePartial ? ' (parz.)' : ''}</Chip>
+      {st.timeSets > 0 && <Chip>a tempo {st.timeSets} × · {st.timeSeconds}s</Chip>}
+      {st.cardioMin > 0 && <Chip>cardio {fmtNum(st.cardioMin)} min · {fmtNum(st.cardioKm, 2)} km</Chip>}
+    </>
+  )
+}
+
+function SwimChips({ s }) {
+  const d = swimDistances(s)
+  return (
+    <>
+      {d.measured != null && <Chip>{fmtNum(d.measured, 0)} m</Chip>}
+      {d.estimated && <Chip className="bg-amber-500/20 text-amber-200">{fmtRange(d.estimated, 0, 'm')} stimati</Chip>}
+      {d.quality === 'unknown' && <Chip>distanza non nota</Chip>}
+      {d.planned != null && <Chip>{fmtNum(d.planned, 0)} m previsti</Chip>}
+      {d.isPartial && <Chip>abbreviata</Chip>}
+    </>
+  )
 }

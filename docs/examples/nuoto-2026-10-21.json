@@ -1,0 +1,22 @@
+{
+  "type": "palestra-swim-session",
+  "schemaVersion": 3,
+  "id": "swim-2026-10-21",
+  "date": "2026-10-21",
+  "status": "completed",
+  "durationMin": 60,
+  "durationSource": "manual",
+  "poolLengthM": 25,
+  "style": "Stile libero",
+  "plannedDistanceM": 2450,
+  "actualDistanceM": null,
+  "estimatedDistanceM": { "min": 1500, "max": 1800 },
+  "distanceSource": "estimated",
+  "isPartial": true,
+  "plannedBlocks": [
+    { "repeats": 1, "segmentsM": [500] },
+    { "repeats": 2, "segmentsM": [200, 100, 75, 75] },
+    { "repeats": 3, "segmentsM": [100, 100, 75, 75] }
+  ],
+  "notes": "Passo volutamente ridotto; minore forza di trazione nella bracciata"
+}

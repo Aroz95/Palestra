@@ -65,3 +65,13 @@ describe('nuotata abbreviata (RF-05 / US-04)', () => {
     expect(a.quality).toBe('mixed')
   })
 })
+
+describe('ND distinto da 0', () => {
+  it('minuti non registrati = null, nessuna seduta = 0', async () => {
+    const { aggregateTraining } = await import('../src/lib/report/aggregate')
+    const period = { from: '2026-10-01', to: '2026-10-31' }
+    const s = { id: 'x', kind: 'strength', date: '2026-10-10', status: 'completed', exercises: [], warmup: [], cooldown: [] }
+    expect(aggregateTraining({ ...emptyState(), sessions: [s] }, period).strengthMinutes).toEqual({ value: null, missing: 1 })
+    expect(aggregateTraining(emptyState(), period).strengthMinutes).toEqual({ value: 0, missing: 0 })
+  })
+})

@@ -18,10 +18,10 @@ const pick = (raw, ...keys) => keys.map((k) => raw?.[k]).find((x) => x !== undef
 
 // ---- Programmi e schede ----
 
-export function normCardio(v, raw, p, { withDone = false } = {}) {
+export function normCardio(v, raw, p, { withDone = false, fallbackId } = {}) {
   if (!v.obj(raw, p, { nullable: false })) return null
   const c = {
-    id: v.id(raw.id, `${p}.id`) ?? uid('cardio'),
+    id: v.id(raw.id, `${p}.id`) ?? fallbackId ?? uid('cardio'),
     name: v.str(raw.name, `${p}.name`, { def: 'Tapis roulant' }) || 'Tapis roulant',
     minutes: v.num(raw.minutes, `${p}.minutes`, { max: 600 }),
     speed: v.num(pick(raw, 'speed', 'speedKmh'), `${p}.speed`, { max: 40 }),
@@ -70,8 +70,8 @@ export function normTemplate(v, raw, p, programId) {
   const exercises = v.arr(raw.exercises, `${p}.exercises`).map((e, i) => normTemplateExercise(v, e, `${p}.exercises[${i}]`)).filter(Boolean)
   const ids = exercises.map((e) => e.id)
   ids.forEach((id, i) => ids.indexOf(id) !== i && v.err(`${p}.exercises[${i}].id`, `id esercizio duplicato "${id}"`))
-  const warmup = v.arr(raw.warmup, `${p}.warmup`).map((c, i) => normCardio(v, c, `${p}.warmup[${i}]`)).filter(Boolean)
-  const cooldown = v.arr(raw.cooldown, `${p}.cooldown`).map((c, i) => normCardio(v, c, `${p}.cooldown[${i}]`)).filter(Boolean)
+  const warmup = v.arr(raw.warmup, `${p}.warmup`).map((c, i) => normCardio(v, c, `${p}.warmup[${i}]`, { fallbackId: `warmup-${i + 1}` })).filter(Boolean)
+  const cooldown = v.arr(raw.cooldown, `${p}.cooldown`).map((c, i) => normCardio(v, c, `${p}.cooldown[${i}]`, { fallbackId: `cooldown-${i + 1}` })).filter(Boolean)
   if (!exercises.length) v.warn(p, `Scheda "${name}" incompleta: nessun esercizio`)
   return {
     id: v.id(raw.id, `${p}.id`) ?? (slug(name) || uid('tpl')),
@@ -219,13 +219,13 @@ function normSet(v, raw, p, isTime) {
   }
 }
 
-function normSessionExercise(v, raw, p) {
+function normSessionExercise(v, raw, p, fallbackId) {
   if (!v.obj(raw, p, { nullable: false })) return null
   const type = v.oneOf(raw.type, `${p}.type`, ['reps', 'time'], 'reps')
   const perHand = v.bool(raw.perHand, `${p}.perHand`)
   const t = v.obj(raw.target, `${p}.target`)
   return {
-    id: v.id(raw.id, `${p}.id`) ?? uid('sx'),
+    id: v.id(raw.id, `${p}.id`) ?? fallbackId,
     exerciseId: v.id(raw.exerciseId, `${p}.exerciseId`),
     name: v.str(raw.name, `${p}.name`, { nullable: false, max: 200 }),
     group: v.str(raw.group, `${p}.group`),
@@ -278,9 +278,9 @@ export function normStrengthSession(v, raw, p) {
     ...sessionCommon(v, raw, p),
     templateId: v.id(raw.templateId, `${p}.templateId`),
     templateRevision: v.num(raw.templateRevision, `${p}.templateRevision`, { int: true, min: 1 }),
-    warmup: v.arr(raw.warmup, `${p}.warmup`).map((c, i) => normCardio(v, c, `${p}.warmup[${i}]`, { withDone: true })).filter(Boolean),
-    exercises: v.arr(raw.exercises, `${p}.exercises`).map((e, i) => normSessionExercise(v, e, `${p}.exercises[${i}]`)).filter(Boolean),
-    cooldown: v.arr(raw.cooldown, `${p}.cooldown`).map((c, i) => normCardio(v, c, `${p}.cooldown[${i}]`, { withDone: true })).filter(Boolean),
+    warmup: v.arr(raw.warmup, `${p}.warmup`).map((c, i) => normCardio(v, c, `${p}.warmup[${i}]`, { withDone: true, fallbackId: `warmup-${i + 1}` })).filter(Boolean),
+    exercises: v.arr(raw.exercises, `${p}.exercises`).map((e, i) => normSessionExercise(v, e, `${p}.exercises[${i}]`, `sx-${i + 1}`)).filter(Boolean),
+    cooldown: v.arr(raw.cooldown, `${p}.cooldown`).map((c, i) => normCardio(v, c, `${p}.cooldown[${i}]`, { withDone: true, fallbackId: `cooldown-${i + 1}` })).filter(Boolean),
   }
   if (raw.origin) s.origin = String(raw.origin)
   return s
@@ -302,7 +302,7 @@ function normBlocks(v, raw, p) {
     }
     if (!segmentsM.length) v.err(bp, 'blocco senza distanze (segmentsM o text)')
     return {
-      id: v.id(b.id, `${bp}.id`) ?? uid('block'),
+      id: v.id(b.id, `${bp}.id`) ?? `block-${i + 1}`,
       text: text || null,
       repeats: v.num(b.repeats, `${bp}.repeats`, { int: true, min: 1, max: 100, def: 1 }),
       segmentsM: segmentsM.filter((x) => x != null),
@@ -470,7 +470,7 @@ export function normDietPlan(v, raw, p) {
     const mids = meals.map((m) => m.id)
     mids.forEach((id, j) => mids.indexOf(id) !== j && v.err(`${dp}.meals[${j}].id`, `id pasto duplicato "${id}"`))
     return {
-      id: v.id(d.id, `${dp}.id`) ?? uid('day'),
+      id: v.id(d.id, `${dp}.id`) ?? `day-${i + 1}`,
       weekday,
       date,
       dayType: v.oneOf(d.dayType, `${dp}.dayType`, ['any', 'training', 'rest'], 'any'),

@@ -1,0 +1,47 @@
+{
+  "type": "palestra-diet-plan",
+  "schemaVersion": 3,
+  "id": "diet-plan-001",
+  "name": "Piano alimentare settimanale (esempio)",
+  "status": "draft",
+  "author": "Esempio di struttura",
+  "validFrom": "2026-11-02",
+  "validTo": null,
+  "notes": "Esempio di struttura, non prescrizione alimentare",
+  "days": [
+    {
+      "weekday": 4,
+      "dayType": "training",
+      "meals": [
+        {
+          "id": "colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "08:00",
+          "items": [
+            { "name": "Yogurt greco", "quantity": 170, "unit": "g" },
+            { "name": "Fiocchi d'avena", "quantity": 40, "unit": "g", "alternatives": [{ "name": "Pane integrale", "quantity": 50, "unit": "g" }] }
+          ],
+          "alternatives": [{ "label": "Alternativa salata", "items": [{ "name": "Uova", "quantity": 2, "unit": "pz" }, { "name": "Pane integrale", "quantity": 50, "unit": "g" }] }],
+          "nutrition": { "kcal": 420, "proteinG": 28, "carbsG": 45, "fatG": 12 }
+        },
+        {
+          "id": "pranzo",
+          "category": "lunch",
+          "label": "Pranzo",
+          "time": "13:00",
+          "items": [{ "name": "Riso basmati", "quantity": 80, "unit": "g", "notes": "peso a crudo" }, { "name": "Petto di pollo", "quantity": 150, "unit": "g" }],
+          "alternatives": [],
+          "nutrition": null
+        }
+      ]
+    },
+    {
+      "weekday": 4,
+      "dayType": "rest",
+      "meals": [
+        { "id": "colazione-riposo", "category": "breakfast", "label": "Colazione", "time": "08:00", "items": [{ "name": "Yogurt greco", "quantity": 170, "unit": "g" }], "nutrition": null }
+      ]
+    }
+  ]
+}
