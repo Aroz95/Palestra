@@ -1,13 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocalStorage } from './storage'
 
-// Cronometro (tempo totale seduta) + timer di recupero a conto alla rovescia.
+const IDLE = { endsAt: null, duration: 0, label: '', kind: 'rest', target: null }
+
+// Cronometro (tempo totale seduta) + conto alla rovescia (recupero, oppure esercizio/cardio a tempo).
 // Entrambi sono basati su timestamp, quindi sopravvivono a ricarica pagina e schermo spento.
-export function useTimers({ sound = true } = {}) {
+// Il conto alla rovescia si ferma da solo a zero e chiama onCountdownEnd(countdown).
+export function useTimers({ sound = true, onCountdownEnd } = {}) {
   const [sw, setSw] = useLocalStorage('palestra:stopwatch', { startedAt: null, accumulated: 0, laps: [] })
-  const [rest, setRest] = useLocalStorage('palestra:rest', { endsAt: null, duration: 0, label: '' })
+  const [rest, setRest] = useLocalStorage('palestra:rest', IDLE)
   const [now, setNow] = useState(Date.now())
+  const [finished, setFinished] = useState(null) // ultimo conto alla rovescia terminato, per un avviso breve
   const firedRef = useRef(null)
+  const endRef = useRef(onCountdownEnd)
+  endRef.current = onCountdownEnd
 
   const active = sw.startedAt != null || rest.endsAt != null
   useEffect(() => {
@@ -19,14 +25,23 @@ export function useTimers({ sound = true } = {}) {
   const elapsed = sw.accumulated + (sw.startedAt != null ? now - sw.startedAt : 0)
   const restLeft = rest.endsAt != null ? Math.max(0, rest.endsAt - now) : 0
 
-  // Fine recupero: suono + vibrazione, una sola volta
+  // Fine conto alla rovescia: suono + vibrazione, stop automatico, callback
   useEffect(() => {
-    if (rest.endsAt != null && restLeft === 0 && firedRef.current !== rest.endsAt) {
-      firedRef.current = rest.endsAt
-      if (sound) beep()
-      navigator.vibrate?.([300, 150, 300])
-    }
-  }, [rest.endsAt, restLeft, sound])
+    if (rest.endsAt == null || restLeft > 0 || firedRef.current === rest.endsAt) return
+    firedRef.current = rest.endsAt
+    const ended = rest
+    if (sound) beep()
+    navigator.vibrate?.([300, 150, 300])
+    setRest((r) => (r.endsAt === ended.endsAt ? IDLE : r))
+    setFinished({ ...ended, at: Date.now() })
+    endRef.current?.(ended)
+  }, [rest, restLeft, sound, setRest])
+
+  useEffect(() => {
+    if (!finished) return
+    const id = setTimeout(() => setFinished(null), 4000)
+    return () => clearTimeout(id)
+  }, [finished])
 
   const startStopwatch = useCallback(
     () => setSw((s) => (s.startedAt != null ? s : { ...s, startedAt: Date.now() })),
@@ -49,19 +64,26 @@ export function useTimers({ sound = true } = {}) {
     [setSw],
   )
 
+  // kind: 'rest' (recupero) | 'work' (esercizio/cardio a tempo, target = cosa segnare come fatto a fine tempo)
   const startRest = useCallback(
-    (seconds, label = 'Recupero') => {
+    (seconds, label = 'Recupero', { kind = 'rest', target = null } = {}) => {
       unlockAudio()
-      setRest({ endsAt: Date.now() + seconds * 1000, duration: seconds, label })
+      setFinished(null)
+      setRest({ endsAt: Date.now() + seconds * 1000, duration: seconds, label, kind, target })
       setNow(Date.now())
     },
     [setRest],
   )
   const addRest = useCallback(
-    (seconds) => setRest((r) => (r.endsAt == null ? r : { ...r, endsAt: Math.max(Date.now(), r.endsAt + seconds * 1000) })),
+    (seconds) =>
+      setRest((r) =>
+        r.endsAt == null
+          ? r
+          : { ...r, endsAt: Math.max(Date.now() + 1000, r.endsAt + seconds * 1000), duration: Math.max(1, r.duration + seconds) },
+      ),
     [setRest],
   )
-  const stopRest = useCallback(() => setRest({ endsAt: null, duration: 0, label: '' }), [setRest])
+  const stopRest = useCallback(() => setRest(IDLE), [setRest])
 
   return {
     elapsed,
@@ -71,7 +93,15 @@ export function useTimers({ sound = true } = {}) {
     pauseStopwatch,
     resetStopwatch,
     lap,
-    rest: { active: rest.endsAt != null, left: restLeft, duration: rest.duration, label: rest.label },
+    rest: {
+      active: rest.endsAt != null,
+      left: restLeft,
+      duration: rest.duration,
+      label: rest.label,
+      kind: rest.kind ?? 'rest',
+      target: rest.target,
+    },
+    finished,
     startRest,
     addRest,
     stopRest,

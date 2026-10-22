@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { fmtClock } from '../lib/stats'
 
-const PRESETS = [45, 60, 90, 120, 180]
+const PRESETS = [30, 45, 60, 90, 120]
 
 export default function TimerBar({ timers, restSeconds }) {
   const [showLaps, setShowLaps] = useState(false)
   const { elapsed, running, laps, rest } = timers
-  const restDone = rest.active && rest.left === 0
   const pct = rest.active && rest.duration ? 100 - (rest.left / (rest.duration * 1000)) * 100 : 0
 
   return (
@@ -59,22 +58,22 @@ export default function TimerBar({ timers, restSeconds }) {
 
         {/* Recupero */}
         {rest.active ? (
-          <div className={`mt-2 overflow-hidden rounded-xl ${restDone ? 'bg-rose-600 animate-pulse' : 'bg-sky-900/60'}`}>
+          <div className={`mt-2 overflow-hidden rounded-xl ${rest.kind === 'work' ? 'bg-amber-900/60' : 'bg-sky-900/60'}`}>
             <div className="h-1 bg-sky-400 transition-all" style={{ width: `${pct}%` }} />
             <div className="flex items-center gap-2 px-3 py-2">
               <div className="flex-1">
                 <div className="text-[10px] font-semibold uppercase tracking-wider text-sky-200">
-                  {restDone ? 'Tempo scaduto!' : rest.label}
+                  {rest.label}
                 </div>
                 <div className="font-mono text-2xl font-bold tabular-nums text-white">{fmtClock(rest.left + 999)}</div>
               </div>
-              {!restDone && (
-                <button onClick={() => timers.addRest(15)} className="btn-ghost">+15s</button>
-              )}
-              <button onClick={timers.stopRest} className="btn bg-white text-slate-900">
-                {restDone ? 'OK' : 'Stop'}
-              </button>
+              <button onClick={() => timers.addRest(15)} className="btn-ghost">+15s</button>
+              <button onClick={timers.stopRest} className="btn bg-white text-slate-900">Stop</button>
             </div>
+          </div>
+        ) : timers.finished ? (
+          <div className="mt-2 rounded-xl bg-emerald-600 px-3 py-3 text-center font-semibold text-white">
+            {timers.finished.kind === 'work' ? `${timers.finished.label}: completato` : 'Recupero finito — via!'}
           </div>
         ) : (
           <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1">

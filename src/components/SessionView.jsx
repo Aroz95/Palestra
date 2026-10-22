@@ -3,9 +3,9 @@ import ExerciseCard from './ExerciseCard'
 import CardioList from './CardioList'
 import Stepper from './Stepper'
 import { fmtDate, fmtNum, sessionStats } from '../lib/stats'
-import { newExerciseFromTemplate, uid } from '../data/defaultData'
+import { DEFAULT_REST, newExerciseFromTemplate, uid } from '../data/defaultData'
 
-export default function SessionView({ session, template, onChange, timers, settings, onNewSession }) {
+export default function SessionView({ session, template, onChange, timers, settings, onNewSession, onStartWorkout }) {
   const [adding, setAdding] = useState(false)
 
   if (!session) {
@@ -23,7 +23,7 @@ export default function SessionView({ session, template, onChange, timers, setti
   const removeExercise = (id) => set({ exercises: session.exercises.filter((e) => e.id !== id) })
 
   const onSetDone = (ex) => {
-    if (settings.autoRest && ex.type !== 'time') timers.startRest(settings.restSeconds)
+    if (settings.autoRest && ex.type !== 'time') timers.startRest(ex.rest ?? DEFAULT_REST)
     if (!timers.running && timers.elapsed === 0) timers.startStopwatch()
   }
 
@@ -31,7 +31,7 @@ export default function SessionView({ session, template, onChange, timers, setti
   const addExercise = (tpl) => {
     const ex = tpl
       ? newExerciseFromTemplate(tpl)
-      : { id: uid(), templateId: null, name: 'Nuovo esercizio', group: '', type: 'reps', perHand: false, step: 2.5, notes: '', sets: [{ reps: 10, weight: 10, done: false }] }
+      : { id: uid(), templateId: null, name: 'Nuovo esercizio', group: '', type: 'reps', perHand: false, step: 2.5, rest: DEFAULT_REST, notes: '', sets: [{ reps: 10, weight: 10, done: false }] }
     set({ exercises: [...session.exercises, ex] })
     setAdding(false)
   }
@@ -63,6 +63,14 @@ export default function SessionView({ session, template, onChange, timers, setti
           </div>
         )}
       </header>
+
+      <button
+        onClick={onStartWorkout}
+        className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-5 text-xl font-extrabold text-slate-950 shadow-lg shadow-emerald-500/20 transition active:scale-[0.98]"
+      >
+        <span className="text-2xl">▶</span>
+        {stats.doneSets > 0 || session.warmup.some((c) => c.done) ? 'Riprendi allenamento' : 'Inizia allenamento'}
+      </button>
 
       {/* Avanzamento */}
       <div className="rounded-2xl bg-slate-900 p-4">

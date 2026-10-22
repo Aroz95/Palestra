@@ -18,10 +18,12 @@ export function writeJSON(key, value) {
 }
 
 // Stato React sincronizzato con localStorage.
-export function useLocalStorage(key, init) {
+// migrate (opzionale) converte i dati salvati da versioni precedenti.
+export function useLocalStorage(key, init, migrate) {
   const [value, setValue] = useState(() => {
     const stored = readJSON(key, undefined)
-    return stored !== undefined ? stored : typeof init === 'function' ? init() : init
+    if (stored !== undefined) return migrate ? migrate(stored) : stored
+    return typeof init === 'function' ? init() : init
   })
   useEffect(() => {
     writeJSON(key, value)

@@ -4,9 +4,10 @@ import SessionView from './components/SessionView'
 import HistoryView from './components/HistoryView'
 import TemplateView from './components/TemplateView'
 import SettingsView from './components/SettingsView'
+import WorkoutMode, { hasPendingSets } from './components/WorkoutMode'
 import { useLocalStorage } from './lib/storage'
 import { useTimers } from './lib/useTimers'
-import { createInitialState, createSessionFromTemplate, todayISO } from './data/defaultData'
+import { createInitialState, createSessionFromTemplate, DEFAULT_REST, migrate, todayISO } from './data/defaultData'
 
 const TABS = [
   { id: 'session', label: 'Seduta', icon: '🏋️' },
@@ -16,9 +17,32 @@ const TABS = [
 ]
 
 export default function App() {
-  const [state, setState] = useLocalStorage('palestra:data', createInitialState)
+  const [state, setState] = useLocalStorage('palestra:data', createInitialState, migrate)
   const [tab, setTab] = useState('session')
-  const timers = useTimers({ sound: state.settings.sound })
+  const [workout, setWorkout] = useLocalStorage('palestra:workout-mode', false)
+  const timers = useTimers({ sound: state.settings.sound, onCountdownEnd: (c) => onCountdownEnd(c) })
+
+  // Fine di un esercizio/cardio a tempo: lo segna come fatto e, se restano serie, avvia il recupero
+  function onCountdownEnd({ kind, target }) {
+    if (kind !== 'work' || !target) return
+    const session = state.sessions.find((s) => s.id === target.sessionId)
+    if (!session) return
+    let updated = session
+    if (target.type === 'set') {
+      updated = {
+        ...session,
+        exercises: session.exercises.map((ex) =>
+          ex.id !== target.exId ? ex : { ...ex, sets: ex.sets.map((s, j) => (j === target.setIdx ? { ...s, done: true } : s)) },
+        ),
+      }
+      const ex = updated.exercises.find((e) => e.id === target.exId)
+      if (ex && hasPendingSets(updated)) timers.startRest(ex.rest ?? DEFAULT_REST, 'Recupero')
+    } else if (target.type === 'cardio') {
+      const mark = (list) => list.map((c) => (c.id === target.itemId ? { ...c, done: true } : c))
+      updated = { ...session, warmup: mark(session.warmup), cooldown: mark(session.cooldown) }
+    }
+    updateSession(updated)
+  }
 
   const active = state.sessions.find((s) => s.id === state.activeSessionId) ?? null
 
@@ -52,6 +76,7 @@ export default function App() {
             timers={timers}
             settings={state.settings}
             onNewSession={newSession}
+            onStartWorkout={() => setWorkout(true)}
           />
         )}
         {tab === 'history' && (
@@ -89,6 +114,10 @@ export default function App() {
           />
         )}
       </main>
+
+      {workout && active && (
+        <WorkoutMode session={active} onChange={updateSession} timers={timers} onClose={() => setWorkout(false)} />
+      )}
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-800 bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
         <div className="mx-auto grid max-w-2xl grid-cols-4">

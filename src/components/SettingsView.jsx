@@ -31,12 +31,15 @@ export default function SettingsView({ settings, onSettings, state, onImport, on
       <section className="space-y-4 rounded-2xl bg-slate-900 p-4">
         <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">Recupero</h2>
         <Stepper
-          label="Secondi di recupero predefiniti"
+          label="Recupero evidenziato nella barra (s)"
           value={settings.restSeconds}
           step={15}
           min={15}
           onChange={(restSeconds) => onSettings({ ...settings, restSeconds: Math.round(restSeconds) })}
         />
+        <p className="text-xs text-slate-400">
+          Il recupero dopo ogni serie si imposta per esercizio nella scheda (predefinito 1 minuto).
+        </p>
         <Toggle
           checked={settings.autoRest}
           onChange={(autoRest) => onSettings({ ...settings, autoRest })}

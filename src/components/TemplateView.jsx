@@ -1,5 +1,5 @@
 import Stepper from './Stepper'
-import { uid } from '../data/defaultData'
+import { DEFAULT_REST, uid } from '../data/defaultData'
 
 // Modifica della scheda: valori predefiniti usati quando si crea una nuova seduta.
 export default function TemplateView({ template, onChange }) {
@@ -16,7 +16,7 @@ export default function TemplateView({ template, onChange }) {
     set({
       exercises: [
         ...template.exercises,
-        { id: uid(), name: 'Nuovo esercizio', group: '', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 10, weight: 10 },
+        { id: uid(), name: 'Nuovo esercizio', group: '', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 10, weight: 10, rest: DEFAULT_REST },
       ],
     })
 
@@ -89,6 +89,13 @@ export default function TemplateView({ template, onChange }) {
                 {ex.type !== 'time' && (
                   <Stepper label={ex.perHand ? 'Kg per mano' : 'Kg'} value={ex.weight} step={ex.step || 1} onChange={(weight) => updateEx(ex.id, { weight })} />
                 )}
+                <Stepper
+                  label="Recupero (s)"
+                  value={ex.rest ?? DEFAULT_REST}
+                  step={15}
+                  min={0}
+                  onChange={(rest) => updateEx(ex.id, { rest: Math.round(rest) })}
+                />
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-300">
                 <label className="flex items-center gap-1.5">

@@ -6,6 +6,15 @@ I dati per ora sono salvati nel **localStorage** del browser (nessun server, nes
 
 ## Funzionalità
 
+- **Modalità allenamento (sequenziale)** — pulsante **▶ Inizia allenamento** nella seduta
+  - Schermo intero, un passo alla volta: riscaldamento → esercizi in ordine → defaticamento.
+  - Per ogni esercizio: serie da fare (quelle fatte vengono scalate e barrate), carico e ripetizioni della serie corrente modificabili con − / + (la modifica vale anche per le serie successive con lo stesso valore).
+  - Grande pulsante **⏱ Serie fatta**: segna la serie, la toglie da quelle da fare e avvia il **recupero di 1 minuto**, mostrato a tutto schermo e che **si ferma da solo** a fine tempo (suono + vibrazione). Poi trovi già la serie successiva pronta.
+  - Finite le serie si passa da soli all'esercizio successivo; durante il recupero vedi già cosa ti aspetta.
+  - Plank e tapis roulant: **▶ Avvia** fa partire il conto alla rovescia del tempo previsto; a fine tempo la serie/attività si segna da sola.
+  - −15 s / +15 s / salta recupero, annulla ultima serie, passo precedente/successivo o salto diretto a un esercizio.
+  - Tempo totale sempre visibile in alto; schermo tenuto acceso (dove il browser lo supporta).
+  - A fine allenamento: riepilogo e salvataggio della durata.
 - **Seduta in corso**
   - Riscaldamento e defaticamento (tapis roulant): minuti, velocità, spunta “fatto”, distanza stimata.
   - Esercizi in sala pesi con una riga per serie: carico e ripetizioni modificabili con **− / +** o digitandoli, pulsante **✓** per segnare la serie come fatta.
@@ -14,10 +23,10 @@ I dati per ora sono salvati nel **localStorage** del browser (nessun server, nes
   - Avanzamento (serie completate), ripetizioni, volume e minuti di cardio calcolati in automatico.
   - Durata della seduta, con la possibilità di prenderla dal cronometro.
 - **Cronometro** sempre visibile in alto: avvia / pausa / riprendi / azzera e **giri**. Parte da solo alla prima serie spuntata.
-- **Timer di recupero**: preset da 45 s a 3 min, +15 s, suono e vibrazione a fine recupero. Può partire in automatico quando spunti una serie (disattivabile in *Opzioni*).
+- **Timer di recupero**: 1 minuto dopo ogni serie (modificabile per esercizio nella *Scheda*), preset da 30 s a 2 min, ±15 s, suono e vibrazione; si ferma da solo a fine tempo.
 - Cronometro e recupero sono basati su timestamp: continuano a contare anche se ricarichi la pagina o lo schermo si spegne.
 - **Storico** delle sedute con riepilogo (serie, ripetizioni, volume, plank, cardio, durata).
-- **Scheda** modificabile: esercizi, serie/ripetizioni/carico predefiniti, incremento dei pulsanti +/−, manubri “per mano”, ordine degli esercizi, riscaldamento e defaticamento.
+- **Scheda** modificabile: esercizi, serie/ripetizioni/carico predefiniti, incremento dei pulsanti +/−, recupero, manubri “per mano”, ordine degli esercizi, riscaldamento e defaticamento.
 - **Nuova seduta**: viene creata dalla scheda riprendendo serie e carichi dell’ultima volta in cui hai fatto ciascun esercizio.
 - **Backup**: esporta / importa i dati in JSON, ripristino dei dati iniziali.
 
@@ -60,7 +69,8 @@ Suggerimento: dal telefono apri il sito e usa **“Aggiungi a schermata Home”*
 |----------------------|----------------------------------------------|
 | `palestra:data`      | scheda, sedute, seduta attiva, impostazioni  |
 | `palestra:stopwatch` | stato del cronometro                         |
-| `palestra:rest`      | stato del timer di recupero                  |
+| `palestra:rest`      | stato del timer di recupero / a tempo        |
+| `palestra:workout-mode` | modalità allenamento aperta o chiusa      |
 
 I dati restano solo nel browser/dispositivo in cui li hai inseriti: cancellando i dati del sito si perdono. Usa **Opzioni → Esporta backup** ogni tanto e **Importa backup** per spostarli su un altro dispositivo.
 
@@ -76,6 +86,7 @@ src/
 │   └── useTimers.js         # cronometro + timer di recupero
 └── components/
     ├── TimerBar.jsx         # barra cronometro/recupero
+    ├── WorkoutMode.jsx      # modalità allenamento sequenziale
     ├── SessionView.jsx      # seduta in corso
     ├── ExerciseCard.jsx     # esercizio con le sue serie
     ├── CardioList.jsx       # riscaldamento / defaticamento

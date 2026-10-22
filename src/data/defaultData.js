@@ -2,8 +2,10 @@
 // type: 'reps' → il campo reps sono ripetizioni; 'time' → il campo reps sono secondi.
 // perHand: il carico è per mano (manubri), nel volume viene contato ×2.
 // step: incremento del carico con i pulsanti +/−.
+// rest: secondi di recupero dopo ogni serie.
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
+export const DEFAULT_REST = 60
 
 export const DEFAULT_TEMPLATE = {
   name: 'Total Body',
@@ -14,17 +16,17 @@ export const DEFAULT_TEMPLATE = {
     { id: 'wu2', name: 'Tapis roulant', minutes: 7.5, speed: 6.5, note: '' },
   ],
   exercises: [
-    { id: 'leg-press', name: 'Leg Press', group: 'Gambe / glutei', type: 'reps', perHand: false, step: 5, sets: 3, reps: 12, weight: 60 },
-    { id: 'leg-extension', name: 'Leg Extension', group: 'Quadricipiti', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 12, weight: 20 },
-    { id: 'leg-curl', name: 'Leg Curl', group: 'Femorali', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 12, weight: 20 },
-    { id: 'incline-chest-press', name: 'Incline Chest Press', group: 'Pettorali / tricipiti', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 12, weight: 20 },
-    { id: 'pec-deck', name: 'Pectoral Machine (Pec Deck)', group: 'Pettorali', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 10, weight: 15 },
-    { id: 'upper-back', name: 'Upper Back Machine', group: 'Schiena', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 10, weight: 20 },
-    { id: 'alzate-laterali', name: 'Alzate laterali con manubri', group: 'Spalle', type: 'reps', perHand: true, step: 1, sets: 3, reps: 10, weight: 6 },
-    { id: 'curl-manubri', name: 'Curl con manubri', group: 'Bicipiti', type: 'reps', perHand: true, step: 1, sets: 3, reps: 12, weight: 6 },
-    { id: 'triceps-pushdown', name: 'Triceps Push Down al cavo con barra', group: 'Tricipiti', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 12, weight: 10 },
-    { id: 'pulldown', name: 'Technogym Pulldown Machine', group: 'Dorsali', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 12, weight: 20 },
-    { id: 'plank', name: 'Plank', group: 'Core', type: 'time', perHand: false, step: 0, sets: 3, reps: 30, weight: 0 },
+    { id: 'leg-press', name: 'Leg Press', group: 'Gambe / glutei', type: 'reps', perHand: false, step: 5, sets: 3, reps: 12, weight: 60, rest: DEFAULT_REST },
+    { id: 'leg-extension', name: 'Leg Extension', group: 'Quadricipiti', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 12, weight: 20, rest: DEFAULT_REST },
+    { id: 'leg-curl', name: 'Leg Curl', group: 'Femorali', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 12, weight: 20, rest: DEFAULT_REST },
+    { id: 'incline-chest-press', name: 'Incline Chest Press', group: 'Pettorali / tricipiti', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 12, weight: 20, rest: DEFAULT_REST },
+    { id: 'pec-deck', name: 'Pectoral Machine (Pec Deck)', group: 'Pettorali', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 10, weight: 15, rest: DEFAULT_REST },
+    { id: 'upper-back', name: 'Upper Back Machine', group: 'Schiena', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 10, weight: 20, rest: DEFAULT_REST },
+    { id: 'alzate-laterali', name: 'Alzate laterali con manubri', group: 'Spalle', type: 'reps', perHand: true, step: 1, sets: 3, reps: 10, weight: 6, rest: DEFAULT_REST },
+    { id: 'curl-manubri', name: 'Curl con manubri', group: 'Bicipiti', type: 'reps', perHand: true, step: 1, sets: 3, reps: 12, weight: 6, rest: DEFAULT_REST },
+    { id: 'triceps-pushdown', name: 'Triceps Push Down al cavo con barra', group: 'Tricipiti', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 12, weight: 10, rest: DEFAULT_REST },
+    { id: 'pulldown', name: 'Technogym Pulldown Machine', group: 'Dorsali', type: 'reps', perHand: false, step: 2.5, sets: 3, reps: 12, weight: 20, rest: DEFAULT_REST },
+    { id: 'plank', name: 'Plank', group: 'Core', type: 'time', perHand: false, step: 0, sets: 3, reps: 30, weight: 0, rest: DEFAULT_REST },
   ],
   cooldown: [
     { id: 'cd1', name: 'Tapis roulant', minutes: 6, speed: 5.5, note: '' },
@@ -49,6 +51,7 @@ function exerciseFromTemplate(ex, count, done = false) {
     type: ex.type,
     perHand: ex.perHand,
     step: ex.step,
+    rest: ex.rest ?? DEFAULT_REST,
     notes: '',
     sets: makeSets(ex, count ?? ex.sets, done),
   }
@@ -98,7 +101,7 @@ export function createInitialState() {
     template: structuredClone(DEFAULT_TEMPLATE),
     sessions: [originalSession(), session22()],
     activeSessionId: 'seduta-2026-10-22',
-    settings: { restSeconds: 90, autoRest: true, sound: true },
+    settings: { restSeconds: DEFAULT_REST, autoRest: true, sound: true },
   }
 }
 
@@ -137,4 +140,18 @@ export function todayISO() {
   const d = new Date()
   const off = d.getTimezoneOffset()
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10)
+}
+
+// Aggiorna i dati salvati con versioni precedenti dell'app.
+export function migrate(state) {
+  if (!state || (state.version ?? 1) >= SCHEMA_VERSION) return state
+  const withRest = (ex) => ({ ...ex, rest: ex.rest ?? DEFAULT_REST })
+  return {
+    ...state,
+    version: SCHEMA_VERSION,
+    // v2: recupero di 1 minuto per ogni serie
+    settings: { ...state.settings, restSeconds: DEFAULT_REST },
+    template: { ...state.template, exercises: state.template.exercises.map(withRest) },
+    sessions: state.sessions.map((s) => ({ ...s, exercises: s.exercises.map(withRest) })),
+  }
 }
