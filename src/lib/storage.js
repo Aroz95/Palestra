@@ -9,11 +9,14 @@ export function readJSON(key, fallback) {
   }
 }
 
+// Usato solo per preferenze e stato dei timer; i dati di allenamento stanno in IndexedDB (lib/persist.js)
 export function writeJSON(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // storage pieno o non disponibile (es. navigazione privata): ignoriamo
+    return true
+  } catch (e) {
+    console.warn(`Salvataggio di ${key} non riuscito`, e)
+    return false
   }
 }
 
