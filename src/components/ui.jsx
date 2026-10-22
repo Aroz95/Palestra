@@ -1,5 +1,5 @@
 // Componenti di interfaccia condivisi
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export function Section({ title, right, children, className = '' }) {
   return (
@@ -69,23 +69,50 @@ export function TextArea({ value, onChange, rows = 2, ...rest }) {
   return <textarea value={value ?? ''} onChange={(e) => onChange(e.target.value)} rows={rows} className={inputCls} {...rest} />
 }
 
-// Numero opzionale: stringa vuota = null (dato non registrato), 0 resta 0
-export function NumberInput({ value, onChange, step = 'any', min = 0, max, ...rest }) {
+// Numero opzionale: campo vuoto = null (dato non registrato), 0 resta 0.
+// Campo di testo con tastiera decimale: accetta la virgola (tastiera italiana di iPhone) e il punto.
+const showNum = (v) => (v == null ? '' : String(v).replace('.', ','))
+export function NumberInput({ value, onChange, step, min = 0, max = Infinity, ...rest }) {
+  const [text, setText] = useState(showNum(value))
+  const [invalid, setInvalid] = useState(false)
+  const last = useRef(value)
+  useEffect(() => {
+    if (value !== last.current) {
+      last.current = value
+      setText(showNum(value))
+      setInvalid(false)
+    }
+  }, [value])
+  const handle = (raw) => {
+    setText(raw)
+    const t = raw.trim().replace(',', '.')
+    if (t === '') {
+      setInvalid(false)
+      last.current = null
+      return onChange(null)
+    }
+    const n = /^-?\d*\.?\d+$|^-?\d+\.?$/.test(t) ? Number(t) : NaN
+    const ok = Number.isFinite(n) && n >= min && n <= max
+    setInvalid(!ok)
+    if (!ok) return // valore non valido o incompleto: non viene salvato
+    last.current = n
+    onChange(n)
+  }
   return (
     <input
-      type="number"
+      type="text"
       inputMode="decimal"
-      step={step}
-      min={min}
-      max={max}
-      value={value ?? ''}
-      onChange={(e) => {
-        const raw = e.target.value.replace(',', '.')
-        if (raw === '') return onChange(null)
-        const n = Number(raw)
-        if (Number.isFinite(n)) onChange(n)
+      autoComplete="off"
+      value={text}
+      onChange={(e) => handle(e.target.value)}
+      onBlur={() => {
+        if (invalid) {
+          setText(showNum(value))
+          setInvalid(false)
+        }
       }}
-      className={inputCls}
+      aria-invalid={invalid || undefined}
+      className={`${inputCls} ${invalid ? 'ring-2 ring-rose-500' : ''}`}
       {...rest}
     />
   )

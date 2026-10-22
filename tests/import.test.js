@@ -199,3 +199,10 @@ describe('roundtrip e report', () => {
     expect(csv).toContain('2026-10-21,swim,planned_distance,2450,,,m,planned')
   })
 })
+
+describe('percorso degli errori sulle misure', () => {
+  it('data non valida segnalata sul campo "date" presente nel file', () => {
+    const { errors } = parseImport(JSON.stringify({ type: 'palestra-body-measurements', measurements: [{ date: '2026-13-40', time: '25:00', weightKg: -3 }] }))
+    expect(errors.map((e) => e.path)).toEqual(['measurements[0].date', 'measurements[0].time', 'measurements[0].weightKg'])
+  })
+})

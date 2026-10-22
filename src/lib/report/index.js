@@ -3,7 +3,7 @@
 import { aggregateAll, periodSessions, weightSeries, measurementSeries } from './aggregate'
 import { strengthStats, sessionDuration } from '../stats'
 import { swimDistances } from '../swim'
-import { toLocalISO, todayISO } from '../dates'
+import { toLocalISO, todayISO, localDate } from '../dates'
 import { FILE_TYPES, SCHEMA_VERSION } from '../../schema/constants'
 import { clone } from '../../schema/factories'
 
@@ -96,7 +96,7 @@ export function buildReport(state, period, { sections = Object.keys(REPORT_SECTI
     }
     if (sections.includes('body')) {
       report.details.measurements = state.measurements
-        .filter((m) => m.at.slice(0, 10) >= period.from && m.at.slice(0, 10) <= period.to)
+        .filter((m) => localDate(m.at) >= period.from && localDate(m.at) <= period.to)
         .map(({ notes, ...m }) => (excludeNotes ? m : { ...m, notes }))
     }
   }
@@ -107,13 +107,27 @@ export function buildReport(state, period, { sections = Object.keys(REPORT_SECTI
 
 const CSV_HEADER = ['date', 'section', 'metric', 'value', 'min', 'max', 'unit', 'quality', 'source']
 
-function csvCell(v) {
-  if (v === null || v === undefined) return ''
-  const s = typeof v === 'number' ? String(Math.round(v * 100) / 100) : String(v)
-  return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+// Dialetti: 'excel' (Excel/Numbers in italiano: separatore ";" e virgola decimale) o 'standard' ("," e punto)
+export const CSV_DIALECTS = {
+  excel: { sep: ';', decimal: ',', label: 'Excel / Numbers (italiano)' },
+  standard: { sep: ',', decimal: '.', label: 'CSV standard' },
 }
 
-export function reportToCSV(state, period, { sections = Object.keys(REPORT_SECTIONS) } = {}) {
+export function csvCell(v, dialect = CSV_DIALECTS.standard) {
+  if (v === null || v === undefined) return ''
+  let s
+  if (typeof v === 'number') {
+    s = String(Math.round(v * 100) / 100).replace('.', dialect.decimal)
+  } else {
+    s = String(v)
+    // Testo che Excel/Numbers interpreterebbero come formula: neutralizzato con un apostrofo
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`
+  }
+  return s.includes(dialect.sep) || /["\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+export function reportToCSV(state, period, { sections = Object.keys(REPORT_SECTIONS), dialect = 'standard' } = {}) {
+  const fmt = CSV_DIALECTS[dialect] ?? CSV_DIALECTS.standard
   const rows = []
   const row = (date, section, metric, value, unit, quality = 'measured', source = '', min = null, max = null) =>
     rows.push([date, section, metric, value, min, max, unit, quality, source])
@@ -159,7 +173,7 @@ export function reportToCSV(state, period, { sections = Object.keys(REPORT_SECTI
     }
   }
   rows.sort((a, b) => String(a[0]).localeCompare(String(b[0])))
-  return [CSV_HEADER, ...rows].map((r) => r.map(csvCell).join(',')).join('\n')
+  return [CSV_HEADER, ...rows].map((r) => r.map((c) => csvCell(c, fmt)).join(fmt.sep)).join('\r\n')
 }
 
 // ---- Esportazioni tipizzate (ripristinabili) ----

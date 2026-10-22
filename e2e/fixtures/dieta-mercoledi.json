@@ -1,0 +1,24 @@
+{
+  "type": "palestra-diet-plan",
+  "schemaVersion": 3,
+  "id": "dieta-e2e",
+  "name": "Piano E2E",
+  "status": "draft",
+  "days": [
+    {
+      "weekday": 3,
+      "meals": [
+        { "id": "cena", "category": "dinner", "label": "Cena", "time": "20:00", "items": [{ "name": "Salmone", "quantity": 150, "unit": "g" }], "nutrition": null },
+        {
+          "id": "colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "07:30",
+          "items": [{ "name": "Pane integrale", "quantity": 60, "unit": "g", "alternatives": [{ "name": "Gallette", "quantity": 30, "unit": "g" }] }],
+          "alternatives": [{ "label": "Dolce", "items": [{ "name": "Yogurt", "quantity": 125, "unit": "g" }] }],
+          "nutrition": { "kcal": 300, "proteinG": 12 }
+        }
+      ]
+    }
+  ]
+}

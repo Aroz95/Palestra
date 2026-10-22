@@ -14,7 +14,7 @@ import {
 import { FILE_TYPES, LIMITS, SCHEMA_VERSION } from '../../schema/constants'
 import { isLegacyBackup, migrateLegacySession, migrateLegacyState } from '../../schema/migrate'
 import { clone, emptyState, uid } from '../../schema/factories'
-import { toLocalISO } from '../dates'
+import { toLocalISO, localDate } from '../dates'
 
 const emptyBatch = () => ({
   fullBackup: false,
@@ -225,7 +225,7 @@ function describe(collection, item) {
     case 'sessions':
       return `${item.kind === 'swim' ? 'Nuoto' : 'Palestra'} ${item.date}${item.title ? ` · ${item.title}` : ''}`
     case 'measurements':
-      return `Misura ${item.at.slice(0, 10)}`
+      return `Misura ${localDate(item.at)}`
     case 'dietPlans':
       return `Piano "${item.name}"`
     case 'goals':
@@ -309,6 +309,33 @@ function remapProgramClone({ program, templates }) {
   }
 }
 
+const templateContent = ({ history, revision, revisionInUse, programId, ...t }) => t
+const dietContent = ({ history, revision, active, archived, createdAt, updatedAt, ...d }) => d
+const snapshotOf = (x) => {
+  const { history, ...snapshot } = x
+  return { revision: x.revision, savedAt: toLocalISO(), snapshot: clone(snapshot) }
+}
+
+// Aggiornamento di un programma da file. Per ogni scheda:
+// - stesso contenuto → invariata;
+// - contenuto diverso → nuova revisione (attuale + 1), la precedente resta nello storico della scheda;
+// - scheda nuova → aggiunta;
+// - scheda non più presente nel file → archiviata (non cancellata: le sedute vi fanno ancora riferimento).
+function mergeProgramTemplates(all, incoming, pid) {
+  const byId = new Map(incoming.map((t) => [t.id, t]))
+  const out = all.map((t) => {
+    if (t.programId !== pid) return t
+    const inc = byId.get(t.id)
+    if (!inc) return t.archived ? t : { ...t, archived: true }
+    byId.delete(t.id)
+    if (stable(templateContent(t)) === stable(templateContent({ ...inc, programId: pid }))) return t.archived ? { ...t, archived: false } : t
+    return { ...inc, programId: pid, revision: t.revision + 1, revisionInUse: false, history: [...(t.history ?? []), snapshotOf(t)] }
+  })
+  const taken = new Set(all.map((t) => t.id))
+  for (const t of byId.values()) out.push({ ...t, id: taken.has(t.id) ? uid('tpl') : t.id, programId: pid, history: [] })
+  return out
+}
+
 // options: { mode: 'merge'|'replace', decisions: { [key]: 'skip'|'update'|'clone' }, setMainProgram, activateDietPlan }
 export function applyImport(state, batch, preview, options = {}) {
   const mode = options.mode ?? 'merge'
@@ -352,9 +379,7 @@ export function applyImport(state, batch, preview, options = {}) {
         const old = next.programs.find((p) => p.id === pid)
         unit.program = { ...unit.program, id: pid, isMain: old?.isMain ?? false }
         next.programs = next.programs.map((p) => (p.id === pid ? unit.program : p))
-        // Le schede del programma vengono aggiornate; quelle usate dallo storico restano (le sedute hanno già lo snapshot)
-        const ids = new Set(unit.templates.map((t) => t.id))
-        next.workoutTemplates = [...next.workoutTemplates.filter((t) => !(t.programId === pid && ids.has(t.id))), ...unit.templates.map((t) => ({ ...t, programId: pid }))]
+        next.workoutTemplates = mergeProgramTemplates(next.workoutTemplates, unit.templates, pid)
         log.updated.push(it.label)
       } else {
         const clash = new Set(next.workoutTemplates.map((t) => t.id))
@@ -369,7 +394,13 @@ export function applyImport(state, batch, preview, options = {}) {
     const key = STATE_KEY[it.collection]
     const item = clone(it.entry.item)
     if (choice === 'update') {
-      next[key] = next[key].map((x) => (x.id === it.targetId ? { ...item, id: it.targetId, ...(it.collection === 'dietPlans' ? { active: x.active } : {}) } : x))
+      next[key] = next[key].map((x) => {
+        if (x.id !== it.targetId) return x
+        if (it.collection !== 'dietPlans') return { ...item, id: it.targetId }
+        // Piano alimentare: il contenuto del file diventa la revisione successiva, la precedente resta nello storico
+        if (stable(dietContent(x)) === stable(dietContent(item))) return x
+        return { ...item, id: x.id, active: x.active, archived: x.archived, revision: x.revision + 1, history: [...(x.history ?? []), snapshotOf(x)], updatedAt: toLocalISO() }
+      })
       log.updated.push(it.label)
     } else {
       const exists = next[key].some((x) => x.id === item.id)

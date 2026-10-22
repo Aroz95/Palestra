@@ -1,0 +1,860 @@
+{
+  "version": 2,
+  "template": {
+    "name": "Total Body",
+    "bodyWeight": 75,
+    "goal": "Ripresa graduale dell’allenamento dopo circa 2 anni di pausa.",
+    "warmup": [
+      {
+        "id": "wu1",
+        "name": "Tapis roulant",
+        "minutes": 7.5,
+        "speed": 5.5,
+        "note": ""
+      },
+      {
+        "id": "wu2",
+        "name": "Tapis roulant",
+        "minutes": 7.5,
+        "speed": 6.5,
+        "note": ""
+      }
+    ],
+    "exercises": [
+      {
+        "id": "leg-press",
+        "name": "Leg Press",
+        "group": "Gambe / glutei",
+        "type": "reps",
+        "perHand": false,
+        "step": 5,
+        "sets": 3,
+        "reps": 12,
+        "weight": 60,
+        "rest": 60
+      },
+      {
+        "id": "leg-extension",
+        "name": "Leg Extension",
+        "group": "Quadricipiti",
+        "type": "reps",
+        "perHand": false,
+        "step": 2.5,
+        "sets": 3,
+        "reps": 12,
+        "weight": 20,
+        "rest": 60
+      },
+      {
+        "id": "leg-curl",
+        "name": "Leg Curl",
+        "group": "Femorali",
+        "type": "reps",
+        "perHand": false,
+        "step": 2.5,
+        "sets": 3,
+        "reps": 12,
+        "weight": 20,
+        "rest": 60
+      },
+      {
+        "id": "incline-chest-press",
+        "name": "Incline Chest Press",
+        "group": "Pettorali / tricipiti",
+        "type": "reps",
+        "perHand": false,
+        "step": 2.5,
+        "sets": 3,
+        "reps": 12,
+        "weight": 20,
+        "rest": 60
+      },
+      {
+        "id": "pec-deck",
+        "name": "Pectoral Machine (Pec Deck)",
+        "group": "Pettorali",
+        "type": "reps",
+        "perHand": false,
+        "step": 2.5,
+        "sets": 3,
+        "reps": 10,
+        "weight": 15,
+        "rest": 60
+      },
+      {
+        "id": "upper-back",
+        "name": "Upper Back Machine",
+        "group": "Schiena",
+        "type": "reps",
+        "perHand": false,
+        "step": 2.5,
+        "sets": 3,
+        "reps": 10,
+        "weight": 20,
+        "rest": 60
+      },
+      {
+        "id": "alzate-laterali",
+        "name": "Alzate laterali con manubri",
+        "group": "Spalle",
+        "type": "reps",
+        "perHand": true,
+        "step": 1,
+        "sets": 3,
+        "reps": 10,
+        "weight": 6,
+        "rest": 60
+      },
+      {
+        "id": "curl-manubri",
+        "name": "Curl con manubri",
+        "group": "Bicipiti",
+        "type": "reps",
+        "perHand": true,
+        "step": 1,
+        "sets": 3,
+        "reps": 12,
+        "weight": 6,
+        "rest": 60
+      },
+      {
+        "id": "triceps-pushdown",
+        "name": "Triceps Push Down al cavo con barra",
+        "group": "Tricipiti",
+        "type": "reps",
+        "perHand": false,
+        "step": 2.5,
+        "sets": 3,
+        "reps": 12,
+        "weight": 10,
+        "rest": 60
+      },
+      {
+        "id": "pulldown",
+        "name": "Technogym Pulldown Machine",
+        "group": "Dorsali",
+        "type": "reps",
+        "perHand": false,
+        "step": 2.5,
+        "sets": 3,
+        "reps": 12,
+        "weight": 20,
+        "rest": 60
+      },
+      {
+        "id": "hyperextension",
+        "name": "Hyperextension",
+        "group": "Lombari",
+        "type": "reps",
+        "perHand": false,
+        "step": 2.5,
+        "sets": 2,
+        "reps": 12,
+        "weight": 0,
+        "rest": 60
+      },
+      {
+        "id": "plank",
+        "name": "Plank",
+        "group": "Core",
+        "type": "time",
+        "perHand": false,
+        "step": 0,
+        "sets": 3,
+        "reps": 30,
+        "weight": 0,
+        "rest": 60
+      }
+    ],
+    "cooldown": [
+      {
+        "id": "cd1",
+        "name": "Tapis roulant",
+        "minutes": 6,
+        "speed": 5.5,
+        "note": ""
+      },
+      {
+        "id": "cd2",
+        "name": "Tapis roulant",
+        "minutes": 4,
+        "speed": 3.75,
+        "note": "Prima 4, poi 3,5 km/h (durate esatte non rilevate)"
+      }
+    ]
+  },
+  "sessions": [
+    {
+      "id": "seduta-2026-10-20",
+      "date": "2026-10-20",
+      "title": "Seduta originale",
+      "note": "Durata complessiva: circa 95 minuti.",
+      "durationMin": 95,
+      "warmup": [
+        {
+          "id": "lycn1v3m4gt8",
+          "name": "Tapis roulant",
+          "minutes": 7.5,
+          "speed": 5.5,
+          "note": "",
+          "done": true
+        },
+        {
+          "id": "76lb2kjy4gt8",
+          "name": "Tapis roulant",
+          "minutes": 7.5,
+          "speed": 6.5,
+          "note": "",
+          "done": true
+        }
+      ],
+      "exercises": [
+        {
+          "id": "g87ixxvk4gt8",
+          "templateId": "leg-press",
+          "name": "Leg Press",
+          "group": "Gambe / glutei",
+          "type": "reps",
+          "perHand": false,
+          "step": 5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 60,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 60,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 60,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "sr30g4ah4gt8",
+          "templateId": "leg-extension",
+          "name": "Leg Extension",
+          "group": "Quadricipiti",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "73g6wpmb4gt8",
+          "templateId": "leg-curl",
+          "name": "Leg Curl",
+          "group": "Femorali",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "yjyw5k184gt8",
+          "templateId": "incline-chest-press",
+          "name": "Incline Chest Press",
+          "group": "Pettorali / tricipiti",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "ejsjro964gt8",
+          "templateId": "pec-deck",
+          "name": "Pectoral Machine (Pec Deck)",
+          "group": "Pettorali",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 10,
+              "weight": 15,
+              "done": true
+            },
+            {
+              "reps": 10,
+              "weight": 15,
+              "done": true
+            },
+            {
+              "reps": 10,
+              "weight": 15,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "pvakxei74gt8",
+          "templateId": "upper-back",
+          "name": "Upper Back Machine",
+          "group": "Schiena",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 10,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 10,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 10,
+              "weight": 20,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "6brtc7c64gt8",
+          "templateId": "alzate-laterali",
+          "name": "Alzate laterali con manubri",
+          "group": "Spalle",
+          "type": "reps",
+          "perHand": true,
+          "step": 1,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 10,
+              "weight": 6,
+              "done": true
+            },
+            {
+              "reps": 10,
+              "weight": 6,
+              "done": true
+            },
+            {
+              "reps": 10,
+              "weight": 6,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "xsphzbck4gt8",
+          "templateId": "curl-manubri",
+          "name": "Curl con manubri",
+          "group": "Bicipiti",
+          "type": "reps",
+          "perHand": true,
+          "step": 1,
+          "rest": 60,
+          "notes": "Una progressione per serie",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 6,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 8,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 10,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "m6c3suxr4gt8",
+          "templateId": "triceps-pushdown",
+          "name": "Triceps Push Down al cavo con barra",
+          "group": "Tricipiti",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 10,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 10,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 10,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "j65tep234gt8",
+          "templateId": "pulldown",
+          "name": "Technogym Pulldown Machine",
+          "group": "Dorsali",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "sdwvbxi44gt8",
+          "templateId": "plank",
+          "name": "Plank",
+          "group": "Core",
+          "type": "time",
+          "perHand": false,
+          "step": 0,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 30,
+              "weight": 0,
+              "done": true
+            },
+            {
+              "reps": 30,
+              "weight": 0,
+              "done": true
+            },
+            {
+              "reps": 30,
+              "weight": 0,
+              "done": true
+            }
+          ]
+        }
+      ],
+      "cooldown": [
+        {
+          "id": "jmkq1t6b4gt8",
+          "name": "Tapis roulant",
+          "minutes": 6,
+          "speed": 5.5,
+          "note": "",
+          "done": true
+        },
+        {
+          "id": "zjlvoxbd4gt8",
+          "name": "Tapis roulant",
+          "minutes": 4,
+          "speed": 3.75,
+          "note": "Prima 4, poi 3,5 km/h (durate esatte non rilevate)",
+          "done": true
+        }
+      ]
+    },
+    {
+      "id": "seduta-2026-10-22",
+      "date": "2026-10-22",
+      "title": "Nuova seduta",
+      "note": "Recupero dopo nuoto del 21/10. Nessun cedimento.",
+      "durationMin": 95,
+      "warmup": [
+        {
+          "id": "882q8qja4gt8",
+          "name": "Tapis roulant iniziale",
+          "minutes": 10,
+          "speed": 5.5,
+          "note": "",
+          "done": true
+        }
+      ],
+      "exercises": [
+        {
+          "id": "daehm3jn4gt8",
+          "templateId": "leg-press",
+          "name": "Leg Press",
+          "group": "Gambe / glutei",
+          "type": "reps",
+          "perHand": false,
+          "step": 5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 60,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 60,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "dfglqh5i4gt8",
+          "templateId": "leg-extension",
+          "name": "Leg Extension",
+          "group": "Quadricipiti",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "rh5su4hc4gt8",
+          "templateId": "leg-curl",
+          "name": "Leg Curl",
+          "group": "Femorali",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "xu3979z44gt8",
+          "templateId": "incline-chest-press",
+          "name": "Incline Chest Press",
+          "group": "Pettorali / tricipiti",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "ge8hf4cf4gt8",
+          "templateId": "pec-deck",
+          "name": "Pectoral Machine (Pec Deck)",
+          "group": "Pettorali",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 10,
+              "weight": 15,
+              "done": true
+            },
+            {
+              "reps": 10,
+              "weight": 15,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "gz12ygtp4gt8",
+          "templateId": "upper-back",
+          "name": "Upper Back Machine",
+          "group": "Schiena",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 10,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 10,
+              "weight": 20,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "1lu3cgj74gt8",
+          "templateId": "alzate-laterali",
+          "name": "Alzate laterali con manubri",
+          "group": "Spalle",
+          "type": "reps",
+          "perHand": true,
+          "step": 1,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 10,
+              "weight": 6,
+              "done": true
+            },
+            {
+              "reps": 10,
+              "weight": 6,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "3k303txf4gt8",
+          "templateId": "curl-manubri",
+          "name": "Curl con manubri",
+          "group": "Bicipiti",
+          "type": "reps",
+          "perHand": true,
+          "step": 1,
+          "rest": 60,
+          "notes": "Seconda serie più pesante",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 6,
+              "done": true
+            },
+            {
+              "reps": 10,
+              "weight": 8,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "3yuvtw9j4gt8",
+          "templateId": "triceps-pushdown",
+          "name": "Triceps Push Down al cavo con barra",
+          "group": "Tricipiti",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 10,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 10,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "cziqggyr4gt8",
+          "templateId": "pulldown",
+          "name": "Technogym Pulldown Machine",
+          "group": "Dorsali",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 20,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "hyper-22",
+          "templateId": "hyperextension",
+          "name": "Hyperextension",
+          "group": "Lombari",
+          "type": "reps",
+          "perHand": false,
+          "step": 2.5,
+          "rest": 60,
+          "notes": "Corpo libero",
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 0,
+              "done": true
+            },
+            {
+              "reps": 12,
+              "weight": 0,
+              "done": true
+            }
+          ]
+        },
+        {
+          "id": "tj2sn7cf4gt8",
+          "templateId": "plank",
+          "name": "Plank",
+          "group": "Core",
+          "type": "time",
+          "perHand": false,
+          "step": 0,
+          "rest": 60,
+          "notes": "",
+          "sets": [
+            {
+              "reps": 30,
+              "weight": 0,
+              "done": true
+            },
+            {
+              "reps": 25,
+              "weight": 0,
+              "done": true
+            }
+          ]
+        }
+      ],
+      "cooldown": [
+        {
+          "id": "tuvau5ex4gt8",
+          "name": "Tapis roulant",
+          "minutes": 6,
+          "speed": 5.5,
+          "note": "",
+          "done": true
+        },
+        {
+          "id": "qx5wstus4gt8",
+          "name": "Tapis roulant",
+          "minutes": 4,
+          "speed": 3.75,
+          "note": "Prima 4, poi 3,5 km/h (durate esatte non rilevate)",
+          "done": true
+        }
+      ]
+    }
+  ],
+  "activeSessionId": null,
+  "settings": {
+    "restSeconds": 60,
+    "autoRest": true,
+    "sound": false
+  }
+}

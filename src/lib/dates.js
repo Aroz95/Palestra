@@ -64,6 +64,13 @@ export function combineDateTime(dateISO, hhmm) {
   return toLocalISO(d)
 }
 
+// Giorno locale di un istante ISO (un file importato può usare un altro fuso, es. "Z")
+export function localDate(iso) {
+  if (!iso) return null
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? String(iso).slice(0, 10) : todayISO(d)
+}
+
 export function timeOf(iso) {
   if (!iso) return ''
   const d = new Date(iso)

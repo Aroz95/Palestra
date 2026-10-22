@@ -1,6 +1,9 @@
 // Scarica un contenuto come file
 export function downloadText(filename, text, type = 'application/json') {
-  const blob = new Blob([text], { type })
+  downloadBlob(filename, new Blob([text], { type }))
+}
+
+export function downloadBlob(filename, blob) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url

@@ -19,10 +19,10 @@ Questo documento descrive i file che l’app sa **importare** ed **esportare**. 
 | `type` | Contenuto | Importazione |
 |---|---|---|
 | `palestra-backup` | tutti i dati | unione (predefinita) o sostituzione completa con doppia conferma |
-| `palestra-program` | programma con schede A/B e calendario | aggiunto; se già presente: salta / aggiorna / copia |
+| `palestra-program` | programma con schede A/B e calendario | aggiunto; se già presente: salta / aggiorna / copia. Con “aggiorna” ogni scheda con contenuto diverso diventa la revisione successiva e le schede non più presenti vengono archiviate |
 | `palestra-seduta` | una seduta di sala pesi | aggiunta allo storico |
 | `palestra-swim-session` | una nuotata (o `sessions: [...]`) | aggiunta allo storico |
-| `palestra-diet-plan` | un piano alimentare | aggiunto, **non** attivato in automatico |
+| `palestra-diet-plan` | un piano alimentare | aggiunto, **non** attivato in automatico; con “aggiorna” diventa la revisione successiva |
 | `palestra-body-measurements` | elenco di misure | ogni misura è un nuovo record, nessuna sovrascrittura |
 | `palestra-report` | riepilogo per periodo | **non importabile** (non è un backup) |
 
@@ -150,7 +150,7 @@ Passo e numero di vasche sono calcolati solo da distanze misurate; con una dista
 | Campo | Note |
 |---|---|
 | `name` | obbligatorio |
-| `status` | `draft` (bozza) \| `validated` (validato da un professionista, con `validatedBy`) |
+| `status` | `draft` (bozza) \| `validated` (validato da un professionista: richiede `validatedBy`, altrimenti viene importato come bozza con un avviso) |
 | `author`, `goal`, `notes`, `validFrom`, `validTo` | facoltativi |
 | `days[]` | `{ weekday (1–7) oppure date, dayType: "any" \| "training" \| "rest", label, meals[] }` |
 
@@ -169,7 +169,7 @@ Stesso `weekday` con `dayType` diversi = varianti per giorni di allenamento e di
 { "type": "palestra-body-measurements", "schemaVersion": 3, "measurements": [ { "date": "2026-10-22", "time": "07:30", "weightKg": 75, "waistCm": 90, "abdomenCm": 100 } ] }
 ```
 
-Campi: `at` (istante) oppure `date` + `time`, `weightKg`, `waistCm` (girovita, punto più stretto), `abdomenCm` (circonferenza addominale all’ombelico), `hipsCm`, `chestCm`, `armCm`, `notes`, `source` (`manual` | `imported` | `device`). Sono ammessi dati parziali, ma almeno un valore è obbligatorio.
+Campi: `at` (istante ISO) oppure `date` (`AAAA-MM-GG`) + `time` (`HH:MM`, facoltativo); gli errori sono indicati sul campo usato nel file, `weightKg`, `waistCm` (girovita, punto più stretto), `abdomenCm` (circonferenza addominale all’ombelico), `hipsCm`, `chestCm`, `armCm`, `notes`, `source` (`manual` | `imported` | `device`). Sono ammessi dati parziali, ma almeno un valore è obbligatorio.
 
 ## Backup (`palestra-backup`)
 
@@ -177,4 +177,4 @@ Contiene lo stato completo: `profile`, `goals`, `measurements`, `programs`, `wor
 
 ## Report (`palestra-report`)
 
-È generato da *Progressi* e contiene `type`, `schemaVersion`, `generatedAt`, `period`, `units`, `filters`, `summary`, `dataQuality`, `notes` ed eventualmente `details`. Il CSV ha una riga per valore: `date,section,metric,value,min,max,unit,quality,source`. Un report **non** è un backup e non è importabile.
+È generato da *Progressi* e contiene `type`, `schemaVersion`, `generatedAt`, `period`, `units`, `filters`, `summary`, `dataQuality`, `notes` ed eventualmente `details`. Il CSV ha una riga per valore: `date,section,metric,value,min,max,unit,quality,source`, in formato Excel/Numbers italiano (`;` e virgola decimale) o standard (`,` e punto); i testi che inizierebbero una formula vengono preceduti da un apostrofo. Il PDF contiene gli stessi valori. Un report **non** è un backup e non è importabile.

@@ -4,6 +4,10 @@ import { toLocalISO, todayISO, combineDateTime } from '../lib/dates'
 
 // ---- Conversione degli oggetti legacy (schema v1/v2) ----
 
+// Nella v2 un carico 0 su un esercizio a ripetizioni indicava il corpo libero
+const legacyEquipment = (isTime, perHand, weights) =>
+  isTime ? 'bodyweight' : perHand ? 'dumbbell' : weights.length && weights.every((w) => w === 0) ? 'bodyweight' : 'machine'
+
 export function migrateLegacyTemplateExercise(ex) {
   const isTime = ex.type === 'time'
   return {
@@ -11,7 +15,7 @@ export function migrateLegacyTemplateExercise(ex) {
     name: ex.name ?? 'Esercizio',
     group: ex.group ?? '',
     type: isTime ? 'time' : 'reps',
-    equipment: isTime ? 'bodyweight' : ex.perHand ? 'dumbbell' : 'machine',
+    equipment: legacyEquipment(isTime, ex.perHand, [ex.weight ?? null]),
     perHand: !!ex.perHand,
     step: ex.step || (isTime ? 0 : 2.5),
     sets: ex.sets ?? 3,
@@ -64,7 +68,7 @@ export function migrateLegacySession(s, { templateId = null, templateExerciseIds
       name: ex.name ?? 'Esercizio',
       group: ex.group ?? '',
       type: isTime ? 'time' : 'reps',
-      equipment: isTime ? 'bodyweight' : ex.perHand ? 'dumbbell' : 'machine',
+      equipment: legacyEquipment(isTime, ex.perHand, (ex.sets ?? []).map((st) => st.weight ?? null)),
       perHand: !!ex.perHand,
       step: ex.step || (isTime ? 0 : 2.5),
       rest: ex.rest ?? DEFAULT_REST,

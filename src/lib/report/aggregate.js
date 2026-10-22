@@ -2,7 +2,7 @@
 import { strengthStats, sessionDuration, personalRecords } from '../stats'
 import { swimDistances } from '../swim'
 import { scheduleAdherence } from '../calendar'
-import { addDays } from '../dates'
+import { addDays, localDate } from '../dates'
 
 const inPeriod = (date, { from, to }) => date >= from && date <= to
 const counted = (s) => ['completed', 'in_progress'].includes(s.status)
@@ -80,8 +80,8 @@ export function aggregateSwim(state, period) {
 export function weightSeries(measurements) {
   const pts = measurements
     .filter((m) => m.weightKg != null)
-    .map((m) => ({ date: m.at.slice(0, 10), at: m.at, value: m.weightKg }))
-    .sort((a, b) => a.at.localeCompare(b.at))
+    .map((m) => ({ date: localDate(m.at), at: m.at, value: m.weightKg }))
+    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
   return pts.map((p) => {
     const win = pts.filter((q) => q.date <= p.date && q.date > addDays(p.date, -7))
     return { ...p, avg7: win.length >= 2 ? avg(win.map((q) => q.value)) : null }
@@ -91,12 +91,12 @@ export function weightSeries(measurements) {
 export function measurementSeries(measurements, key) {
   return measurements
     .filter((m) => m[key] != null)
-    .map((m) => ({ date: m.at.slice(0, 10), at: m.at, value: m[key] }))
-    .sort((a, b) => a.at.localeCompare(b.at))
+    .map((m) => ({ date: localDate(m.at), at: m.at, value: m[key] }))
+    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
 }
 
 export function aggregateBody(state, period) {
-  const list = state.measurements.filter((m) => inPeriod(m.at.slice(0, 10), period))
+  const list = state.measurements.filter((m) => inPeriod(localDate(m.at), period))
   const stat = (key) => {
     const s = measurementSeries(list, key)
     if (!s.length) return null

@@ -90,10 +90,14 @@ export function progressionHint(prev, step) {
   return base
 }
 
-// Miglior carico per esercizio confrontabile (solo serie completate con carico noto)
+// Record per esercizio confrontabile: solo sedute svolte, serie completate con carico noto.
+// Ogni miglioramento è registrato alla sua data: "nuovo nel periodo" = miglioramento avvenuto nel periodo
+// rispetto al migliore precedente (indipendentemente da cosa accade dopo).
+const COUNTED = ['completed', 'in_progress']
 export function personalRecords(sessions, { from, to } = {}) {
   const best = new Map()
-  const sorted = sessions.filter((s) => s.kind === 'strength').sort((a, b) => a.date.localeCompare(b.date))
+  const events = []
+  const sorted = sessions.filter((s) => s.kind === 'strength' && COUNTED.includes(s.status)).sort((a, b) => a.date.localeCompare(b.date))
   for (const s of sorted) {
     for (const ex of s.exercises) {
       if (ex.type === 'time') continue
@@ -101,19 +105,16 @@ export function personalRecords(sessions, { from, to } = {}) {
         if (!st.done || st.weight == null || st.reps == null || st.weight <= 0) continue
         const k = comparableKey(ex)
         const cur = best.get(k)
-        const better = !cur || st.weight > cur.weight || (st.weight === cur.weight && st.reps > cur.reps)
-        if (better) {
-          const prevBest = cur ? { weight: cur.weight, reps: cur.reps, date: cur.date } : null
-          best.set(k, { key: k, name: ex.name, perHand: ex.perHand, weight: st.weight, reps: st.reps, date: s.date, prevBest })
-        }
+        if (cur && !(st.weight > cur.weight || (st.weight === cur.weight && st.reps > cur.reps))) continue
+        const rec = { key: k, name: ex.name, perHand: ex.perHand, weight: st.weight, reps: st.reps, date: s.date, prevBest: cur ? { weight: cur.weight, reps: cur.reps, date: cur.date } : null }
+        best.set(k, rec)
+        events.push(rec)
       }
     }
   }
-  const all = [...best.values()]
-  return {
-    all,
-    newInPeriod: from ? all.filter((r) => r.date >= from && r.date <= to && r.prevBest) : [],
-  }
+  const newInPeriod = new Map()
+  if (from) for (const e of events) if (e.prevBest && e.date >= from && e.date <= to) newInPeriod.set(e.key, { ...e, prevBest: newInPeriod.get(e.key)?.prevBest ?? e.prevBest })
+  return { all: [...best.values()], newInPeriod: [...newInPeriod.values()] }
 }
 
 // Serie storica di un esercizio confrontabile

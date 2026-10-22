@@ -4,6 +4,7 @@ import { ADHERENCE, MEAL_CATEGORIES } from '../schema/constants'
 import { newDietPlan, uid, clone } from '../schema/factories'
 import { addDays, fmtDate, todayISO, toLocalISO, weekdayOf, WEEKDAYS_SHORT } from '../lib/dates'
 import { dayNutrition } from '../lib/report/aggregate'
+import { pickDay, sortedMeals, nextMeal, isValidated } from '../lib/diet'
 import { occurrencesOn } from '../lib/calendar'
 import { fmtNum } from '../lib/stats'
 import * as A from '../lib/actions'
@@ -43,22 +44,21 @@ export default function DietView({ state, update, onImport }) {
   }
 
   const shown = editing ?? plan
-  const byDate = shown?.days.some((d) => d.date)
+  const datedDays = shown ? shown.days.filter((d) => d.date).sort((a, b) => a.date.localeCompare(b.date)) : []
   const wd = weekdayOf(date)
-  const candidates = shown ? shown.days.filter((d) => (byDate ? d.date === date : d.weekday === wd)) : []
   // Giorni di allenamento/riposo: scelta automatica in base al calendario, modificabile
   const isTraining = occurrencesOn(state, date).some((o) => o.kind === 'strength' || o.kind === 'swim') || state.sessions.some((s) => s.date === date)
-  const types = [...new Set(candidates.map((d) => d.dayType))]
-  const effType = dayType ?? (types.includes(isTraining ? 'training' : 'rest') ? (isTraining ? 'training' : 'rest') : types[0])
-  const day = candidates.find((d) => d.dayType === effType) ?? candidates[0] ?? null
-  const meals = day ? [...day.meals].sort((a, b) => (a.time ?? '99').localeCompare(b.time ?? '99')) : []
+  const { day, types, type: effType } = pickDay(shown, date, { isTraining, dayType })
+  const meals = sortedMeals(day)
   const isToday = date === todayISO()
-  const nextMealId = isToday ? (meals.find((m) => m.time && m.time >= nowHHMM()) ?? meals[meals.length - 1])?.id : null
+  const nextMealId = isToday ? nextMeal(day, nowHHMM())?.id : null
   const nutrition = day ? dayNutrition(day) : null
   const weekStart = addDays(date, 1 - wd)
 
   const setPlan = (p) => update((s) => A.upsertIn(s, 'dietPlans', p))
   const saveRevision = () => {
+    // "Validato" solo con l'indicazione di chi l'ha validato: nessuna autocertificazione implicita
+    if (editing.status === 'validated' && !editing.validatedBy?.trim()) return alert('Per segnare il piano come validato indica il professionista che l’ha validato, altrimenti lascialo come bozza.')
     const prev = plan
     const { history, ...snapshot } = prev
     setPlan({ ...editing, revision: prev.revision + 1, updatedAt: toLocalISO(), history: [...(prev.history ?? []), { revision: prev.revision, savedAt: toLocalISO(), snapshot: clone(snapshot) }] })
@@ -87,7 +87,7 @@ export default function DietView({ state, update, onImport }) {
         <Card className="space-y-2">
           <div className="flex flex-wrap items-center gap-1">
             {plan.active && <Chip className="bg-emerald-600 text-white">Attivo</Chip>}
-            {plan.status === 'validated' ? (
+            {isValidated(plan) ? (
               <Chip className="bg-sky-700 text-white">Validato{plan.validatedBy ? ` da ${plan.validatedBy}` : ''}</Chip>
             ) : (
               <Chip className="bg-amber-500/20 text-amber-200">Bozza — non validato da un professionista</Chip>
@@ -150,9 +150,15 @@ export default function DietView({ state, update, onImport }) {
       {editing && <PlanMetaEditor plan={editing} onChange={setEditing} onSave={saveRevision} onCancel={() => setEditing(null)} />}
 
       {/* Navigazione giorni */}
-      {byDate ? (
-        <Select value={date} onChange={setDate} aria-label="Giorno" options={shown.days.map((d) => ({ value: d.date, label: fmtDate(d.date) }))} />
-      ) : (
+      {datedDays.length > 0 && (
+        <Select
+          value={datedDays.some((d) => d.date === date) ? date : ''}
+          onChange={(v) => v && setDate(v)}
+          aria-label="Giorni con data specifica"
+          options={[{ value: '', label: `Giorni con data specifica (${datedDays.length})` }, ...datedDays.map((d) => ({ value: d.date, label: `${fmtDate(d.date)}${d.label ? ` · ${d.label}` : ''}` }))]}
+        />
+      )}
+      {(
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5, 6, 7].map((n) => {
             const d = addDays(weekStart, n - 1)
@@ -174,7 +180,7 @@ export default function DietView({ state, update, onImport }) {
       )}
       <div className="flex items-center justify-between px-1 text-sm">
         <span className="capitalize text-slate-300">{fmtDate(date)}</span>
-        {!byDate && (
+        {(
           <span className="flex gap-1">
             <button onClick={() => setDate(addDays(date, -7))} className="text-slate-400" aria-label="Settimana precedente">‹</button>
             <button onClick={() => setDate(todayISO())} className="text-xs text-emerald-400">oggi</button>
@@ -212,8 +218,7 @@ export default function DietView({ state, update, onImport }) {
       {!day && (
         <Empty
           action={
-            editing &&
-            !byDate && (
+            editing && (
               <button onClick={() => setEditing({ ...editing, days: [...editing.days, { id: uid('day'), weekday: wd, date: null, dayType: 'any', label: '', meals: [] }] })} className="btn-ghost text-sm">
                 + Aggiungi questo giorno al piano
               </button>
@@ -295,6 +300,9 @@ function MealCard({ meal: m, next, state, update, plan, date }) {
           : 'Valori nutrizionali non disponibili'}
       </div>
       {m.notes && <p className="text-xs text-slate-400">{m.notes}</p>}
+      {log && log.planRevision != null && log.planRevision !== plan.revision && (
+        <p className="text-[11px] text-amber-300">Registrato come “{ADHERENCE[log.status]}” sulla revisione {log.planRevision} del piano (il pasto può essere cambiato).</p>
+      )}
       <div className="flex flex-wrap items-center gap-1 pt-1">
         <span className="text-[11px] text-slate-500">Diario (facoltativo):</span>
         {Object.entries(ADHERENCE).map(([k, label]) => (

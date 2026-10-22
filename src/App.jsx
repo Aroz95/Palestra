@@ -38,7 +38,7 @@ const TRAINING_TABS = [
 ]
 
 export default function App() {
-  const [state, setState, status] = usePersistentState()
+  const [state, setState, status, commit] = usePersistentState()
   const [tab, setTab] = useLocalStorage('palestra:tab', 'today')
   const [sub, setSub] = useLocalStorage('palestra:subtabs', { training: 'session', more: 'profile' })
   const [workout, setWorkout] = useLocalStorage('palestra:workout-mode', false)
@@ -109,6 +109,7 @@ export default function App() {
       {showTimer && <TimerBar timers={timers} restSeconds={state.settings.restSeconds} />}
 
       <main className="mx-auto max-w-2xl px-4 pb-28 pt-4">
+        <SaveBadge status={status} />
         {status.migrated && !hideMigrated && (
           <div className="mb-4 rounded-2xl border border-sky-800/60 bg-sky-950/40 p-3 text-sm text-sky-100">
             Dati aggiornati alla nuova versione: sedute, scheda e storico sono stati conservati (la scheda è ora la “Scheda A” del programma principale). Una copia dei dati precedenti è salvata in Altro → Opzioni.
@@ -173,18 +174,23 @@ export default function App() {
             setSub={(v) => setSub((s) => ({ ...s, more: v }))}
             status={status}
             importProps={{
-              onApply: (next, label) => {
-                setUndo({ label, prev: stateRef.current })
-                setState(next)
+              // L'importazione è considerata applicata solo dopo il salvataggio riuscito (con snapshot dello stato precedente)
+              onApply: async (next, label) => {
+                const prev = stateRef.current
+                await commit(next, { kind: 'import', label, state: prev })
+                setUndo({ label, prev, after: next })
               },
-              undo,
-              onUndo: () => {
-                setState(undo.prev)
+              // Annullabile solo finché non ci sono modifiche successive all'importazione
+              undo: undo ? { label: undo.label, available: state === undo.after } : null,
+              onUndo: async () => {
+                if (stateRef.current !== undo.after) return
+                await commit(undo.prev, { kind: 'undo-import', label: undo.label, state: undo.after })
                 setUndo(null)
               },
             }}
-            onReset={() => {
-              setState(emptyState())
+            onReset={async () => {
+              await commit(emptyState(), { kind: 'reset', label: 'Cancella tutti i dati', state: stateRef.current })
+              setUndo(null)
               timers.resetStopwatch()
               timers.stopRest()
               setWorkout(false)
@@ -212,6 +218,23 @@ export default function App() {
           ))}
         </div>
       </nav>
+    </div>
+  )
+}
+
+// Stato del salvataggio sempre visibile: salvato / in corso / non salvato
+function SaveBadge({ status }) {
+  const map = {
+    saved: ['text-emerald-400', '● Salvato sul dispositivo'],
+    saving: ['text-slate-400', '○ Salvataggio…'],
+    error: ['text-rose-400', '▲ Non salvato'],
+    idle: ['text-slate-500', ''],
+  }
+  const [cls, label] = map[status.save] ?? map.idle
+  return (
+    <div className={`-mt-2 mb-2 text-right text-[11px] ${cls}`} role="status" aria-live="polite">
+      {label}
+      {status.backend === 'localstorage' && status.save !== 'error' ? ' (archivio di ripiego)' : ''}
     </div>
   )
 }

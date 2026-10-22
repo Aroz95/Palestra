@@ -38,7 +38,10 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
 
   const preview = parsed && !parsed.errors.length ? previewImport(state, parsed.batch) : null
 
-  const apply = () => {
+  const [busy, setBusy] = useState(false)
+  const [failure, setFailure] = useState(null)
+
+  const apply = async () => {
     const pv = previewImport(state, parsed.batch) // ricalcolato sullo stato attuale
     if (mode === 'replace') {
       if (!confirm('Sostituire TUTTI i dati attuali con quelli del backup?')) return
@@ -52,7 +55,17 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
       alert(`Importazione annullata, nessun dato modificato: ${e.message}`)
       return
     }
-    onApply(res.state, parsed.fileName || 'testo incollato')
+    setBusy(true)
+    setFailure(null)
+    try {
+      // Successo mostrato solo dopo il salvataggio riuscito
+      await onApply(res.state, parsed.fileName || 'testo incollato')
+    } catch (e) {
+      setFailure(`Importazione NON salvata: ${e.message} I dati precedenti sono intatti; puoi riprovare.`)
+      return
+    } finally {
+      setBusy(false)
+    }
     setLog({ ...res.log, file: parsed.fileName || 'testo incollato' })
     setParsed(null)
     setPaste('')
@@ -162,12 +175,20 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
               {mode === 'merge' && parsed.batch.programs.length > 0 && <Toggle checked={setMain} onChange={setSetMain} label="Imposta il programma importato come principale" />}
               {mode === 'merge' && parsed.batch.dietPlans.length > 0 && <Toggle checked={activateDiet} onChange={setActivateDiet} label="Imposta il piano importato come attivo" />}
               <div className="flex gap-2">
-                <button onClick={apply} className="btn flex-1 bg-emerald-500 text-slate-950">{mode === 'replace' ? 'Sostituisci' : 'Importa'}</button>
+                <button onClick={apply} disabled={busy} className="btn flex-1 bg-emerald-500 text-slate-950 disabled:opacity-50">
+                  {busy ? 'Salvataggio…' : mode === 'replace' ? 'Sostituisci' : 'Importa'}
+                </button>
                 <button onClick={() => setParsed(null)} className="btn-ghost">Annulla</button>
               </div>
             </>
           )}
         </Card>
+      )}
+
+      {failure && (
+        <div role="alert" className="rounded-2xl bg-rose-950/60 p-3 text-sm text-rose-200">
+          {failure}
+        </div>
       )}
 
       {log && (
@@ -187,9 +208,29 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
       )}
 
       {undo && (
-        <Card tone="info" className="flex items-center justify-between gap-2 text-sm">
-          <span className="text-slate-200">Ultima importazione: {undo.label}</span>
-          <button onClick={onUndo} className="btn-ghost text-sm">Annulla importazione</button>
+        <Card tone="info" className="space-y-2 text-sm">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-slate-200">Ultima importazione: {undo.label}</span>
+            {undo.available && (
+              <button
+                onClick={async () => {
+                  try {
+                    await onUndo()
+                  } catch (e) {
+                    setFailure(`Annullamento NON salvato: ${e.message}`)
+                  }
+                }}
+                className="btn-ghost text-sm"
+              >
+                Annulla importazione
+              </button>
+            )}
+          </div>
+          {!undo.available && (
+            <p className="text-xs text-slate-400">
+              Annullamento non più disponibile: dopo l’importazione ci sono state altre modifiche, che verrebbero perse. Lo stato precedente all’importazione resta salvato come copia di sicurezza in Altro → Opzioni.
+            </p>
+          )}
         </Card>
       )}
     </div>

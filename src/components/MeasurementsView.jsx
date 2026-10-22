@@ -3,7 +3,7 @@ import { Card, Empty, Field, NumberInput, Section, Select, TextInput } from './u
 import LineChart from './LineChart'
 import { MEASUREMENT_FIELDS } from '../schema/constants'
 import { newMeasurement } from '../schema/factories'
-import { combineDateTime, todayISO, timeOf, fmtDateShort } from '../lib/dates'
+import { combineDateTime, todayISO, timeOf, fmtDateShort, localDate } from '../lib/dates'
 import { weightSeries } from '../lib/report/aggregate'
 import { fmtNum } from '../lib/stats'
 import * as A from '../lib/actions'
@@ -14,7 +14,7 @@ const SOURCES = { manual: 'Manuale', imported: 'Importata', device: 'Dispositivo
 
 export default function MeasurementsView({ state, update }) {
   const [draft, setDraft] = useState(null)
-  const list = [...state.measurements].sort((a, b) => b.at.localeCompare(a.at))
+  const list = [...state.measurements].sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
   const ws = weightSeries(state.measurements)
 
   const startNew = () => setDraft({ ...newMeasurement(), date: todayISO(), time: new Date().toTimeString().slice(0, 5) })
@@ -85,7 +85,7 @@ export default function MeasurementsView({ state, update }) {
             <Card key={m.id} className="space-y-1 py-3">
               <div className="flex items-baseline justify-between">
                 <span className="font-semibold capitalize text-white">
-                  {fmtDateShort(m.at.slice(0, 10))} {timeOf(m.at) !== '00:00' ? timeOf(m.at) : ''}
+                  {fmtDateShort(localDate(m.at))} {timeOf(m.at) !== '00:00' ? timeOf(m.at) : ''}
                 </span>
                 <span className="text-xs text-slate-400">{SOURCES[m.source]}</span>
               </div>
@@ -98,7 +98,7 @@ export default function MeasurementsView({ state, update }) {
               </div>
               {m.notes && <p className="text-xs text-slate-400">{m.notes}</p>}
               <div className="flex gap-3 pt-1 text-xs">
-                <button onClick={() => setDraft({ ...m, date: m.at.slice(0, 10), time: timeOf(m.at) })} className="text-slate-300 underline">Modifica</button>
+                <button onClick={() => setDraft({ ...m, date: localDate(m.at), time: timeOf(m.at) })} className="text-slate-300 underline">Modifica</button>
                 <button onClick={() => confirm('Eliminare questa misura?') && update((s) => A.removeIn(s, 'measurements', m.id))} className="text-rose-400 underline">Elimina</button>
               </div>
             </Card>

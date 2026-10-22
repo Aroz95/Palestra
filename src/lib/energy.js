@@ -4,6 +4,7 @@
 // - Nuoto: MET 5,8–8,3 (Compendium, nuoto in vasca da moderato a sostenuto).
 // kcal totali = MET × peso × ore; kcal attive = (MET − 1) × peso × ore (esclude il metabolismo a riposo).
 import { cardioMinutes } from './stats'
+import { localDate } from './dates'
 
 const KCAL_PER_L_O2 = 5
 
@@ -56,7 +57,7 @@ export function estimateEnergy(session, weightKg, durationMin) {
 // Peso più recente registrato fino alla data indicata (nessun valore inventato)
 export function bodyWeightAt(measurements, date) {
   const m = measurements
-    .filter((x) => x.weightKg != null && x.at.slice(0, 10) <= date)
-    .sort((a, b) => b.at.localeCompare(a.at))[0]
-  return m ? { weightKg: m.weightKg, date: m.at.slice(0, 10) } : null
+    .filter((x) => x.weightKg != null && localDate(x.at) <= date)
+    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))[0]
+  return m ? { weightKg: m.weightKg, date: localDate(m.at) } : null
 }

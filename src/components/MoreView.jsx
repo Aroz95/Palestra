@@ -8,7 +8,7 @@ import { toLocalISO } from '../lib/dates'
 import * as A from '../lib/actions'
 import { exportBackup, exportProgram, exportDietPlan, exportMeasurements, fileNames } from '../lib/report'
 import { downloadJSON } from '../lib/download'
-import { getLegacySnapshot } from '../lib/persist'
+import { getLegacySnapshot, getSnapshot } from '../lib/persist'
 
 export const MORE_TABS = [
   { id: 'profile', label: 'Profilo' },
@@ -89,6 +89,8 @@ function ProfileView({ state, update }) {
   )
 }
 
+const SNAPSHOT_LABELS = { import: 'Prima dell’ultima importazione', 'undo-import': 'Prima dell’ultimo annullamento', reset: 'Prima della cancellazione dei dati' }
+
 const GOAL_STATUS = { active: 'Attivo', achieved: 'Raggiunto', paused: 'In pausa', abandoned: 'Abbandonato' }
 
 function GoalCard({ goal: g, onChange, onRemove }) {
@@ -161,11 +163,13 @@ function SettingsView({ state, update, status, onReset }) {
   const [quota, setQuota] = useState(null)
   const [persisted, setPersisted] = useState(null)
   const [snapshot, setSnapshot] = useState(null)
+  const [copies, setCopies] = useState([])
   useEffect(() => {
     navigator.storage?.estimate?.().then(setQuota).catch(() => {})
     navigator.storage?.persisted?.().then(setPersisted).catch(() => {})
     getLegacySnapshot().then(setSnapshot)
-  }, [])
+    Promise.all(Object.keys(SNAPSHOT_LABELS).map((k) => getSnapshot(k).then((v) => v && { kind: k, ...v }))).then((l) => setCopies(l.filter(Boolean)))
+  }, [status.savedAt])
   const mb = (b) => `${(b / 1024 / 1024).toFixed(1)} MB`
 
   return (
@@ -200,9 +204,33 @@ function SettingsView({ state, update, status, onReset }) {
               <button onClick={() => downloadJSON(`palestra-dati-versione-precedente-${snapshot.savedAt.slice(0, 10)}.json`, snapshot.data)} className="ml-2 underline">Scarica</button>
             </div>
           )}
+          {copies.length > 0 && (
+            <div className="space-y-1 rounded-xl bg-slate-800/60 p-3 text-xs text-slate-300">
+              <div className="font-semibold text-slate-200">Copie di sicurezza automatiche</div>
+              {copies.map((c) => (
+                <div key={c.kind} className="flex items-center justify-between gap-2">
+                  <span>
+                    {SNAPSHOT_LABELS[c.kind]} · {c.savedAt.slice(0, 16).replace('T', ' ')}
+                    {c.label ? ` · ${c.label}` : ''}
+                  </span>
+                  <button onClick={() => downloadJSON(`palestra-copia-${c.kind}-${c.savedAt.slice(0, 10)}.json`, exportBackup(c.state))} className="underline">
+                    Scarica
+                  </button>
+                </div>
+              ))}
+              <p className="text-slate-500">Ogni copia è un backup completo reimportabile con “Importa”.</p>
+            </div>
+          )}
           <Toggle checked={s.reportExcludeNotes} onChange={(reportExcludeNotes) => set({ reportExcludeNotes })} label="Escludi le note dai report condivisi (predefinito)" />
           <button
-            onClick={() => confirm('Cancellare programmi, sedute, misure, piani e profilo? L’operazione non si può annullare: scarica prima un backup.') && confirm('Conferma definitiva: cancellare tutti i dati?') && onReset()}
+            onClick={async () => {
+              if (!confirm('Cancellare programmi, sedute, misure, piani e profilo? Scarica prima un backup.') || !confirm('Conferma definitiva: cancellare tutti i dati?')) return
+              try {
+                await onReset()
+              } catch (e) {
+                alert(`Cancellazione non eseguita: ${e.message}`)
+              }
+            }}
             className="rounded-xl px-3 py-2 text-sm text-rose-400 active:bg-rose-950"
           >
             Cancella tutti i dati

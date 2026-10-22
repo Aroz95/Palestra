@@ -21,21 +21,23 @@ Attività previste dal calendario con stato (prevista, in corso, completata, sal
 Piani importati in JSON o creati a mano: consultazione per giorno e pasto, alternative, giorni di allenamento/riposo, nutrienti solo se dichiarati (altrimenti “ND”), bozza vs validato da un professionista, revisioni, duplicazione, archiviazione. Diario facoltativo dei pasti (seguito / modificato / saltato).
 
 ### Progressi
-Periodi 7/30/90 giorni, mese, anno o personalizzato, con confronto rispetto al periodo precedente: frequenza e aderenza al calendario, serie/ripetizioni/volume/RIR, record solo su esercizi confrontabili, grafico per esercizio, nuoto (misurato e stimato separati), peso con media mobile a 7 giorni, girovita e addome, alimentazione, calorie. **Report** in JSON e CSV con scelta delle sezioni e del dettaglio, anteprima ed esclusione delle note personali.
+Periodi 7/30/90 giorni, mese, anno o personalizzato, con confronto rispetto al periodo precedente: frequenza e aderenza al calendario, serie/ripetizioni/volume/RIR, record solo su esercizi confrontabili, grafico per esercizio, nuoto (misurato e stimato separati), peso con media mobile a 7 giorni, girovita e addome, alimentazione, calorie. **Report** in **PDF** (A4, generato sul dispositivo), JSON e CSV (formato Excel/Numbers italiano o standard) con scelta delle sezioni e del dettaglio, anteprima ed esclusione delle note personali.
 
 ### Altro
 Profilo e obiettivi (con storico delle modifiche, senza notifiche o promesse), misure corporee (girovita e addome distinti), **Importa**, **Esporta**, impostazioni del timer, stato dell’archivio e privacy.
 
 ## Import / export
 
-Un’unica schermata **Altro → Importa** accetta file JSON (anche incollati come testo): backup, programmi A/B, sedute, nuotate, piani alimentari, misure. Prima di salvare mostra un’anteprima (es. “1 programma, 2 schede”) con errori e avvisi indicati per campo. Per ogni elemento già presente si sceglie **salta / aggiorna / copia**. L’importazione è atomica (con un errore non viene modificato nulla), si può annullare l’ultima importazione e scaricarne il log. La sostituzione completa è possibile solo da backup, con doppia conferma e copia di sicurezza.
+Un’unica schermata **Altro → Importa** accetta file JSON (anche incollati come testo): backup, programmi A/B, sedute, nuotate, piani alimentari, misure. Prima di salvare mostra un’anteprima (es. “1 programma, 2 schede”) con errori e avvisi indicati per campo. Per ogni elemento già presente si sceglie **salta / aggiorna / copia**; aggiornare una scheda o un piano crea una nuova revisione. L’importazione è atomica: con un errore nel file non viene modificato nulla, e il successo viene mostrato solo dopo il salvataggio riuscito. L’ultima importazione si può annullare finché non ci sono altre modifiche; lo stato precedente resta comunque come copia di sicurezza. La sostituzione completa è possibile solo da backup, con doppia conferma e copia di sicurezza.
 
 Lo schema dei file è pubblico e stabile: **[docs/SCHEMA.md](docs/SCHEMA.md)**, con esempi validati in **[docs/examples/](docs/examples/)**. Puoi passarli a ChatGPT come modello per generare programmi o piani alimentari importabili. Restano importabili anche i file delle versioni precedenti.
 
 ## Dati, privacy e aggiornamenti
 
-- I dati sono salvati in **IndexedDB** nel browser; timer e preferenze in localStorage. Nessun server, nessun tracciamento, nessun invio a terzi.
+- I dati sono salvati in **IndexedDB** nel browser, subito a ogni modifica; un indicatore mostra *Salvato / Salvataggio… / Non salvato*. Timer e preferenze in localStorage. Nessun server, nessun tracciamento, nessun invio a terzi.
 - Gli errori di salvataggio (es. spazio esaurito) sono mostrati in un avviso con il pulsante per esportare subito un backup.
+- Copie di sicurezza automatiche prima di importazioni, annullamenti e cancellazione dei dati (*Altro → Opzioni*).
+- **Offline**: dopo la prima apertura l’app funziona anche senza rete (service worker); si può aggiungere alla schermata Home come app.
 - **Aggiornamento dalla versione precedente**: al primo avvio i dati della versione 2 (localStorage `palestra:data`) vengono migrati al nuovo modello; la vecchia chiave **non viene cancellata** e una copia è salvata in IndexedDB (scaricabile da *Altro → Opzioni*). La vecchia scheda diventa la “Scheda A” del programma principale; sedute, note, carichi per mano, velocità e durate sono conservati, senza inventare orari mai registrati.
 - I dati restano solo sul dispositivo: per cambiare telefono usa *Altro → Esporta → Backup* e poi *Importa*.
 
@@ -54,16 +56,17 @@ Requisiti: Node.js 20+ (consigliato 22).
 ```bash
 npm install
 npm run dev       # http://localhost:5173
-npm test          # test automatici (Vitest)
+npm test          # test unitari e di integrazione (Vitest)
+npm run test:e2e  # collaudo end-to-end (Playwright)
 npm run build     # build di produzione in dist/
 npm run preview
 ```
 
-I test coprono migrazioni v1/v2 → v3, persistenza, statistiche e durate, nuoto, import (legacy, duplicati, errori con percorso, atomicità), roundtrip di backup ed export, report e gli esempi documentati.
+Piano di collaudo, garanzie sui dati e checklist manuale per iPhone: **[docs/COLLAUDO.md](docs/COLLAUDO.md)**.
 
 ## Pubblicazione su GitHub Pages
 
-Il workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) esegue i test, compila e pubblica a ogni push su `main`/`master` (o manualmente da *Actions*). Configurazione una tantum: *Settings → Pages → Source: GitHub Actions*. L’app è su `https://<utente>.github.io/<repository>/`. Dal telefono: *Condividi → Aggiungi a schermata Home*.
+Il workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) esegue test unitari ed end-to-end, compila e pubblica a ogni push su `main`/`master` (o manualmente da *Actions*). Configurazione una tantum: *Settings → Pages → Source: GitHub Actions*. L’app è su `https://<utente>.github.io/<repository>/`. Dal telefono: *Condividi → Aggiungi a schermata Home*.
 
 ## Struttura
 
@@ -84,4 +87,4 @@ docs/SCHEMA.md, docs/examples/  # schema pubblico ed esempi
 tests/                          # Vitest
 ```
 
-Non ancora incluso (fasi successive del documento di analisi): report PDF, promemoria, import assistito da testo/PDF, sincronizzazione tra dispositivi.
+Non ancora incluso: sincronizzazione tra dispositivi (richiede decisioni su archiviazione remota e privacy), import assistito da testo/PDF, promemoria.

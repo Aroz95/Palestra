@@ -61,6 +61,7 @@ describe('record e progressione', () => {
   const mk = (date, weight, reps, rir = null, exId = 'leg-press') => ({
     id: date,
     kind: 'strength',
+    status: 'completed',
     date,
     exercises: [{ exerciseId: exId, name: 'Leg Press', equipment: 'machine', perHand: false, type: 'reps', sets: [{ reps, weight, done: true, rir, target: { repMin: 10, repMax: 12 } }] }],
     warmup: [],

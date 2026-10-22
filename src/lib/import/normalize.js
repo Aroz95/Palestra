@@ -363,12 +363,18 @@ const MEASURE_KEYS = [
 
 export function normMeasurement(v, raw, p, { defaultSource = 'imported' } = {}) {
   if (!v.obj(raw, p, { nullable: false })) return null
-  let at = raw.at
-  if (!at && isValidDate(raw.date)) at = combineDateTime(raw.date, raw.time ?? '00:00')
-  else if (isValidDate(at)) at = combineDateTime(at, '00:00')
+  // Istante da "at" oppure da "date" (+ "time"): l'errore viene indicato sul campo presente nel file
+  let at
+  if (raw.at === undefined && raw.date !== undefined) {
+    const d = v.date(raw.date, `${p}.date`, { nullable: false })
+    const t = raw.time !== undefined ? v.time(raw.time, `${p}.time`) : '00:00'
+    at = d ? combineDateTime(d, t ?? '00:00') : null
+  } else {
+    at = v.datetime(isValidDate(raw.at) ? combineDateTime(raw.at, '00:00') : raw.at, `${p}.at`, { nullable: false })
+  }
   const m = {
     id: v.id(raw.id, `${p}.id`) ?? uid('measure'),
-    at: v.datetime(at, `${p}.at`, { nullable: false }),
+    at,
     notes: v.str(pick(raw, 'notes', 'note'), `${p}.notes`),
     source: v.oneOf(raw.source, `${p}.source`, ['manual', 'imported', 'device'], defaultSource),
   }
@@ -478,11 +484,16 @@ export function normDietPlan(v, raw, p) {
       meals,
     }
   }).filter(Boolean)
+  let status = v.oneOf(raw.status, `${p}.status`, ['draft', 'validated'], 'draft')
+  if (status === 'validated' && !String(raw.validatedBy ?? '').trim()) {
+    v.warn(`${p}.status`, 'piano indicato come "validated" senza "validatedBy": importato come bozza')
+    status = 'draft'
+  }
   return {
     id: v.id(raw.id, `${p}.id`) ?? (slug(raw.name) || uid('diet')),
     name: v.str(raw.name, `${p}.name`, { nullable: false, max: 200 }),
     author: v.str(raw.author, `${p}.author`),
-    status: v.oneOf(raw.status, `${p}.status`, ['draft', 'validated'], 'draft'),
+    status,
     validatedBy: v.str(raw.validatedBy, `${p}.validatedBy`),
     active: v.bool(raw.active, `${p}.active`),
     archived: v.bool(raw.archived, `${p}.archived`),

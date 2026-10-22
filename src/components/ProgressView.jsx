@@ -4,8 +4,8 @@ import LineChart from './LineChart'
 import { PERIODS, periodRange, previousPeriod, todayISO } from '../lib/dates'
 import { aggregateAll, weightSeries, measurementSeries } from '../lib/report/aggregate'
 import { comparableKey, exerciseHistory, fmtNum, fmtRange } from '../lib/stats'
-import { buildReport, reportToCSV, REPORT_SECTIONS, fileNames } from '../lib/report'
-import { downloadCSV, downloadJSON } from '../lib/download'
+import { buildReport, reportToCSV, REPORT_SECTIONS, CSV_DIALECTS, fileNames } from '../lib/report'
+import { downloadBlob, downloadCSV, downloadJSON } from '../lib/download'
 import { WEEKDAYS_SHORT } from '../lib/dates'
 
 function Delta({ cur, prev, digits = 0, unit = '' }) {
@@ -273,7 +273,9 @@ function ReportExport({ state, period, settings }) {
   const [detail, setDetail] = useState('summary')
   const [excludeNotes, setExcludeNotes] = useState(settings.reportExcludeNotes ?? true)
   const report = useMemo(() => buildReport(state, period, { sections, detail, excludeNotes }), [state, period.from, period.to, sections, detail, excludeNotes])
-  const csv = useMemo(() => reportToCSV(state, period, { sections }), [state, period.from, period.to, sections])
+  const [dialect, setDialect] = useState('excel')
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const csv = useMemo(() => reportToCSV(state, period, { sections, dialect }), [state, period.from, period.to, sections, dialect])
   const toggle = (k) => setSections(sections.includes(k) ? sections.filter((x) => x !== k) : [...sections, k])
   return (
     <Section title="Esporta report">
@@ -288,11 +290,30 @@ function ReportExport({ state, period, settings }) {
         </div>
         <Segmented value={detail} onChange={setDetail} options={[{ id: 'summary', label: 'Solo riepilogo' }, { id: 'detailed', label: 'Con dettaglio sedute' }]} />
         <Toggle checked={excludeNotes} onChange={setExcludeNotes} label="Escludi note personali e sanitarie" />
+        <Segmented value={dialect} onChange={setDialect} options={Object.entries(CSV_DIALECTS).map(([id, d]) => ({ id, label: `CSV ${d.label}` }))} />
         <details className="text-xs">
           <summary className="cursor-pointer text-slate-300">Anteprima ({csv.split('\n').length - 1} righe CSV)</summary>
           <pre className="mt-2 max-h-64 overflow-auto rounded-xl bg-slate-950 p-2 text-[11px] text-slate-300">{JSON.stringify(report, null, 2).slice(0, 4000)}</pre>
         </details>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <button
+            disabled={!sections.length || pdfBusy}
+            onClick={async () => {
+              setPdfBusy(true)
+              try {
+                // jsPDF viene caricato solo quando serve
+                const { buildReportPdf } = await import('../lib/report/pdf')
+                downloadBlob(fileNames.report(period, 'pdf'), buildReportPdf(state, period, { sections, detail, excludeNotes }).output('blob'))
+              } catch (e) {
+                alert(`PDF non generato: ${e.message}`)
+              } finally {
+                setPdfBusy(false)
+              }
+            }}
+            className="btn w-full bg-sky-500 text-slate-950 disabled:opacity-40"
+          >
+            {pdfBusy ? 'Generazione PDF…' : 'Scarica PDF'}
+          </button>
           <button disabled={!sections.length} onClick={() => downloadJSON(fileNames.report(period, 'json'), report)} className="btn flex-1 bg-emerald-500 text-slate-950 disabled:opacity-40">Scarica JSON</button>
           <button disabled={!sections.length} onClick={() => downloadCSV(fileNames.report(period, 'csv'), csv)} className="btn-ghost flex-1 disabled:opacity-40">Scarica CSV</button>
         </div>

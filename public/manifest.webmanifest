@@ -1,0 +1,16 @@
+{
+  "name": "Palestra — diario di allenamento",
+  "short_name": "Palestra",
+  "description": "Diario di allenamento, nuoto, misure e alimentazione. I dati restano sul dispositivo.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

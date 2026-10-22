@@ -111,7 +111,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] text-slate-100">
+    <div role="dialog" aria-modal="true" aria-label="Modalità allenamento" className="fixed inset-0 z-50 flex flex-col bg-slate-950 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] text-slate-100">
       {/* Barra superiore */}
       <div className="border-b border-slate-800 px-4 py-2">
         <div className="mx-auto flex max-w-2xl items-center gap-3">

@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Card, Empty, Section, Sheet } from './ui'
 import { OccurrenceItem, SessionChip, freeSessionsOn } from './CalendarView'
 import { occurrencesOn, mainProgram } from '../lib/calendar'
-import { fmtDate, todayISO, weekdayOf, timeOf } from '../lib/dates'
+import { fmtDate, todayISO, weekdayOf, timeOf, localDate } from '../lib/dates'
 import { fmtNum } from '../lib/stats'
+import { pickDay, nextMeal } from '../lib/diet'
 import { SESSION_STATUS } from '../schema/constants'
 
 export default function TodayView({ state, update, onStart, onOpenSession, go }) {
@@ -14,7 +15,7 @@ export default function TodayView({ state, update, onStart, onOpenSession, go })
   const program = mainProgram(state)
   const templates = state.workoutTemplates.filter((t) => !t.archived && (!program || t.programId === program.id))
   const [choose, setChoose] = useState(false)
-  const lastMeasure = [...state.measurements].sort((a, b) => b.at.localeCompare(a.at))[0]
+  const lastMeasure = [...state.measurements].sort((a, b) => Date.parse(b.at) - Date.parse(a.at))[0]
   const nothing = !state.programs.length && !state.sessions.length
 
   return (
@@ -85,7 +86,7 @@ export default function TodayView({ state, update, onStart, onOpenSession, go })
         <Section title="Ultima misura">
           <Card className="flex items-center justify-between py-3 text-sm">
             <span className="text-slate-300">
-              {lastMeasure.at.slice(0, 10)} · {[lastMeasure.weightKg != null && `${fmtNum(lastMeasure.weightKg, 1)} kg`, lastMeasure.waistCm != null && `vita ${fmtNum(lastMeasure.waistCm, 1)} cm`, lastMeasure.abdomenCm != null && `addome ${fmtNum(lastMeasure.abdomenCm, 1)} cm`].filter(Boolean).join(' · ')}
+              {localDate(lastMeasure.at)} · {[lastMeasure.weightKg != null && `${fmtNum(lastMeasure.weightKg, 1)} kg`, lastMeasure.waistCm != null && `vita ${fmtNum(lastMeasure.waistCm, 1)} cm`, lastMeasure.abdomenCm != null && `addome ${fmtNum(lastMeasure.abdomenCm, 1)} cm`].filter(Boolean).join(' · ')}
             </span>
             <button onClick={() => go('more', 'measures')} className="text-xs text-emerald-400">Misure</button>
           </Card>
@@ -127,13 +128,10 @@ function NextMeal({ state, go }) {
   const plan = state.dietPlans.find((d) => d.active && !d.archived)
   if (!plan) return null
   const today = todayISO()
-  const days = plan.days.filter((d) => (d.date ? d.date === today : d.weekday === weekdayOf(today)))
-  const training = occurrencesOn(state, today).some((o) => o.kind === 'strength' || o.kind === 'swim')
-  const day = days.find((d) => d.dayType === (training ? 'training' : 'rest')) ?? days.find((d) => d.dayType === 'any') ?? days[0]
+  const training = occurrencesOn(state, today).some((o) => o.kind === 'strength' || o.kind === 'swim') || state.sessions.some((s) => s.date === today)
+  const { day } = pickDay(plan, today, { isTraining: training })
   if (!day?.meals.length) return null
-  const now = timeOf(new Date().toISOString())
-  const meals = [...day.meals].sort((a, b) => (a.time ?? '99').localeCompare(b.time ?? '99'))
-  const next = meals.find((m) => m.time && m.time >= now) ?? meals[meals.length - 1]
+  const next = nextMeal(day, timeOf(new Date().toISOString()))
   return (
     <Section title="Prossimo pasto" right={<button onClick={() => go('diet')} className="text-xs text-emerald-400">Piano</button>}>
       <Card className="space-y-1 py-3">
