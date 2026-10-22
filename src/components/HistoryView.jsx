@@ -1,4 +1,26 @@
 import { fmtDate, fmtNum, sessionStats } from '../lib/stats'
+import { downloadJSON } from '../lib/download'
+import { SCHEMA_VERSION } from '../data/defaultData'
+
+// Esporta una singola seduta in JSON, con un riepilogo leggibile
+function exportSession(s) {
+  const st = sessionStats(s)
+  downloadJSON(`palestra-seduta-${s.date}.json`, {
+    type: 'palestra-seduta',
+    version: SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    summary: {
+      seriePesi: st.sets,
+      ripetizioni: st.reps,
+      volumeKg: Math.round(st.volume),
+      plank: { serie: st.timeSets, secondi: st.timeSeconds },
+      cardioMinuti: st.cardioMin,
+      cardioKm: Math.round(st.cardioKm * 100) / 100,
+      durataMinuti: s.durationMin ?? null,
+    },
+    session: s,
+  })
+}
 
 export default function HistoryView({ sessions, activeId, onOpen, onDelete, onNewSession }) {
   const sorted = [...sessions].sort((a, b) => b.date.localeCompare(a.date))
@@ -38,6 +60,7 @@ export default function HistoryView({ sessions, activeId, onOpen, onDelete, onNe
             </button>
             <div className="mt-3 flex gap-2">
               <button onClick={() => onOpen(s.id)} className="btn-ghost text-sm">Apri</button>
+              <button onClick={() => exportSession(s)} className="btn-ghost text-sm">Esporta JSON</button>
               <button
                 onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete(s.id)}
                 className="ml-auto rounded-xl px-3 py-2 text-sm text-rose-400 active:bg-rose-950"

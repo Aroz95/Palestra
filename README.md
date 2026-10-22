@@ -26,6 +26,7 @@ I dati per ora sono salvati nel **localStorage** del browser (nessun server, nes
 - **Timer di recupero**: 1 minuto dopo ogni serie (modificabile per esercizio nella *Scheda*), preset da 30 s a 2 min, ±15 s, suono e vibrazione; si ferma da solo a fine tempo.
 - Cronometro e recupero sono basati su timestamp: continuano a contare anche se ricarichi la pagina o lo schermo si spegne.
 - **Storico** delle sedute con riepilogo (serie, ripetizioni, volume, plank, cardio, durata).
+  Ogni seduta si può **esportare in JSON** (`palestra-seduta-AAAA-MM-GG.json`, con riepilogo + dati completi) e reimportare da *Opzioni → Importa*, che la aggiunge allo storico senza toccare il resto.
 - **Scheda** modificabile: esercizi, serie/ripetizioni/carico predefiniti, incremento dei pulsanti +/−, recupero, manubri “per mano”, ordine degli esercizi, riscaldamento e defaticamento.
 - **Nuova seduta**: viene creata dalla scheda riprendendo serie e carichi dell’ultima volta in cui hai fatto ciascun esercizio.
 - **Backup**: esporta / importa i dati in JSON, ripristino dei dati iniziali.

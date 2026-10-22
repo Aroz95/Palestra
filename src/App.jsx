@@ -7,7 +7,7 @@ import SettingsView from './components/SettingsView'
 import WorkoutMode, { hasPendingSets } from './components/WorkoutMode'
 import { useLocalStorage } from './lib/storage'
 import { useTimers } from './lib/useTimers'
-import { createInitialState, createSessionFromTemplate, DEFAULT_REST, migrate, todayISO } from './data/defaultData'
+import { createInitialState, createSessionFromTemplate, DEFAULT_REST, migrate, todayISO, uid } from './data/defaultData'
 
 const TABS = [
   { id: 'session', label: 'Seduta', icon: '🏋️' },
@@ -105,7 +105,14 @@ export default function App() {
             settings={state.settings}
             onSettings={(settings) => setState((st) => ({ ...st, settings }))}
             state={state}
-            onImport={(data) => setState(data)}
+            onImport={(data) => setState(migrate(data))}
+            onImportSession={(session) =>
+              setState((st) => {
+                const [imported] = migrate({ ...st, version: 1, sessions: [session] }).sessions
+                const id = st.sessions.some((s) => s.id === imported.id) ? uid() : imported.id
+                return { ...st, sessions: [...st.sessions, { ...imported, id }] }
+              })
+            }
             onReset={() => {
               setState(createInitialState())
               timers.resetStopwatch()

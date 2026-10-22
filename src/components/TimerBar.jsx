@@ -86,7 +86,7 @@ export default function TimerBar({ timers, restSeconds }) {
                   s === restSeconds ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-200'
                 }`}
               >
-                {s < 60 ? `${s}s` : `${s / 60}${s % 60 ? `:${String(s % 60).padStart(2, '0')}` : ''} min`}
+                {s < 60 ? `${s}s` : s % 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s / 60} min`}
               </button>
             ))}
           </div>
