@@ -1,5 +1,5 @@
 import Stepper from './Stepper'
-import { DEFAULT_REST, uid } from '../data/defaultData'
+import { DEFAULT_REST, EXAMPLE_TEMPLATE, uid } from '../data/defaultData'
 
 // Modifica della scheda: valori predefiniti usati quando si crea una nuova seduta.
 export default function TemplateView({ template, onChange }) {
@@ -32,6 +32,20 @@ export default function TemplateView({ template, onChange }) {
           Valori predefiniti per le nuove sedute. Le sedute già registrate non vengono modificate.
         </p>
       </header>
+
+      {template.exercises.length === 0 && template.warmup.length === 0 && template.cooldown.length === 0 && (
+        <section className="rounded-2xl border border-dashed border-slate-700 p-4 text-center">
+          <p className="text-sm text-slate-300">
+            La scheda è vuota. Aggiungi esercizi e attività qui sotto, oppure parti da un esempio e modificalo.
+          </p>
+          <button
+            onClick={() => onChange(structuredClone({ ...EXAMPLE_TEMPLATE, exercises: EXAMPLE_TEMPLATE.exercises.map((e) => ({ ...e, id: uid() })) }))}
+            className="btn-ghost mt-3 text-sm"
+          >
+            Carica esempio “Total Body”
+          </button>
+        </section>
+      )}
 
       <section className="space-y-3 rounded-2xl bg-slate-900 p-4">
         <div className="flex items-end gap-3">

@@ -73,10 +73,10 @@ export default function SettingsView({ settings, onSettings, state, onImport, on
           />
         </div>
         <button
-          onClick={() => confirm('Ripristinare la scheda e le sedute iniziali? Tutti i dati attuali andranno persi.') && onReset()}
+          onClick={() => confirm('Cancellare scheda, sedute e storico? L’operazione non si può annullare: esporta prima un backup se ti serve.') && onReset()}
           className="rounded-xl px-3 py-2 text-sm text-rose-400 active:bg-rose-950"
         >
-          Ripristina dati iniziali
+          Cancella tutti i dati
         </button>
       </section>
     </div>

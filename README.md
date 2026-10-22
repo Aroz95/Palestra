@@ -29,12 +29,13 @@ I dati per ora sono salvati nel **localStorage** del browser (nessun server, nes
   Ogni seduta si può **esportare in JSON** (`palestra-seduta-AAAA-MM-GG.json`, con riepilogo + dati completi) e reimportare da *Opzioni → Importa*, che la aggiunge allo storico senza toccare il resto.
 - **Scheda** modificabile: esercizi, serie/ripetizioni/carico predefiniti, incremento dei pulsanti +/−, recupero, manubri “per mano”, ordine degli esercizi, riscaldamento e defaticamento.
 - **Nuova seduta**: viene creata dalla scheda riprendendo serie e carichi dell’ultima volta in cui hai fatto ciascun esercizio.
-- **Backup**: esporta / importa i dati in JSON, ripristino dei dati iniziali.
+- **Backup**: esporta / importa i dati in JSON, cancellazione di tutti i dati.
 
-### Dati precaricati
+### Primo avvio
 
-- **20 ottobre 2026 — Seduta originale** (storico, tutta completata): 30 serie, 342 ripetizioni, 7.386 kg di volume nominale, plank 3 × 30 s, 25 min di tapis roulant (~2,3 km), ~95 minuti.
-- **22 ottobre 2026 — Nuova seduta** (da compilare): tapis roulant iniziale 10 min a 5,5 km/h già segnato; esercizi precompilati con **2 serie** (consiglio: 1–2 serie, niente cedimento, carichi adeguati al recupero dopo palestra del 20 e nuoto del 21). Modifica serie, carichi e ripetizioni in base a quanto fatto davvero.
+Al primo avvio l'app è **vuota**: nessuna scheda e nessuna seduta. Crea la tua scheda nella sezione **Scheda** (esercizi, serie, ripetizioni, carichi, recupero, riscaldamento e defaticamento), oppure tocca **Carica esempio “Total Body”** e modificalo.
+
+I dati già salvati nel browser non vengono toccati dagli aggiornamenti dell'app: scheda, seduta in corso e storico restano come sono.
 
 > Il volume è nominale (ripetizioni × carico, i manubri “per mano” contano ×2): è indicativo e non direttamente comparabile tra macchine diverse.
 

@@ -5,17 +5,29 @@ import Stepper from './Stepper'
 import { fmtDate, fmtNum, sessionStats } from '../lib/stats'
 import { DEFAULT_REST, newExerciseFromTemplate, uid } from '../data/defaultData'
 
-export default function SessionView({ session, template, onChange, timers, settings, onNewSession, onStartWorkout }) {
+export default function SessionView({ session, template, onChange, timers, settings, onNewSession, onStartWorkout, onEditTemplate }) {
   const [adding, setAdding] = useState(false)
 
   if (!session) {
+    const emptyTemplate = !template.exercises.length && !template.warmup.length && !template.cooldown.length
     return (
       <div className="py-16 text-center">
-        <p className="mb-4 text-slate-400">Nessuna seduta selezionata.</p>
-        <button onClick={onNewSession} className="btn bg-emerald-500 text-slate-950">Inizia nuova seduta</button>
+        {emptyTemplate ? (
+          <>
+            <p className="mb-1 text-lg font-semibold text-white">Benvenuto!</p>
+            <p className="mb-4 text-slate-400">Per iniziare crea la tua scheda di allenamento.</p>
+            <button onClick={onEditTemplate} className="btn bg-emerald-500 text-slate-950">Crea la scheda</button>
+          </>
+        ) : (
+          <>
+            <p className="mb-4 text-slate-400">Nessuna seduta selezionata.</p>
+            <button onClick={onNewSession} className="btn bg-emerald-500 text-slate-950">Inizia nuova seduta</button>
+          </>
+        )}
       </div>
     )
   }
+  const hasSteps = session.exercises.length + session.warmup.length + session.cooldown.length > 0
 
   const stats = sessionStats(session)
   const set = (patch) => onChange({ ...session, ...patch })
@@ -66,7 +78,8 @@ export default function SessionView({ session, template, onChange, timers, setti
 
       <button
         onClick={onStartWorkout}
-        className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-5 text-xl font-extrabold text-slate-950 shadow-lg shadow-emerald-500/20 transition active:scale-[0.98]"
+        disabled={!hasSteps}
+        className="flex w-full disabled:opacity-40 items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-5 text-xl font-extrabold text-slate-950 shadow-lg shadow-emerald-500/20 transition active:scale-[0.98]"
       >
         <span className="text-2xl">▶</span>
         {stats.doneSets > 0 || session.warmup.some((c) => c.done) ? 'Riprendi allenamento' : 'Inizia allenamento'}

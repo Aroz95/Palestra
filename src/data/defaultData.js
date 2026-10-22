@@ -1,4 +1,4 @@
-// Dati iniziali: scheda Total Body + seduta originale del 20/10/2026 + seduta del 22/10/2026.
+// Dati iniziali: nessuna scheda e nessuna seduta. La scheda Total Body è solo un esempio caricabile a richiesta.
 // type: 'reps' → il campo reps sono ripetizioni; 'time' → il campo reps sono secondi.
 // perHand: il carico è per mano (manubri), nel volume viene contato ×2.
 // step: incremento del carico con i pulsanti +/−.
@@ -7,7 +7,7 @@
 export const SCHEMA_VERSION = 2
 export const DEFAULT_REST = 60
 
-export const DEFAULT_TEMPLATE = {
+export const EXAMPLE_TEMPLATE = {
   name: 'Total Body',
   bodyWeight: 75,
   goal: 'Ripresa graduale dell’allenamento dopo circa 2 anni di pausa.',
@@ -32,6 +32,15 @@ export const DEFAULT_TEMPLATE = {
     { id: 'cd1', name: 'Tapis roulant', minutes: 6, speed: 5.5, note: '' },
     { id: 'cd2', name: 'Tapis roulant', minutes: 4, speed: 3.75, note: 'Prima 4, poi 3,5 km/h (durate esatte non rilevate)' },
   ],
+}
+
+export const EMPTY_TEMPLATE = {
+  name: 'La mia scheda',
+  bodyWeight: null,
+  goal: '',
+  warmup: [],
+  exercises: [],
+  cooldown: [],
 }
 
 export function uid() {
@@ -61,46 +70,12 @@ function cardioFromTemplate(list, done = false) {
   return list.map((c) => ({ ...c, id: uid(), done }))
 }
 
-function originalSession() {
-  const t = DEFAULT_TEMPLATE
-  const exercises = t.exercises.map((ex) => exerciseFromTemplate(ex, ex.sets, true))
-  // Curl: progressione 6 / 8 / 10 kg per mano
-  const curl = exercises.find((e) => e.templateId === 'curl-manubri')
-  curl.sets = [6, 8, 10].map((w) => ({ reps: 12, weight: w, done: true }))
-  curl.notes = 'Una progressione per serie'
-  return {
-    id: 'seduta-2026-10-20',
-    date: '2026-10-20',
-    title: 'Seduta originale',
-    note: 'Durata complessiva: circa 95 minuti.',
-    durationMin: 95,
-    warmup: cardioFromTemplate(t.warmup, true),
-    exercises,
-    cooldown: cardioFromTemplate(t.cooldown, true),
-  }
-}
-
-function session22() {
-  const t = DEFAULT_TEMPLATE
-  return {
-    id: 'seduta-2026-10-22',
-    date: '2026-10-22',
-    title: 'Nuova seduta',
-    note: 'Dopo la palestra del 20/10 e il nuoto del 21/10: ridurre a 1–2 serie per esercizio, evitare il cedimento e adeguare i carichi al recupero.',
-    durationMin: null,
-    warmup: [{ id: uid(), name: 'Tapis roulant iniziale', minutes: 10, speed: 5.5, note: '', done: true }],
-    // 2 serie precompilate (consiglio di recupero): togli/aggiungi serie in base a quanto fatto davvero
-    exercises: t.exercises.map((ex) => exerciseFromTemplate(ex, 2, false)),
-    cooldown: cardioFromTemplate(t.cooldown, false),
-  }
-}
-
 export function createInitialState() {
   return {
     version: SCHEMA_VERSION,
-    template: structuredClone(DEFAULT_TEMPLATE),
-    sessions: [originalSession(), session22()],
-    activeSessionId: 'seduta-2026-10-22',
+    template: structuredClone(EMPTY_TEMPLATE),
+    sessions: [],
+    activeSessionId: null,
     settings: { restSeconds: DEFAULT_REST, autoRest: true, sound: true },
   }
 }

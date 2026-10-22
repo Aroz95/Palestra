@@ -77,6 +77,7 @@ export default function App() {
             settings={state.settings}
             onNewSession={newSession}
             onStartWorkout={() => setWorkout(true)}
+            onEditTemplate={() => setTab('template')}
           />
         )}
         {tab === 'history' && (
