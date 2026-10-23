@@ -72,6 +72,7 @@ Un service worker conserva l’app sul dispositivo: dopo la prima apertura onlin
 | E2E-13 | iPhone, app in background durante il timer | `e2e/workout.e2e.js` (emulazione) | **da verificare su iPhone** |
 | E2E-14 | Funzionamento offline | `e2e/offline.e2e.js` (server spento davvero) | automatico (Chromium) |
 | NUT-T01..T20 | Alimentazione v4: obiettivi, alternative, consumato, report | `tests/nutrition.test.js`, `e2e/diet.e2e.js`, `e2e/upgrade.e2e.js` | automatico; NUT-T18 **da verificare su iPhone** |
+| BUG-NUOTO-01 | `(100x3)x4` = 12 × 100 m; 500 + (200)x2 + (100x3)x4 = 2.100 m; export/reimport; rigenerazione dei blocchi salvati male | `tests/swim.test.js`, `e2e/swim.e2e.js` | automatico |
 | E2E-15 | PDF | `e2e/report.e2e.js`, `tests/pdf.test.js` | automatico; download su iPhone **da verificare** |
 
 I test automatici girano con il motore Chromium e il profilo di iPhone 13 (dimensioni, touch). Safari/WebKit non è disponibile nell’ambiente di sviluppo: le voci seguenti vanno verificate a mano.

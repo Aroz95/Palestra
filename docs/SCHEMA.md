@@ -139,11 +139,28 @@ Ogni esercizio della seduta ha `exerciseId` (id dell’esercizio in scheda), `na
 | `estimatedDistanceM` | stima `{ min, max }` (o un numero): resta un intervallo e non viene sommata alle distanze misurate |
 | `distanceSource` | `measured` \| `manually_counted` \| `estimated` \| `unknown`; `measured`/`manually_counted` richiedono `actualDistanceM`, `estimated` richiede `estimatedDistanceM` |
 | `isPartial` | percorso abbreviato rispetto al previsto |
-| `plannedBlocks` | `{ repeats, segmentsM, restSec, note }` oppure `{ text }` nel formato `(200+100+2×75)×2` («2×75» = 2 ripetizioni da 75 m, «)×2» ripete il gruppo) |
+| `plannedBlocks` | `{ text, repeats, segmentsM, restSec, note }`: `segmentsM` = distanza di ogni singolo tratto in metri, nell'ordine; con solo `text` i tratti vengono calcolati (sintassi sotto) |
 | `technique` | `{ catch, strokeQuality, shoulderFatigue, breathing }` valori 1–5 facoltativi |
 | `rpe`, `style`, `goal`, `notes` | facoltativi |
 
 Passo e numero di vasche sono calcolati solo da distanze misurate; con una distanza stimata vengono mostrati come intervallo e marcati “stima”.
+
+### Sintassi dei blocchi di nuoto (`text`)
+
+| Testo | Tratti | Totale |
+|---|---|---|
+| `500` (anche `500m`) | 1 × 500 m | 500 m |
+| `(200)x2` | 2 × 200 m | 400 m |
+| `4x100` oppure `100x4` | 4 × 100 m | 400 m |
+| `(100x3)x4` | 12 × 100 m | 1.200 m |
+| `(200+100+2×75)×2` | 200, 100, 75, 75 ripetuti 2 volte | 900 m |
+| `30x(50)` | 30 × 50 m | 1.500 m |
+
+- `+` unisce tratti in sequenza; le parentesi formano un gruppo; separatori di moltiplicazione: `x`, `X`, `×`, `*`.
+- In `a×b` tra due numeri, quello **minore di 25** è il numero di ripetizioni e l’altro la distanza, in qualsiasi ordine. Se entrambi sono ≥ 25 (es. `50x50`) l’espressione è ambigua: metti la distanza tra parentesi (`30x(50)`).
+- Accanto a un gruppo tra parentesi ogni numero è un numero di ripetizioni (1–100); non si moltiplicano due gruppi tra loro. Solo metri interi, al massimo 1000 tratti per blocco.
+- Le espressioni non valide sono rifiutate con un messaggio (nell’app il blocco non viene aggiunto; in import è un errore sul campo `text`).
+- Se un file contiene sia `text` sia `segmentsM` e non coincidono, i `segmentsM` del file vengono importati così come sono, con un avviso; nell’app la seduta mostra la differenza e permette di rigenerare i tratti dal testo, con conferma. Cambia solo la distanza prevista: `actualDistanceM` non viene mai toccata.
 
 ## Piano alimentare (`palestra-diet-plan`)
 

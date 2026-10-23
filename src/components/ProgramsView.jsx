@@ -5,9 +5,10 @@ import { newProgram, newTemplateExercise, newCardio, uid } from '../schema/facto
 import { exampleProgram } from '../schema/example'
 import * as A from '../lib/actions'
 import { WEEKDAYS } from '../lib/dates'
-import { parseBlock, blocksTotal, formatBlock } from '../lib/swim'
+import { previewBlock, blockIssues, regenerateBlocks, expandedSegments, blockTotal, blocksTotal, formatBlock } from '../lib/swim'
 import { exportProgram, fileNames } from '../lib/report'
 import { downloadJSON } from '../lib/download'
+import { fmtNum } from '../lib/stats'
 
 export default function ProgramsView({ state, update, onStartTemplate, onImport }) {
   const [openId, setOpenId] = useState(() => (state.programs.find((p) => p.isMain) ?? state.programs[0])?.id ?? null)
@@ -265,35 +266,63 @@ export function SwimPlanEditor({ plan, onChange }) {
 
 export function BlocksEditor({ blocks, onChange }) {
   const [text, setText] = useState('')
-  const [error, setError] = useState(null)
+  const pv = previewBlock(text)
+  const issues = blockIssues(blocks)
   const add = () => {
-    try {
-      const segmentsM = parseBlock(text)
-      onChange([...blocks, { id: uid('block'), text: text.trim(), repeats: 1, segmentsM, restSec: null, note: '' }])
-      setText('')
-      setError(null)
-    } catch (e) {
-      setError(e.message)
-    }
+    if (!pv?.ok) return // i blocchi non validi non vengono salvati
+    onChange([...blocks, { id: uid('block'), text: text.trim(), repeats: 1, segmentsM: pv.segments, restSec: null, note: '' }])
+    setText('')
+  }
+  const regenerate = () => {
+    const lines = issues.map((i) => `${i.text}: ${i.saved.count} tratti, ${fmtNum(i.saved.totalM, 0)} m → ${i.regenerated.count} tratti, ${fmtNum(i.regenerated.totalM, 0)} m`)
+    if (window.confirm(`Rigenerare i tratti dal testo dei blocchi?\n\n${lines.join('\n')}\n\nCambia solo il piano (distanza prevista). La distanza effettivamente nuotata non viene modificata.`)) onChange(regenerateBlocks(blocks, issues))
   }
   return (
-    <Field label="Blocchi previsti" hint="Formato: (200+100+2×75)×2 — «2×75» = 2 ripetizioni da 75 m, «)×2» ripete il gruppo">
-      <div className="space-y-2">
-        {blocks.map((b) => (
-          <div key={b.id} className="flex items-center gap-2 rounded-lg bg-slate-800 px-3 py-2 text-sm">
-            <span className="flex-1 font-mono text-slate-100">{formatBlock(b)}</span>
-            <span className="text-slate-400">{blocksTotal([b])} m</span>
-            <button onClick={() => onChange(blocks.filter((x) => x.id !== b.id))} className="text-rose-400" aria-label="Rimuovi blocco">✕</button>
+    // Non dentro un <label>: un tocco sul testo attiverebbe il primo pulsante (✕ del primo blocco)
+    <div role="group" aria-labelledby="blocks-label">
+      <span id="blocks-label" className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Blocchi previsti</span>
+      <div className="mt-1 space-y-2">
+        {blocks.map((b) => {
+          const issue = issues.find((i) => i.id === b.id)
+          return (
+            <div key={b.id} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${issue ? 'bg-amber-900/40' : 'bg-slate-800'}`} data-testid="swim-block">
+              <span className="flex-1 font-mono text-slate-100">{formatBlock(b)}</span>
+              <span className="text-xs text-slate-400">{expandedSegments(b).length} tratti</span>
+              <span className="text-slate-300">{fmtNum(blockTotal(b), 0)} m</span>
+              <button onClick={() => onChange(blocks.filter((x) => x.id !== b.id))} className="text-rose-400" aria-label={`Rimuovi blocco ${formatBlock(b)}`}>✕</button>
+            </div>
+          )
+        })}
+        {issues.length > 0 && (
+          <div role="alert" className="space-y-2 rounded-xl border border-amber-700 bg-amber-900/30 p-3 text-xs text-amber-100">
+            <p>
+              {issues.length === 1 ? 'Un blocco salvato ha' : `${issues.length} blocchi salvati hanno`} tratti che non corrispondono al testo (errore di lettura di una versione precedente):
+            </p>
+            <ul className="list-disc pl-4">
+              {issues.map((i) => (
+                <li key={i.id}>
+                  <span className="font-mono">{i.text}</span>: salvati {i.saved.count} tratti ({fmtNum(i.saved.totalM, 0)} m), dal testo {i.regenerated.count} tratti ({fmtNum(i.regenerated.totalM, 0)} m)
+                </li>
+              ))}
+            </ul>
+            <button onClick={regenerate} className="rounded-lg bg-amber-400 px-3 py-1.5 font-semibold text-slate-950">Rigenera i tratti dal testo</button>
           </div>
-        ))}
+        )}
         <div className="flex gap-2">
-          <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="(200+100+2×75)×2" className="min-w-0 flex-1 rounded-xl bg-slate-800 px-3 py-2 font-mono text-slate-100" aria-label="Nuovo blocco" />
-          <button onClick={add} className="btn-ghost">Aggiungi</button>
+          <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="(100×3)×4" className="min-w-0 flex-1 rounded-xl bg-slate-800 px-3 py-2 font-mono text-slate-100" aria-label="Nuovo blocco" aria-invalid={pv?.ok === false} />
+          <button onClick={add} disabled={!pv?.ok} className="btn-ghost disabled:opacity-40">Aggiungi</button>
         </div>
-        {error && <p className="text-xs text-rose-400">{error}</p>}
-        {blocks.length > 0 && <p className="text-sm text-slate-300">Totale previsto: <b className="text-white">{blocksTotal(blocks)} m</b></p>}
+        {pv?.ok && (
+          <p className="text-xs text-sky-200" aria-live="polite" data-testid="block-preview">
+            Anteprima: {pv.count} {pv.count === 1 ? 'tratto' : 'tratti'} · {fmtNum(pv.totalM, 0)} m
+            {pv.count > 1 && pv.count <= 30 && <span className="text-slate-400"> ({pv.segments.join(' + ')})</span>}
+          </p>
+        )}
+        {pv?.ok === false && <p className="text-xs text-rose-400" aria-live="polite">{pv.error}</p>}
+        {blocks.length > 0 && <p className="text-sm text-slate-300">Totale previsto: <b className="text-white">{fmtNum(blocksTotal(blocks), 0)} m</b></p>}
       </div>
-    </Field>
+      <span className="mt-1 block text-xs text-slate-500">Es. 500 · (200)×2 · (100×3)×4 · (200+100+2×75)×2. In «4×100» o «100×4» il numero minore di 25 indica le ripetizioni; accanto a un gruppo tra parentesi ogni numero è un numero di ripetizioni. Separatori: x, ×, *.</span>
+    </div>
   )
 }
 

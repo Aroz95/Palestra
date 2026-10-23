@@ -2,7 +2,7 @@
 // e registra errori/avvisi nel Validator con il percorso del campo.
 import { DEFAULT_REST, EQUIPMENT, DISTANCE_SOURCES, MEAL_CATEGORIES, SESSION_STATUS, ACTIVITY_KINDS } from '../../schema/constants'
 import { uid } from '../../schema/factories'
-import { parseBlock, blocksTotal } from '../swim'
+import { parseBlock, blocksTotal, blockIssues } from '../swim'
 import { combineDateTime, isValidDate } from '../dates'
 
 const slug = (s) =>
@@ -301,6 +301,12 @@ function normBlocks(v, raw, p) {
       }
     }
     if (!segmentsM.length) v.err(bp, 'blocco senza distanze (segmentsM o text)')
+    else if (text) {
+      // I segmenti salvati restano quelli del file (nessuna correzione automatica): l'incoerenza viene segnalata
+      // e si può rigenerare dall'app, con anteprima e conferma.
+      const issue = blockIssues([{ id: 'x', text, repeats: b.repeats ?? 1, segmentsM: segmentsM.filter((x) => x != null) }])[0]
+      if (issue) v.warn(`${bp}.segmentsM`, `i tratti salvati (${issue.saved.count}, ${issue.saved.totalM} m) non corrispondono al testo "${text}" (${issue.regenerated.count} tratti, ${issue.regenerated.totalM} m): verificali dopo l'import`)
+    }
     return {
       id: v.id(b.id, `${bp}.id`) ?? `block-${i + 1}`,
       text: text || null,

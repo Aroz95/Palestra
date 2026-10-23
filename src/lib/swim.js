@@ -1,20 +1,31 @@
-// Blocchi di nuoto nel formato "(200+100+2×75)×2": "2×75" = 2 ripetizioni da 75 m, ")×2" = ripeti il gruppo.
+// Blocchi di nuoto. Sintassi (documentata in docs/SCHEMA.md):
+// - distanza in metri: "500" (anche "500m")
+// - somma di tratti: "200+100"
+// - ripetizioni "N×D" oppure "D×N": il numero minore di 25 è il numero di ripetizioni, l'altro la distanza
+//   ("4×100" = "100×4" = 4 da 100 m); se entrambi sono ≥ 25 l'espressione è ambigua e va scritta con le parentesi
+// - gruppi tra parentesi: "(200+100)×2" o "2×(200+100)"; accanto a un gruppo ogni numero è un numero di ripetizioni
+// - annidamento: "(100×3)×4" = 12 da 100 m
+// Separatori di moltiplicazione accettati: x, X, ×, *.
+export const MIN_DISTANCE_M = 25
+export const MAX_REPEATS = 100
+export const MAX_SEGMENTS = 1000
 
 function tokenize(text) {
-  const src = String(text).replace(/\s+/g, '').replace(/[x*X]/g, '×')
+  const src = String(text ?? '').replace(/\s+/g, '').replace(/[xX*]/g, '×')
   const tokens = []
   for (let i = 0; i < src.length; ) {
     const c = src[i]
     if (/\d/.test(c)) {
       let j = i
       while (j < src.length && /\d/.test(src[j])) j++
-      tokens.push({ t: 'n', v: Number(src.slice(i, j)) })
+      tokens.push({ t: 'n', v: Number(src.slice(i, j)), raw: src.slice(i, j) })
       i = j
+      if (src[i] === 'm' || src[i] === 'M') i++ // "100m" ammesso
     } else if ('+×()'.includes(c)) {
       tokens.push({ t: c })
       i++
-    } else if (c === 'm' || c === 'M') {
-      i++ // "100m" ammesso
+    } else if (c === ',' || c === '.') {
+      throw new Error('Usa solo metri interi (niente decimali)')
     } else {
       throw new Error(`Carattere non valido "${c}"`)
     }
@@ -22,60 +33,113 @@ function tokenize(text) {
   return tokens
 }
 
+const repeat = (segs, n) => Array.from({ length: n }, () => segs).flat()
+const checkReps = (n) => {
+  if (!Number.isInteger(n) || n < 1 || n > MAX_REPEATS) throw new Error(`Le ripetizioni devono essere tra 1 e ${MAX_REPEATS} (trovato ${n})`)
+  return n
+}
+const checkSize = (segs) => {
+  if (segs.length > MAX_SEGMENTS) throw new Error(`Troppi tratti (${segs.length}, massimo ${MAX_SEGMENTS})`)
+  return segs
+}
+
+// Restituisce l'elenco delle distanze dei singoli tratti, nell'ordine in cui vanno nuotati.
+// Lancia un Error con un messaggio leggibile se l'espressione non è valida o è ambigua.
 export function parseBlock(text) {
   const tokens = tokenize(text)
+  if (!tokens.length) throw new Error('Blocco vuoto')
   let pos = 0
   const peek = () => tokens[pos]
-  const take = (t) => {
-    const tok = tokens[pos]
-    if (!tok || (t && tok.t !== t)) throw new Error(t === 'n' ? 'Atteso un numero' : `Atteso "${t}"`)
-    pos++
-    return tok
+  const describe = (tok) => (!tok ? 'la fine del testo' : tok.t === 'n' ? `"${tok.raw}"` : `"${tok.t}"`)
+
+  // fattore: numero oppure gruppo tra parentesi
+  function factor() {
+    const tok = peek()
+    if (tok?.t === 'n') {
+      pos++
+      return { num: tok.v }
+    }
+    if (tok?.t === '(') {
+      pos++
+      const segs = expr()
+      if (peek()?.t !== ')') throw new Error('Manca la parentesi di chiusura ")"')
+      pos++
+      return { group: segs }
+    }
+    throw new Error(tok ? `Atteso un numero o "(" al posto di ${describe(tok)}` : 'Espressione incompleta: manca un numero alla fine')
   }
-  const repeat = (segs, n) => Array.from({ length: n }, () => segs).flat()
+
+  // termine: fattori uniti da ×, risolti in tratti
+  function term() {
+    const factors = [factor()]
+    while (peek()?.t === '×') {
+      pos++
+      factors.push(factor())
+    }
+    const groups = factors.filter((f) => f.group)
+    const nums = factors.filter((f) => !f.group).map((f) => f.num)
+    if (groups.length > 1) throw new Error('Non si possono moltiplicare due gruppi tra parentesi tra loro')
+    if (groups.length === 1) return checkSize(nums.reduce((segs, n) => repeat(segs, checkReps(n)), groups[0].group))
+    if (nums.length === 1) {
+      if (nums[0] <= 0) throw new Error('Le distanze devono essere positive')
+      return [nums[0]]
+    }
+    const expr = nums.join('×')
+    const distances = nums.filter((n) => n >= MIN_DISTANCE_M)
+    if (distances.length === 0) throw new Error(`"${expr}": nessuna distanza riconoscibile (le distanze partono da ${MIN_DISTANCE_M} m)`)
+    if (distances.length > 1) throw new Error(`"${expr}" è ambiguo: non è chiaro quale numero sia la distanza. Metti la distanza tra parentesi, es. "${nums[0]}×(${nums[1]})"`)
+    const dist = distances[0]
+    const counts = nums.filter((n, i) => i !== nums.indexOf(dist))
+    return checkSize(counts.reduce((segs, n) => repeat(segs, checkReps(n)), [dist]))
+  }
 
   function expr() {
     let segs = term()
     while (peek()?.t === '+') {
-      take('+')
-      segs = segs.concat(term())
-    }
-    return segs
-  }
-  function term() {
-    let segs
-    if (peek()?.t === '(') {
-      take('(')
-      segs = expr()
-      take(')')
-    } else {
-      const n = take('n').v
-      if (peek()?.t === '×') {
-        take('×')
-        if (peek()?.t === '(') {
-          take('(')
-          const inner = expr()
-          take(')')
-          segs = repeat(inner, n)
-        } else {
-          segs = repeat([take('n').v], n)
-        }
-      } else {
-        segs = [n]
-      }
-    }
-    while (peek()?.t === '×') {
-      take('×')
-      segs = repeat(segs, take('n').v)
+      pos++
+      segs = checkSize(segs.concat(term()))
     }
     return segs
   }
 
-  if (!tokens.length) throw new Error('Blocco vuoto')
   const segments = expr()
-  if (pos < tokens.length) throw new Error('Formato non riconosciuto')
-  if (segments.some((s) => s <= 0)) throw new Error('Le distanze devono essere positive')
+  if (pos < tokens.length) throw new Error(peek().t === ')' ? 'Parentesi di chiusura ")" senza apertura' : `Formato non riconosciuto vicino a ${describe(peek())}`)
   return segments
+}
+
+// Anteprima per l'interfaccia: { ok, segments, count, totalM } oppure { ok: false, error }
+export function previewBlock(text) {
+  if (!String(text ?? '').trim()) return null
+  try {
+    const segments = parseBlock(text)
+    return { ok: true, segments, count: segments.length, totalM: segments.reduce((a, b) => a + b, 0) }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+}
+
+// Tratti salvati, espansi con le ripetizioni del blocco
+export const expandedSegments = (b) => repeat(b.segmentsM ?? [], b.repeats ?? 1)
+
+// Blocchi salvati in passato con segmenti che non corrispondono al testo (es. "(100×3)×4" letto come 100 tratti da 3 m).
+// Restituisce, per ogni blocco con testo valido ma segmenti diversi, i segmenti rigenerati. Non modifica nulla.
+export function blockIssues(blocks = []) {
+  const out = []
+  for (const b of blocks) {
+    if (!b.text) continue
+    const pv = previewBlock(b.text)
+    if (!pv?.ok) continue
+    const saved = expandedSegments(b)
+    if (saved.length !== pv.segments.length || saved.some((x, i) => x !== pv.segments[i])) {
+      out.push({ id: b.id, text: b.text, saved: { count: saved.length, totalM: blockTotal(b) }, regenerated: { segmentsM: pv.segments, count: pv.count, totalM: pv.totalM } })
+    }
+  }
+  return out
+}
+
+export function regenerateBlocks(blocks, issues) {
+  const byId = Object.fromEntries(issues.map((i) => [i.id, i]))
+  return blocks.map((b) => (byId[b.id] ? { ...b, repeats: 1, segmentsM: byId[b.id].regenerated.segmentsM } : b))
 }
 
 export function blockTotal(b) {
