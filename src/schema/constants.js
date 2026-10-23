@@ -1,5 +1,6 @@
 // Contratti dati v3. Lo schema pubblico è documentato in docs/SCHEMA.md.
-export const SCHEMA_VERSION = 3
+// v4: piani alimentari con obiettivi, guida, nutrienti per alimento/alternativa; diario con consumi; scelte delle alternative
+export const SCHEMA_VERSION = 4
 export const DEFAULT_REST = 60
 
 export const FILE_TYPES = {

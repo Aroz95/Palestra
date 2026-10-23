@@ -18,10 +18,10 @@ Attività previste dal calendario con stato (prevista, in corso, completata, sal
 - **Storico** unificato palestra + nuoto con filtri ed esportazione di ogni seduta.
 
 ### Alimentazione
-Piani importati in JSON o creati a mano: consultazione per giorno e pasto, alternative, giorni di allenamento/riposo, nutrienti solo se dichiarati (altrimenti “ND”), bozza vs validato da un professionista, revisioni, duplicazione, archiviazione. Diario facoltativo dei pasti (seguito / modificato / saltato).
+Piani importati in JSON o creati a mano: consultazione per giorno e pasto, alternative, giorni di allenamento/riposo, nutrienti solo se dichiarati (altrimenti “ND”), bozza vs validato da un professionista, revisioni, duplicazione, archiviazione. Obiettivi del piano (generali, allenamento/riposo, per giorno) distinti da **programmato** e **consumato**; alternative con i propri valori, anteprima e scelta per data senza modificare il piano; guida del piano (pesatura, idratazione, pre/post allenamento). Diario facoltativo dei pasti (seguito / modificato / saltato, quantità consumate, cibo fuori piano, note private).
 
 ### Progressi
-Periodi 7/30/90 giorni, mese, anno o personalizzato, con confronto rispetto al periodo precedente: frequenza e aderenza al calendario, serie/ripetizioni/volume/RIR, record solo su esercizi confrontabili, grafico per esercizio, nuoto (misurato e stimato separati), peso con media mobile a 7 giorni, girovita e addome, alimentazione, calorie. **Report** in **PDF** (A4, generato sul dispositivo), JSON e CSV (formato Excel/Numbers italiano o standard) con scelta delle sezioni e del dettaglio, anteprima ed esclusione delle note personali.
+Periodi 7/30/90 giorni, mese, anno o personalizzato, con confronto rispetto al periodo precedente: frequenza e aderenza al calendario, serie/ripetizioni/volume/RIR, record solo su esercizi confrontabili, grafico per esercizio, nuoto (misurato e stimato separati), peso con media mobile a 7 giorni, girovita e addome, alimentazione (obiettivo, programmato e consumato medi con la qualità del dato), calorie. **Report** in **PDF** (A4, generato sul dispositivo), JSON e CSV (formato Excel/Numbers italiano o standard) con scelta delle sezioni e del dettaglio, anteprima ed esclusione delle note personali; la guida del piano alimentare si include solo su richiesta.
 
 ### Altro
 Profilo e obiettivi (con storico delle modifiche, senza notifiche o promesse), misure corporee (girovita e addome distinti), **Importa**, **Esporta**, impostazioni del timer, stato dell’archivio e privacy.
@@ -43,7 +43,8 @@ Lo schema dei file è pubblico e stabile: **[docs/SCHEMA.md](docs/SCHEMA.md)**, 
 
 | Chiave | Dove | Contenuto |
 |---|---|---|
-| `state` | IndexedDB `palestra` | tutti i dati (schema v3) |
+| `state` | IndexedDB `palestra` | tutti i dati (schema v4) |
+| `snapshot:pre-v4` | IndexedDB `palestra` | copia dei dati v3 prima dell’aggiornamento alla v4 |
 | `legacy-snapshot` | IndexedDB `palestra` | copia dei dati v2 prima della migrazione |
 | `palestra:data` | localStorage | dati v2 originali (mai cancellati) |
 | `palestra:stopwatch`, `palestra:rest` | localStorage | stato di cronometro e recupero |

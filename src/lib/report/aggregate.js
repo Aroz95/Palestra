@@ -1,8 +1,9 @@
 // Aggregazioni per periodo: unica fonte per la dashboard Progressi e per i report esportati.
 import { strengthStats, sessionDuration, personalRecords } from '../stats'
 import { swimDistances } from '../swim'
-import { scheduleAdherence } from '../calendar'
-import { addDays, localDate } from '../dates'
+import { scheduleAdherence, activityOn } from '../calendar'
+import { pickDay, isTrainingDay, resolveTarget, dayPlanned, dayConsumed, deltaToTarget, selectionsFor, planCompleteness, MAIN_KEYS } from '../diet'
+import { addDays, localDate, daysInRange } from '../dates'
 
 const inPeriod = (date, { from, to }) => date >= from && date <= to
 const counted = (s) => ['completed', 'in_progress'].includes(s.status)
@@ -116,14 +117,44 @@ export function aggregateBody(state, period) {
   }
 }
 
-// kcal/macro del piano: sommati solo se presenti per tutti i pasti del giorno, altrimenti "parziale"
-export function dayNutrition(day) {
-  const keys = ['kcal', 'proteinG', 'carbsG', 'fatG']
-  const out = {}
-  for (const k of keys) {
-    const vals = day.meals.map((m) => m.nutrition?.[k])
-    const known = vals.filter((x) => x != null)
-    out[k] = { value: known.length ? sum(known) : null, partial: known.length > 0 && known.length < vals.length, missing: known.length === 0 }
+const avgOf = (vals) => {
+  const k = vals.filter((x) => x != null)
+  return k.length ? k.reduce((a, b) => a + b, 0) / k.length : null
+}
+const overall = (statuses) => (!statuses.length || statuses.every((x) => x === 'missing') ? 'missing' : statuses.every((x) => x === 'complete') ? 'complete' : 'partial')
+
+// Alimentazione per giorno del periodo: obiettivo, programmato (con le alternative scelte), consumato registrato.
+// Il programmato si basa sul piano attivo (revisione corrente); il consumato solo sulle registrazioni del diario.
+export function dietDaily(state, period, plan) {
+  return daysInRange(period.from, period.to).map((date) => {
+    const activity = activityOn(state, date)
+    const { day } = plan ? pickDay(plan, date, { isTraining: activity }) : { day: null }
+    const training = isTrainingDay(day, activity)
+    const target = plan ? resolveTarget(plan, day, training) : null
+    const planned = day ? dayPlanned(day, selectionsFor(state, date, plan.id)) : null
+    const logs = state.dietLog.filter((l) => l.date === date)
+    const consumed = logs.length ? dayConsumed(day, logs) : null
+    return {
+      date,
+      training,
+      hasPlanDay: !!day,
+      target: target ? Object.fromEntries(MAIN_KEYS.map((k) => [k, target[k].value])) : null,
+      targetSource: target ? Object.fromEntries(MAIN_KEYS.map((k) => [k, target[k].source])) : null,
+      planned,
+      consumed,
+      deltaPlanned: planned && target ? deltaToTarget(planned, target) : null,
+      deltaConsumed: consumed && target ? deltaToTarget(consumed, target) : null,
+      logged: logs.filter((l) => l.status !== 'extra').length,
+    }
+  })
+}
+function summarize(rows, field) {
+  const withData = rows.filter((r) => r[field])
+  const out = { days: withData.length, daysComplete: {}, avg: {}, quality: overall(withData.map((r) => r[field].kcal.status)) }
+  for (const k of MAIN_KEYS) {
+    const complete = withData.filter((r) => r[field][k].status === 'complete')
+    out.daysComplete[k] = complete.length
+    out.avg[k] = avgOf(complete.map((r) => r[field][k].value)) // media solo sui giorni completi
   }
   return out
 }
@@ -132,12 +163,30 @@ export function aggregateDiet(state, period) {
   const plan = state.dietPlans.find((d) => d.active && !d.archived) ?? null
   const log = state.dietLog.filter((l) => inPeriod(l.date, period))
   const byStatus = (s) => log.filter((l) => l.status === s).length
+  const daily = dietDaily(state, period, plan)
+  const planned = plan ? summarize(daily, 'planned') : null
+  const consumed = summarize(daily, 'consumed')
+  const completeness = plan ? planCompleteness(plan) : null
   return {
     activePlan: plan ? { id: plan.id, name: plan.name, status: plan.status, revision: plan.revision, validatedBy: plan.validatedBy || null } : null,
-    programmed: plan
-      ? plan.days.map((d) => ({ weekday: d.weekday, date: d.date, dayType: d.dayType, label: d.label, ...dayNutrition(d) }))
-      : [],
-    adherence: log.length ? { logged: log.length, followed: byStatus('followed'), modified: byStatus('modified'), skipped: byStatus('skipped') } : null,
+    targets: plan?.nutritionTargets ?? null,
+    planned,
+    consumed,
+    deltaAvg: {
+      planned: Object.fromEntries(MAIN_KEYS.map((k) => [k, avgOf(daily.map((r) => r.deltaPlanned?.[k] ?? null))])),
+      consumed: Object.fromEntries(MAIN_KEYS.map((k) => [k, avgOf(daily.map((r) => r.deltaConsumed?.[k] ?? null))])),
+    },
+    // Piano per giorno (opzioni principali): compatibilità con le viste per giorno della settimana
+    programmed: plan ? plan.days.map((d) => ({ weekday: d.weekday, date: d.date, dayType: d.dayType, label: d.label, ...dayPlanned(d) })) : [],
+    adherence: log.length ? { logged: byStatus('followed') + byStatus('modified') + byStatus('skipped'), followed: byStatus('followed'), modified: byStatus('modified'), skipped: byStatus('skipped'), extra: byStatus('extra') } : null,
+    dataQuality: {
+      targets: plan?.nutritionTargets && MAIN_KEYS.some((k) => plan.nutritionTargets.default?.[k] != null || plan.nutritionTargets.training?.[k] != null || plan.nutritionTargets.rest?.[k] != null) ? 'declared' : 'missing',
+      planned: planned?.quality ?? 'missing',
+      consumed: consumed.quality,
+      nutritionCompleteness: completeness,
+      plannedBasis: plan ? `piano attivo "${plan.name}", revisione ${plan.revision}` : null,
+    },
+    daily,
   }
 }
 

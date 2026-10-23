@@ -6,7 +6,7 @@ import { pickDay, nextMeal, sortedMeals, isValidated } from '../src/lib/diet'
 import { parseImport, previewImport, applyImport } from '../src/lib/import'
 import { emptyState } from '../src/schema/factories'
 import { logMeal } from '../src/lib/actions'
-import { dayNutrition } from '../src/lib/report/aggregate'
+import { dayPlanned } from '../src/lib/diet'
 
 const meal = (id, time, kcal = null) => ({ id, category: 'other', label: id, time, items: [], alternatives: [], nutrition: kcal == null ? null : { kcal, proteinG: null, carbsG: null, fatG: null }, notes: '' })
 const plan = {
@@ -39,8 +39,8 @@ describe('scelta del giorno', () => {
     expect(nextMeal(d, '21:00').id).toBe('spuntino')
   })
   it('macro: somma solo dei valori dichiarati, giorno parziale se mancano', () => {
-    expect(dayNutrition(plan.days[0]).kcal).toEqual({ value: 1000, partial: true, missing: false })
-    expect(dayNutrition(plan.days[0]).proteinG).toEqual({ value: null, partial: false, missing: true })
+    expect(dayPlanned(plan.days[0]).kcal).toEqual({ value: 1000, status: 'partial', known: 2, total: 3 })
+    expect(dayPlanned(plan.days[0]).proteinG).toEqual({ value: null, status: 'missing', known: 0, total: 3 })
   })
 })
 

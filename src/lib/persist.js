@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { idbGet, idbSetMany } from './db'
 import { readJSON } from './storage'
-import { migrateToV3 } from '../schema/migrate'
+import { migrateToLatest as migrateToV3 } from '../schema/migrate'
+import { SCHEMA_VERSION } from '../schema/constants'
 import { emptyState } from '../schema/factories'
 import { toLocalISO } from './dates'
 
@@ -14,7 +15,16 @@ export const FALLBACK_KEY = 'palestra:data:v3' // usato solo se IndexedDB non è
 export async function loadState() {
   try {
     const stored = await idbGet(STATE_KEY)
-    if (stored) return { state: migrateToV3(stored), backend: 'indexeddb' }
+    if (stored) {
+      if ((stored.schemaVersion ?? 0) >= SCHEMA_VERSION) return { state: migrateToV3(stored), backend: 'indexeddb' }
+      // Aggiornamento di schema: copia dello stato precedente e nuovo stato nella stessa transazione
+      const upgraded = migrateToV3(stored)
+      await idbSetMany([
+        [`snapshot:pre-v${SCHEMA_VERSION}`, { savedAt: toLocalISO(), label: `Prima dell’aggiornamento allo schema ${SCHEMA_VERSION}`, state: stored }],
+        [STATE_KEY, upgraded],
+      ])
+      return { state: upgraded, backend: 'indexeddb' }
+    }
     // Dati scritti in ripiego quando IndexedDB non era disponibile: hanno la precedenza sulla v2
     const fallback = readJSON(FALLBACK_KEY, null)
     const legacy = readJSON(LEGACY_KEY, null)

@@ -3,6 +3,8 @@
 import { Validator } from './validate'
 import {
   normDietPlan,
+  normDietLog,
+  normDietSelection,
   normGoal,
   normMeasurement,
   normProfile,
@@ -28,6 +30,7 @@ const emptyBatch = () => ({
   settings: null,
   calendar: null,
   dietLog: [],
+  dietSelections: [],
   activeSessionId: null,
   sources: [],
 })
@@ -169,7 +172,8 @@ function collectBackup(v, raw, path, batch) {
   batch.profile = normProfile(v, raw.profile, p('profile'))
   batch.settings = raw.settings && typeof raw.settings === 'object' ? { ...raw.settings } : null
   batch.calendar = raw.calendar && typeof raw.calendar === 'object' ? clone(raw.calendar) : null
-  batch.dietLog = Array.isArray(raw.dietLog) ? clone(raw.dietLog) : []
+  batch.dietLog = v.arr(raw.dietLog, p('dietLog')).map((l, i) => normDietLog(v, l, p(`dietLog[${i}]`))).filter(Boolean)
+  batch.dietSelections = v.arr(raw.dietSelections, p('dietSelections')).map((x, i) => normDietSelection(v, x, p(`dietSelections[${i}]`))).filter(Boolean)
   batch.activeSessionId = raw.activeSessionId ?? null
 }
 
@@ -354,6 +358,7 @@ export function applyImport(state, batch, preview, options = {}) {
     next.settings = { ...next.settings, ...(batch.settings ?? {}) }
     next.calendar = { overrides: batch.calendar?.overrides ?? {}, extra: batch.calendar?.extra ?? [] }
     next.dietLog = batch.dietLog
+    next.dietSelections = batch.dietSelections
     next.activeSessionId = next.sessions.some((s) => s.id === batch.activeSessionId) ? batch.activeSessionId : null
     next.meta = { ...next.meta, restoredAt: toLocalISO() }
     log.inserted = preview.items.map((i) => i.label)
@@ -419,6 +424,26 @@ export function applyImport(state, batch, preview, options = {}) {
   // Il piano alimentare attivo non viene mai sostituito automaticamente
   if (importedDietId && options.activateDietPlan) {
     next.dietPlans = next.dietPlans.map((d) => ({ ...d, active: d.id === importedDietId }))
+  }
+  // Backup in unione: diario, scelte delle alternative e stati del calendario vengono aggiunti se mancano,
+  // senza sovrascrivere quelli già presenti sul dispositivo
+  if (batch.fullBackup) {
+    const addMissing = (cur, inc, key) => {
+      const have = new Set(cur.map(key))
+      const extra = inc.filter((x) => !have.has(key(x)))
+      return { list: [...cur, ...extra], added: extra.length }
+    }
+    const dl = addMissing(next.dietLog ?? [], batch.dietLog, (l) => `${l.date}|${l.planId}|${l.mealId}`)
+    const ds = addMissing(next.dietSelections ?? [], batch.dietSelections, (x) => `${x.date}|${x.planId}|${x.mealId}`)
+    next.dietLog = dl.list
+    next.dietSelections = ds.list
+    if (dl.added) log.inserted.push(`${dl.added} registrazioni del diario alimentare`)
+    if (ds.added) log.inserted.push(`${ds.added} scelte di alternative`)
+    if (batch.calendar) {
+      const overrides = { ...(batch.calendar.overrides ?? {}), ...(next.calendar?.overrides ?? {}) }
+      const ex = addMissing(next.calendar?.extra ?? [], batch.calendar.extra ?? [], (x) => x.id)
+      next.calendar = { overrides, extra: ex.list }
+    }
   }
   // Profilo da backup: usato solo se quello attuale è vuoto
   if (batch.profile) {

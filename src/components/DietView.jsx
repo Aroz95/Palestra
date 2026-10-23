@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { Card, Chip, Empty, Field, NumberInput, Section, Select, TextArea, TextInput } from './ui'
-import { ADHERENCE, MEAL_CATEGORIES } from '../schema/constants'
+import { Card, Chip, Empty, Field, Section, Segmented, Select, TextArea, TextInput } from './ui'
 import { newDietPlan, uid, clone } from '../schema/factories'
 import { addDays, fmtDate, todayISO, toLocalISO, weekdayOf, WEEKDAYS_SHORT } from '../lib/dates'
-import { dayNutrition } from '../lib/report/aggregate'
-import { pickDay, sortedMeals, nextMeal, isValidated } from '../lib/diet'
-import { occurrencesOn } from '../lib/calendar'
-import { fmtNum } from '../lib/stats'
+import { pickDay, sortedMeals, nextMeal, isValidated, isTrainingDay, resolveTarget, hasTargets, dayPlanned, dayConsumed, deltaToTarget, selectionsFor, planCompleteness } from '../lib/diet'
+import { activityOn } from '../lib/calendar'
 import * as A from '../lib/actions'
+import MealCard, { ConsumptionSheet } from './diet/MealCard'
+import { DayTable, NutritionLine } from './diet/NutritionView'
+import { GuideView, WorkoutTips, hasGuide } from './diet/GuideView'
+import { TargetsEditor, GuidelinesEditor, DayTargetEditor, MealEditor } from './diet/editors'
+import { optionNutrition } from '../lib/diet'
+import { ADHERENCE } from '../schema/constants'
 import { exportDietPlan, fileNames } from '../lib/report'
 import { downloadJSON } from '../lib/download'
 
@@ -20,6 +23,9 @@ export default function DietView({ state, update, onImport }) {
   const [date, setDate] = useState(todayISO())
   const [dayType, setDayType] = useState(null)
   const [editing, setEditing] = useState(null) // bozza del piano in modifica
+  const [sub, setSub] = useState('day')
+  const [preview, setPreview] = useState({}) // anteprima delle alternative: { [data]: { [mealId]: alternativeId|null } }
+  const [extraOpen, setExtraOpen] = useState(false)
 
   const createPlan = () => {
     const p = newDietPlan({ days: [1, 2, 3, 4, 5, 6, 7].map((weekday) => ({ id: uid('day'), weekday, date: null, dayType: 'any', label: '', meals: [] })) })
@@ -47,13 +53,28 @@ export default function DietView({ state, update, onImport }) {
   const datedDays = shown ? shown.days.filter((d) => d.date).sort((a, b) => a.date.localeCompare(b.date)) : []
   const wd = weekdayOf(date)
   // Giorni di allenamento/riposo: scelta automatica in base al calendario, modificabile
-  const isTraining = occurrencesOn(state, date).some((o) => o.kind === 'strength' || o.kind === 'swim') || state.sessions.some((s) => s.date === date)
-  const { day, types, type: effType } = pickDay(shown, date, { isTraining, dayType })
+  const activity = activityOn(state, date)
+  const { day, types, type: effType } = pickDay(shown, date, { isTraining: activity, dayType })
+  const training = isTrainingDay(day, activity)
   const meals = sortedMeals(day)
   const isToday = date === todayISO()
   const nextMealId = isToday ? nextMeal(day, nowHHMM())?.id : null
-  const nutrition = day ? dayNutrition(day) : null
   const weekStart = addDays(date, 1 - wd)
+
+  // Obiettivo / programmato (con anteprima delle alternative) / consumato registrato
+  const saved = plan ? selectionsFor(state, date, plan.id) : {}
+  const datePreview = preview[date] ?? {}
+  const selections = { ...saved, ...datePreview }
+  const previewing = Object.entries(datePreview).some(([mid, alt]) => (saved[mid] ?? null) !== alt)
+  const target = shown ? resolveTarget(shown, day, training) : null
+  const planned = day ? dayPlanned(day, selections) : null
+  const logs = plan ? state.dietLog.filter((l) => l.date === date) : []
+  const consumed = logs.length ? dayConsumed(day, logs) : null
+  const extras = logs.filter((l) => l.status === 'extra')
+  const sourceLabel = { day: 'specifico del giorno', training: 'giorno di allenamento', rest: 'giorno di riposo', default: 'generale' }
+  const targetSources = target ? [...new Set(['kcal', 'proteinG', 'carbsG', 'fatG'].map((k) => target[k].source).filter(Boolean))] : []
+  const completeness = shown ? planCompleteness(shown) : null
+  const prePost = (m) => (training && shown?.guidelines?.preWorkout?.mealCategories?.includes(m.category) ? 'pre' : training && shown?.guidelines?.postWorkout?.mealCategories?.includes(m.category) ? 'post' : null)
 
   const setPlan = (p) => update((s) => A.upsertIn(s, 'dietPlans', p))
   const saveRevision = () => {
@@ -82,6 +103,17 @@ export default function DietView({ state, update, onImport }) {
         </div>
         <button onClick={onImport} className="btn-ghost text-sm">Importa</button>
       </div>
+
+      {plan && !editing && (
+        <Segmented
+          value={sub}
+          onChange={setSub}
+          options={[
+            { id: 'day', label: 'Giorno' },
+            { id: 'guide', label: `Guida${hasGuide(plan.guidelines) ? '' : ' (vuota)'}` },
+          ]}
+        />
+      )}
 
       {plan && (
         <Card className="space-y-2">
@@ -147,8 +179,27 @@ export default function DietView({ state, update, onImport }) {
         </Card>
       )}
 
-      {editing && <PlanMetaEditor plan={editing} onChange={setEditing} onSave={saveRevision} onCancel={() => setEditing(null)} />}
+      {editing && (
+        <>
+          <PlanMetaEditor plan={editing} onChange={setEditing} onSave={saveRevision} onCancel={() => setEditing(null)} />
+          <TargetsEditor targets={editing.nutritionTargets} onChange={(nutritionTargets) => setEditing({ ...editing, nutritionTargets })} />
+          <GuidelinesEditor guidelines={editing.guidelines} onChange={(guidelines) => setEditing({ ...editing, guidelines })} />
+        </>
+      )}
 
+      {editing && (
+        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-slate-800 bg-slate-950/95 px-4 py-2 backdrop-blur">
+          <div className="mx-auto flex max-w-2xl gap-2">
+            <button onClick={saveRevision} className="btn flex-1 bg-emerald-500 text-slate-950">Salva revisione {editing.revision + 1}</button>
+            <button onClick={() => setEditing(null)} className="btn-ghost">Annulla</button>
+          </div>
+        </div>
+      )}
+
+      {sub === 'guide' && !editing && plan && <GuideView plan={plan} />}
+
+      {(sub === 'day' || editing) && (
+        <>
       {/* Navigazione giorni */}
       {datedDays.length > 0 && (
         <Select
@@ -198,22 +249,27 @@ export default function DietView({ state, update, onImport }) {
         </div>
       )}
 
-      {nutrition && (
-        <div className="grid grid-cols-4 gap-2 text-center text-xs">
-          {[
-            ['kcal', 'kcal', ''],
-            ['proteinG', 'Proteine', 'g'],
-            ['carbsG', 'Carboidrati', 'g'],
-            ['fatG', 'Grassi', 'g'],
-          ].map(([k, label, u]) => (
-            <div key={k} className="rounded-xl bg-slate-900 px-1 py-2">
-              <div className="text-[10px] uppercase text-slate-400">{label}</div>
-              <div className="font-semibold text-white">{nutrition[k].missing ? 'ND' : `${fmtNum(nutrition[k].value, 0)}${u ? ` ${u}` : ''}`}</div>
-              {nutrition[k].partial && <div className="text-[10px] text-amber-300">parziale</div>}
-            </div>
-          ))}
-        </div>
+      {day && target && !editing && (
+        <Card className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-1">
+            <span className="text-sm font-semibold text-white">{training ? 'Giorno di allenamento' : 'Giorno di riposo'}</span>
+            {previewing && <Chip className="bg-amber-500/20 text-amber-200">anteprima alternative</Chip>}
+          </div>
+          <DayTable
+            rows={[
+              { label: 'Obiettivo', kind: 'target', hint: hasTargets(target) ? targetSources.map((x) => sourceLabel[x]).join(', ') : 'non specificato', cells: Object.fromEntries(['kcal', 'proteinG', 'carbsG', 'fatG'].map((k) => [k, target[k].value])) },
+              { label: 'Programmato', kind: 'total', hint: 'dal piano, non consumato', cells: planned },
+              ...(hasTargets(target) ? [{ label: 'Scostamento', kind: 'delta', hint: 'programmato − obiettivo', cells: deltaToTarget(planned, target), muted: true }] : []),
+              ...(consumed ? [{ label: 'Consumato', kind: 'total', hint: 'solo quanto registrato', cells: consumed }] : []),
+              ...(consumed && hasTargets(target) ? [{ label: 'Scostamento', kind: 'delta', hint: 'consumato − obiettivo', cells: deltaToTarget(consumed, target), muted: true }] : []),
+            ]}
+          />
+          <p className="text-[11px] text-slate-500">
+            ND = non disponibile. Gli scostamenti compaiono solo con totali completi. {completeness?.total ? `Pasti del piano con valori completi: ${completeness.complete}/${completeness.total}.` : ''}
+          </p>
+        </Card>
       )}
+      {!editing && <WorkoutTips plan={shown} training={training} onOpenGuide={() => setSub('guide')} />}
 
       {!day && (
         <Empty
@@ -228,18 +284,31 @@ export default function DietView({ state, update, onImport }) {
           Nessun pasto previsto per questo giorno nel piano.
         </Empty>
       )}
+      {day && editing && <DayTargetEditor key={day.id} day={day} onChange={editDay} />}
       {day && (
         <div className="space-y-2">
           {meals.map((m) =>
             editing ? (
               <MealEditor key={m.id} meal={m} onChange={(meal) => editDay({ meals: day.meals.map((x) => (x.id === m.id ? meal : x)) })} onRemove={() => editDay({ meals: day.meals.filter((x) => x.id !== m.id) })} />
             ) : (
-              <MealCard key={m.id} meal={m} next={m.id === nextMealId} state={state} update={update} plan={plan} date={date} />
+              <MealCard
+                key={m.id}
+                meal={m}
+                next={m.id === nextMealId}
+                state={state}
+                update={update}
+                plan={plan}
+                date={date}
+                workoutRole={prePost(m)}
+                selectedId={selections[m.id] ?? null}
+                savedId={saved[m.id] ?? null}
+                onPreview={(altId) => setPreview({ ...preview, [date]: { ...datePreview, [m.id]: altId } })}
+              />
             ),
           )}
           {editing && (
             <button
-              onClick={() => editDay({ meals: [...day.meals, { id: uid('meal'), category: 'other', label: 'Nuovo pasto', time: null, items: [], alternatives: [], nutrition: null, notes: '' }] })}
+              onClick={() => editDay({ meals: [...day.meals, { id: uid('meal'), category: 'other', label: 'Nuovo pasto', time: null, items: [], alternatives: [], nutrition: null, guidance: [], notes: '' }] })}
               className="btn-ghost w-full text-sm"
             >
               + Aggiungi pasto
@@ -247,76 +316,43 @@ export default function DietView({ state, update, onImport }) {
           )}
         </div>
       )}
-    </div>
-  )
-}
 
-function MealCard({ meal: m, next, state, update, plan, date }) {
-  const log = state.dietLog.find((l) => l.date === date && l.planId === plan.id && l.mealId === m.id)
-  const n = m.nutrition
-  return (
-    <Card tone={next ? 'info' : 'default'} className="space-y-2">
-      <div className="flex items-baseline justify-between gap-2">
-        <div>
-          <span className="font-semibold text-white">{m.label}</span>
-          {next && <span className="ml-2 text-xs text-sky-300">prossimo</span>}
-        </div>
-        <span className="text-sm text-slate-400">{m.time ?? ''}</span>
-      </div>
-      {m.items.length === 0 && <p className="text-sm text-slate-500">Nessun alimento indicato.</p>}
-      <ul className="space-y-1 text-sm">
-        {m.items.map((it, i) => (
-          <li key={i}>
-            <span className="text-slate-100">{it.name}</span>
-            {it.quantity != null && (
-              <span className="text-slate-400">
-                {' '}
-                · {fmtNum(it.quantity, 1)} {it.unit}
-              </span>
-            )}
-            {it.notes && <div className="text-xs text-slate-500">{it.notes}</div>}
-            {it.alternatives?.length > 0 && (
-              <div className="text-xs text-slate-400">oppure: {it.alternatives.map((a) => `${a.name}${a.quantity != null ? ` ${fmtNum(a.quantity, 1)} ${a.unit}` : ''}`).join(' · ')}</div>
-            )}
-          </li>
-        ))}
-      </ul>
-      {m.alternatives.length > 0 && (
-        <details className="text-sm">
-          <summary className="cursor-pointer text-slate-300">Alternative ({m.alternatives.length})</summary>
-          <ul className="mt-1 space-y-1 text-slate-400">
-            {m.alternatives.map((a, i) => (
-              <li key={i}>
-                {a.label && <b className="text-slate-300">{a.label}: </b>}
-                {a.items.map((it) => `${it.name}${it.quantity != null ? ` ${fmtNum(it.quantity, 1)} ${it.unit}` : ''}`).join(', ')}
-              </li>
-            ))}
-          </ul>
-        </details>
+      {day && !editing && plan && (
+        <Section title="Fuori piano" right={<button onClick={() => setExtraOpen(true)} className="text-sm text-emerald-400">+ Aggiungi</button>}>
+          {extras.length === 0 ? (
+            <p className="px-1 text-xs text-slate-500">Nessuna aggiunta registrata per questo giorno.</p>
+          ) : (
+            <div className="space-y-2">
+              {extras.map((l) => (
+                <Card key={l.id} className="flex items-center justify-between gap-2 py-3 text-sm">
+                  <div>
+                    <div className="font-medium text-white">{l.label}</div>
+                    <div className="text-xs">
+                      <NutritionLine n={optionNutrition(l.consumption ?? { items: [] })} />
+                    </div>
+                  </div>
+                  <button onClick={() => update((s) => A.removeLog(s, l.id))} className="text-xs text-rose-400 underline">Elimina</button>
+                </Card>
+              ))}
+            </div>
+          )}
+        </Section>
       )}
-      <div className="text-xs text-slate-400">
-        {n && [n.kcal, n.proteinG, n.carbsG, n.fatG].some((x) => x != null)
-          ? `${n.kcal != null ? `${fmtNum(n.kcal, 0)} kcal` : 'kcal ND'} · P ${n.proteinG ?? 'ND'} · C ${n.carbsG ?? 'ND'} · G ${n.fatG ?? 'ND'}`
-          : 'Valori nutrizionali non disponibili'}
-      </div>
-      {m.notes && <p className="text-xs text-slate-400">{m.notes}</p>}
-      {log && log.planRevision != null && log.planRevision !== plan.revision && (
-        <p className="text-[11px] text-amber-300">Registrato come “{ADHERENCE[log.status]}” sulla revisione {log.planRevision} del piano (il pasto può essere cambiato).</p>
+      {extraOpen && (
+        <ConsumptionSheet
+          extra
+          title="Consumo fuori piano"
+          option={{ id: null, items: [{ name: '', quantity: null, unit: 'g', notes: '', nutrition: null, alternatives: [] }], nutrition: null }}
+          onClose={() => setExtraOpen(false)}
+          onSave={({ consumption, note, label }) => {
+            update((s) => A.addExtraFood(s, { date, planId: plan.id, planRevision: plan.revision, label, consumption, note }))
+            setExtraOpen(false)
+          }}
+        />
       )}
-      <div className="flex flex-wrap items-center gap-1 pt-1">
-        <span className="text-[11px] text-slate-500">Diario (facoltativo):</span>
-        {Object.entries(ADHERENCE).map(([k, label]) => (
-          <button
-            key={k}
-            onClick={() => update((s) => A.logMeal(s, { date, planId: plan.id, planRevision: plan.revision, mealId: m.id, status: log?.status === k ? null : k }))}
-            aria-pressed={log?.status === k}
-            className={`rounded-lg px-2 py-1 text-xs font-medium ${log?.status === k ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </Card>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -360,61 +396,5 @@ function PlanMetaEditor({ plan, onChange, onSave, onCancel }) {
         </div>
       </Card>
     </Section>
-  )
-}
-
-function MealEditor({ meal: m, onChange, onRemove }) {
-  const set = (patch) => onChange({ ...m, ...patch })
-  const updItem = (i, patch) => set({ items: m.items.map((it, j) => (j === i ? { ...it, ...patch } : it)) })
-  const n = m.nutrition ?? { kcal: null, proteinG: null, carbsG: null, fatG: null }
-  const setN = (patch) => {
-    const next = { ...n, ...patch }
-    set({ nutrition: Object.values(next).every((x) => x == null) ? null : next })
-  }
-  return (
-    <Card className="space-y-3">
-      <div className="grid grid-cols-[1fr_6rem] gap-2">
-        <Field label="Pasto">
-          <TextInput value={m.label} onChange={(label) => set({ label })} />
-        </Field>
-        <Field label="Ora">
-          <input type="time" value={m.time ?? ''} onChange={(e) => set({ time: e.target.value || null })} className="w-full rounded-xl bg-slate-800 px-2 py-2 text-slate-100 [color-scheme:dark]" />
-        </Field>
-      </div>
-      <Field label="Categoria">
-        <Select value={m.category} onChange={(category) => set({ category })} options={Object.entries(MEAL_CATEGORIES).map(([value, label]) => ({ value, label }))} />
-      </Field>
-      {m.items.map((it, i) => (
-        <div key={i} className="grid grid-cols-[1fr_4.5rem_4rem_2rem] items-end gap-2">
-          <Field label="Alimento">
-            <TextInput value={it.name} onChange={(name) => updItem(i, { name })} />
-          </Field>
-          <Field label="Q.tà">
-            <NumberInput value={it.quantity} onChange={(quantity) => updItem(i, { quantity })} />
-          </Field>
-          <Field label="Unità">
-            <TextInput value={it.unit} onChange={(unit) => updItem(i, { unit })} />
-          </Field>
-          <button onClick={() => set({ items: m.items.filter((_, j) => j !== i) })} className="pb-2 text-rose-400" aria-label="Rimuovi alimento">✕</button>
-        </div>
-      ))}
-      <button onClick={() => set({ items: [...m.items, { name: '', quantity: null, unit: 'g', notes: '', alternatives: [] }] })} className="btn-ghost w-full text-sm">+ Alimento</button>
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          ['kcal', 'kcal'],
-          ['proteinG', 'P (g)'],
-          ['carbsG', 'C (g)'],
-          ['fatG', 'G (g)'],
-        ].map(([k, l]) => (
-          <Field key={k} label={l}>
-            <NumberInput value={n[k]} onChange={(v) => setN({ [k]: v })} />
-          </Field>
-        ))}
-      </div>
-      <Field label="Note">
-        <TextInput value={m.notes} onChange={(notes) => set({ notes })} />
-      </Field>
-      <button onClick={() => confirm('Eliminare questo pasto?') && onRemove()} className="text-sm text-rose-400">Elimina pasto</button>
-    </Card>
   )
 }

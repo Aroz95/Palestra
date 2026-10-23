@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Card, Chip, Metric, Section, Segmented, Toggle } from './ui'
+import { DayTable } from './diet/NutritionView'
+import { MAIN_KEYS } from '../lib/diet'
 import LineChart from './LineChart'
 import { PERIODS, periodRange, previousPeriod, todayISO } from '../lib/dates'
 import { aggregateAll, weightSeries, measurementSeries } from '../lib/report/aggregate'
@@ -216,29 +218,41 @@ function BodyWidget({ a, state, period }) {
 
 function DietWidget({ a }) {
   const d = a.diet
+  const avgCells = (sum, total) =>
+    Object.fromEntries(MAIN_KEYS.map((k) => [k, sum && sum.avg[k] != null ? { value: sum.avg[k], status: 'complete' } : { value: null, status: 'missing' }]))
+  const targetAvg = Object.fromEntries(MAIN_KEYS.map((k) => {
+    const v = d.daily.map((r) => r.target?.[k]).filter((x) => x != null)
+    return [k, v.length ? v.reduce((x, y) => x + y, 0) / v.length : null]
+  }))
+  const consumedPts = d.daily.filter((r) => r.consumed?.kcal.status === 'complete').map((r) => ({ date: r.date, value: r.consumed.kcal.value }))
+  const targetPts = d.daily.filter((r) => r.target?.kcal != null && consumedPts.length).map((r) => ({ date: r.date, value: r.target.kcal }))
   return (
     <Section title="Alimentazione">
-      <Card className="space-y-2 text-sm">
+      <Card className="space-y-3 text-sm">
         {d.activePlan ? (
-          <>
-            <div className="text-slate-200">
-              Piano attivo: <b className="text-white">{d.activePlan.name}</b> · rev. {d.activePlan.revision} · {d.activePlan.status === 'validated' ? 'validato' : 'bozza'}
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {d.programmed.map((x, i) => (
-                <Chip key={i}>
-                  {x.weekday ? WEEKDAYS_SHORT[x.weekday] : x.date}
-                  {x.dayType !== 'any' ? ` (${x.dayType === 'training' ? 'allen.' : 'riposo'})` : ''}: {x.kcal.missing ? 'kcal ND' : `${fmtNum(x.kcal.value, 0)} kcal${x.kcal.partial ? ' parziale' : ''}`}
-                </Chip>
-              ))}
-            </div>
-          </>
+          <div className="text-slate-200">
+            Piano attivo: <b className="text-white">{d.activePlan.name}</b> · rev. {d.activePlan.revision} · {d.activePlan.status === 'validated' ? 'validato' : 'bozza'}
+          </div>
         ) : (
-          <p className="text-slate-400">Nessun piano attivo.</p>
+          <p className="text-slate-400">Nessun piano attivo: obiettivi e programmato non disponibili.</p>
         )}
+        <DayTable
+          rows={[
+            { label: 'Obiettivo medio', kind: 'target', hint: d.dataQuality.targets === 'declared' ? 'dal piano' : 'non specificato', cells: targetAvg },
+            ...(d.planned ? [{ label: 'Programmato medio', kind: 'total', hint: `${d.planned.daysComplete.kcal}/${d.planned.days} giorni con dati completi`, cells: avgCells(d.planned) }] : []),
+            { label: 'Consumato medio', kind: 'total', hint: `${d.consumed.daysComplete.kcal}/${d.consumed.days} giorni registrati completi`, cells: avgCells(d.consumed) },
+          ]}
+        />
+        {consumedPts.length > 0 && (
+          <LineChart label="kcal consumate e obiettivo" unit="kcal" digits={0} series={[{ name: 'Consumate (giorni completi)', points: consumedPts }, ...(targetPts.length ? [{ name: 'Obiettivo', dashed: true, points: targetPts }] : [])]} />
+        )}
+        <p className="text-xs text-slate-400">
+          Medie calcolate solo sui giorni con dati completi; i giorni parziali non vengono stimati.
+          {d.dataQuality.nutritionCompleteness?.total ? ` Pasti del piano con valori completi: ${d.dataQuality.nutritionCompleteness.complete}/${d.dataQuality.nutritionCompleteness.total}.` : ''}
+        </p>
         <p className="text-slate-300">
           Aderenza:{' '}
-          {d.adherence ? `${d.adherence.followed} seguiti · ${d.adherence.modified} modificati · ${d.adherence.skipped} saltati (${d.adherence.logged} pasti registrati)` : 'non registrata'}
+          {d.adherence ? `${d.adherence.followed} seguiti · ${d.adherence.modified} modificati · ${d.adherence.skipped} saltati${d.adherence.extra ? ` · ${d.adherence.extra} fuori piano` : ''}` : 'non registrata'}
         </p>
       </Card>
     </Section>
@@ -272,7 +286,8 @@ function ReportExport({ state, period, settings }) {
   const [sections, setSections] = useState(Object.keys(REPORT_SECTIONS))
   const [detail, setDetail] = useState('summary')
   const [excludeNotes, setExcludeNotes] = useState(settings.reportExcludeNotes ?? true)
-  const report = useMemo(() => buildReport(state, period, { sections, detail, excludeNotes }), [state, period.from, period.to, sections, detail, excludeNotes])
+  const [includePlanGuide, setIncludePlanGuide] = useState(false)
+  const report = useMemo(() => buildReport(state, period, { sections, detail, excludeNotes, includePlanGuide }), [state, period.from, period.to, sections, detail, excludeNotes, includePlanGuide])
   const [dialect, setDialect] = useState('excel')
   const [pdfBusy, setPdfBusy] = useState(false)
   const csv = useMemo(() => reportToCSV(state, period, { sections, dialect }), [state, period.from, period.to, sections, dialect])
@@ -290,6 +305,7 @@ function ReportExport({ state, period, settings }) {
         </div>
         <Segmented value={detail} onChange={setDetail} options={[{ id: 'summary', label: 'Solo riepilogo' }, { id: 'detailed', label: 'Con dettaglio sedute' }]} />
         <Toggle checked={excludeNotes} onChange={setExcludeNotes} label="Escludi note personali e sanitarie" />
+        {sections.includes('diet') && <Toggle checked={includePlanGuide} onChange={setIncludePlanGuide} label="Includi la guida del piano alimentare" />}
         <Segmented value={dialect} onChange={setDialect} options={Object.entries(CSV_DIALECTS).map(([id, d]) => ({ id, label: `CSV ${d.label}` }))} />
         <details className="text-xs">
           <summary className="cursor-pointer text-slate-300">Anteprima ({csv.split('\n').length - 1} righe CSV)</summary>
@@ -303,7 +319,7 @@ function ReportExport({ state, period, settings }) {
               try {
                 // jsPDF viene caricato solo quando serve
                 const { buildReportPdf } = await import('../lib/report/pdf')
-                downloadBlob(fileNames.report(period, 'pdf'), buildReportPdf(state, period, { sections, detail, excludeNotes }).output('blob'))
+                downloadBlob(fileNames.report(period, 'pdf'), buildReportPdf(state, period, { sections, detail, excludeNotes, includePlanGuide }).output('blob'))
               } catch (e) {
                 alert(`PDF non generato: ${e.message}`)
               } finally {

@@ -85,9 +85,9 @@ describe('KPI per periodo (confini inclusi, sedute saltate e fuori periodo esclu
     expect(a.body.weightAvg7Last).toBeNull()
   })
   it('alimentazione: macro sommati solo se dichiarati, aderenza solo se registrata', () => {
-    expect(a.diet.programmed[0].kcal).toEqual({ value: 400, partial: true, missing: false })
-    expect(a.diet.programmed[0].carbsG).toEqual({ value: null, partial: false, missing: true })
-    expect(a.diet.adherence).toEqual({ logged: 2, followed: 1, modified: 0, skipped: 1 })
+    expect(a.diet.programmed[0].kcal).toEqual({ value: 400, status: 'partial', known: 1, total: 2 })
+    expect(a.diet.programmed[0].carbsG).toEqual({ value: null, status: 'missing', known: 0, total: 2 })
+    expect(a.diet.adherence).toEqual({ logged: 2, followed: 1, modified: 0, skipped: 1, extra: 0 })
   })
   it('energia: attive e totali separate, sedute senza valore non stimate', () => {
     expect(a.energy).toMatchObject({ sessionsWithValue: 2, sessionsWithout: 2, activeKcal: { min: 600, max: 700 }, totalKcal: { min: 800, max: 900 } })

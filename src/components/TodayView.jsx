@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Card, Empty, Section, Sheet } from './ui'
 import { OccurrenceItem, SessionChip, freeSessionsOn } from './CalendarView'
-import { occurrencesOn, mainProgram } from '../lib/calendar'
+import { occurrencesOn, mainProgram, activityOn } from '../lib/calendar'
 import { fmtDate, todayISO, weekdayOf, timeOf, localDate } from '../lib/dates'
 import { fmtNum } from '../lib/stats'
 import { pickDay, nextMeal } from '../lib/diet'
@@ -128,7 +128,7 @@ function NextMeal({ state, go }) {
   const plan = state.dietPlans.find((d) => d.active && !d.archived)
   if (!plan) return null
   const today = todayISO()
-  const training = occurrencesOn(state, today).some((o) => o.kind === 'strength' || o.kind === 'swim') || state.sessions.some((s) => s.date === today)
+  const training = activityOn(state, today)
   const { day } = pickDay(plan, today, { isTraining: training })
   if (!day?.meals.length) return null
   const next = nextMeal(day, timeOf(new Date().toISOString()))

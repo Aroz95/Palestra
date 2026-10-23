@@ -48,6 +48,14 @@ export function scheduleAdherence(state, from, to) {
   return { planned: occ.length, completed, ratio: occ.length ? completed / occ.length : null }
 }
 
+// Giorno con allenamento: attività di palestra/nuoto prevista dal calendario o seduta registrata (non saltata)
+export function activityOn(state, date) {
+  return (
+    occurrencesOn(state, date).some((o) => (o.kind === 'strength' || o.kind === 'swim') && o.status !== 'skipped' && o.status !== 'postponed') ||
+    state.sessions.some((s) => s.date === date && s.status !== 'skipped' && s.status !== 'postponed')
+  )
+}
+
 export function templateName(state, id) {
   const t = state.workoutTemplates.find((x) => x.id === id)
   return t ? `${t.label ? `${t.label} · ` : ''}${t.name}` : 'Scheda non trovata'

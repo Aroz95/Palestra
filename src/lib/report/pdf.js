@@ -152,14 +152,38 @@ export function buildReportPdf(state, period, opts = {}) {
   if (s.diet) {
     const d = s.diet
     h2('Alimentazione')
+    const g = (v) => (v == null ? 'ND' : `${fmtNum(v, 0)} g`)
+    const macro = (o) => (o ? `${o.kcal == null ? 'ND' : `${fmtNum(o.kcal, 0)} kcal`} · P ${g(o.proteinG)} · C ${g(o.carbsG)} · G ${g(o.fatG)}` : 'ND')
     if (d.activePlan) {
       kv('Piano attivo', `${d.activePlan.name} (rev. ${d.activePlan.revision})`, d.activePlan.status === 'validated' ? 'validato da un professionista' : 'bozza, non validata da un professionista')
+      const t = d.targets
+      if (t?.default) kv('Obiettivo predefinito', macro(t.default), 'dal piano')
+      if (t?.training) kv('Obiettivo giorni di allenamento', macro(t.training), 'dal piano')
+      if (t?.rest) kv('Obiettivo giorni di riposo', macro(t.rest), 'dal piano')
+      if (!t) kv('Obiettivi', 'non specificati nel piano')
       for (const day of d.programmed) {
         const label = `${day.weekday ? WEEKDAYS_SHORT[day.weekday] : it(day.date)}${day.dayType !== 'any' ? ` (${day.dayType === 'training' ? 'allenamento' : 'riposo'})` : ''}`
-        kv(`kcal programmate ${label}`, day.kcal.missing ? 'ND' : `${fmtNum(day.kcal.value, 0)} kcal${day.kcal.partial ? ' (parziale)' : ''}`)
+        const k = day.kcal
+        kv(`kcal programmate ${label}`, k.value == null ? 'ND' : `${fmtNum(k.value, 0)} kcal${k.status === 'partial' ? ` (parziale, ${k.known}/${k.total} pasti)` : ''}`)
       }
+      if (d.planned) kv('Programmato medio nel periodo', macro(d.planned.avg), `${d.planned.daysComplete.kcal}/${d.planned.days} giorni con dati completi`)
+      const c = d.dataQuality?.nutritionCompleteness
+      if (c?.total) kv('Completezza nutrizionale del piano', `${c.complete}/${c.total} pasti con valori completi`)
     } else kv('Piano attivo', 'nessuno')
-    kv('Aderenza registrata', d.adherence ? `${d.adherence.followed} seguiti · ${d.adherence.modified} modificati · ${d.adherence.skipped} saltati` : 'non registrata')
+    kv('Consumato medio nel periodo', d.consumed.days ? macro(d.consumed.avg) : 'non registrato', d.consumed.days ? `${d.consumed.daysComplete.kcal}/${d.consumed.days} giorni con dati completi; i giorni parziali non sono stimati` : null)
+    kv('Aderenza registrata', d.adherence ? `${d.adherence.followed} seguiti · ${d.adherence.modified} modificati · ${d.adherence.skipped} saltati${d.adherence.extra ? ` · ${d.adherence.extra} fuori piano` : ''}` : 'non registrata')
+    if (d.guidelines) {
+      const gl = d.guidelines
+      const guid = (o) => (o ? [o.timing ? `Quando: ${o.timing}` : null, ...(o.advice ?? [])].filter(Boolean) : [])
+      const lists = [['Indicazioni generali', gl.general], ['Pesatura degli alimenti', gl.foodWeighing], ['Idratazione', gl.hydration], ['Prima dell’allenamento', guid(gl.preWorkout)], ['Dopo l’allenamento', guid(gl.postWorkout)], ['Note', gl.notes]]
+      h2('Guida del piano')
+      for (const [title, items] of lists) {
+        if (!items?.length) continue
+        text(title, { size: 9, bold: true, gap: 0.5 })
+        for (const it of items) text(`• ${it}`, { size: 8.5, indent: 2, gap: 0.5 })
+      }
+      text('Indicazioni riportate dal piano; non sostituiscono il parere del professionista.', { size: 8, color: [100, 116, 139], gap: 1 })
+    }
   }
 
   if (s.energy) {

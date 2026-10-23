@@ -53,11 +53,13 @@ test('E2E-06 dieta: mercoledì con pasti ordinati, alternative e valori ignoti N
   const meals = main(page).locator('div.rounded-2xl').filter({ hasText: /Colazione|Cena/ })
   await expect(meals.nth(0)).toContainText('Colazione') // 07:30 prima delle 20:00
   await expect(meals.nth(0)).toContainText('oppure: Gallette 30 g')
-  await expect(meals.nth(0)).toContainText('P 12 · C ND · G ND')
+  await expect(meals.nth(0)).toContainText('P 12 g · C ND · G ND')
   await expect(meals.nth(1)).toContainText('Valori nutrizionali non disponibili')
   await expect(main(page)).toContainText('Bozza — non validato da un professionista')
-  await main(page).getByText('Alternative (1)').click()
-  await expect(main(page)).toContainText('Yogurt 125 g')
+  // alternativa del pasto: anteprima con i propri alimenti, senza copiare i valori del principale
+  await main(page).getByRole('group', { name: 'Opzioni Colazione' }).getByRole('button', { name: 'Dolce' }).click()
+  await expect(meals.nth(0)).toContainText('Yogurt · 125 g')
+  await expect(meals.nth(0)).toContainText('Valori nutrizionali non disponibili')
   // il piano importato non viene attivato da solo
   expect((await savedState(page)).dietPlans[0].active).toBe(false)
 })

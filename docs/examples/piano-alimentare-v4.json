@@ -1,0 +1,2385 @@
+{
+  "type": "palestra-diet-plan",
+  "schemaVersion": 4,
+  "id": "ricomposizione-2026-10",
+  "name": "Ricomposizione e nuoto (esempio v4)",
+  "status": "draft",
+  "author": "Esempio di struttura: valori indicativi da verificare",
+  "validFrom": "2026-11-02",
+  "validTo": null,
+  "goal": "Riduzione graduale della massa grassa con conservazione della muscolatura",
+  "notes": "Esempio del contratto v4: non è una prescrizione alimentare.",
+  "nutritionTargets": {
+    "default": {
+      "kcal": 2200,
+      "proteinG": 140,
+      "carbsG": 264,
+      "fatG": 65,
+      "fiberG": 30,
+      "waterMl": null
+    },
+    "training": {
+      "kcal": 2300,
+      "carbsG": 289
+    },
+    "rest": {
+      "kcal": 2000,
+      "carbsG": 214
+    },
+    "weightLossKgPerWeek": {
+      "min": 0.3,
+      "max": 0.5
+    }
+  },
+  "guidelines": {
+    "general": [
+      "La colazione può comprendere latte, fette biscottate, burro e marmellata.",
+      "Distribuire le proteine tra i pasti principali."
+    ],
+    "foodWeighing": [
+      "Pasta e riso pesati a secco; carni e pesci a crudo; legumi cotti e scolati.",
+      "Per i prodotti confezionati fare riferimento all'etichetta."
+    ],
+    "hydration": [
+      "Bere regolarmente durante la giornata e adattare l'apporto alla sudorazione."
+    ],
+    "preWorkout": {
+      "timing": "Circa 60–90 minuti prima",
+      "advice": [
+        "Preferire uno spuntino digeribile.",
+        "Evitare pasti abbondanti e molto grassi."
+      ],
+      "mealCategories": [
+        "afternoon_snack"
+      ]
+    },
+    "postWorkout": {
+      "timing": "Al pasto successivo",
+      "advice": [
+        "Prevedere proteine e carboidrati."
+      ],
+      "mealCategories": [
+        "dinner"
+      ]
+    },
+    "notes": [
+      "Schema orientativo da adattare alla risposta individuale."
+    ]
+  },
+  "days": [
+    {
+      "id": "giorno-1",
+      "weekday": 1,
+      "dayType": "training",
+      "meals": [
+        {
+          "id": "1-colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "08:00",
+          "items": [
+            {
+              "name": "Latte parzialmente scremato",
+              "quantity": 250,
+              "unit": "ml",
+              "quantityBasis": "packaged",
+              "nutrition": {
+                "kcal": 115,
+                "proteinG": 8.5,
+                "carbsG": 12.5,
+                "fatG": 4,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Fette biscottate",
+              "quantity": 3,
+              "unit": "pz",
+              "notes": "circa 8 g l'una: verificare in etichetta",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 2.7,
+                "carbsG": 19,
+                "fatG": 1.5,
+                "fiberG": null,
+                "source": "label"
+              }
+            },
+            {
+              "name": "Burro",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 75,
+                "proteinG": 0.1,
+                "carbsG": 0.1,
+                "fatG": 8.3,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Marmellata",
+              "quantity": 20,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 45,
+                "proteinG": 0.1,
+                "carbsG": 11,
+                "fatG": 0,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "1-colazione-skyr",
+              "label": "Skyr e avena",
+              "items": [
+                {
+                  "name": "Skyr",
+                  "quantity": 170,
+                  "unit": "g"
+                },
+                {
+                  "name": "Fiocchi d'avena",
+                  "quantity": 40,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                }
+              ],
+              "nutrition": {
+                "kcal": 257,
+                "proteinG": 24,
+                "carbsG": 31,
+                "fatG": 3,
+                "fiberG": 4,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "1-pranzo",
+          "category": "lunch",
+          "label": "Pranzo",
+          "time": "13:00",
+          "items": [
+            {
+              "name": "Pasta di semola",
+              "quantity": 80,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "notes": "pesata a secco"
+            },
+            {
+              "name": "Petto di pollo",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g"
+            },
+            {
+              "name": "Verdure di stagione",
+              "quantity": 200,
+              "unit": "g",
+              "quantityBasis": "raw"
+            }
+          ],
+          "nutrition": {
+            "kcal": 580,
+            "proteinG": 47,
+            "carbsG": 63,
+            "fatG": 14,
+            "fiberG": 7,
+            "source": "table"
+          },
+          "alternatives": [
+            {
+              "id": "1-pranzo-riso",
+              "label": "Riso e tonno",
+              "items": [
+                {
+                  "name": "Riso basmati",
+                  "quantity": 80,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                },
+                {
+                  "name": "Tonno al naturale",
+                  "quantity": 120,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Olio extravergine d'oliva",
+                  "quantity": 10,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": {
+                "kcal": 530,
+                "proteinG": 36,
+                "carbsG": 63,
+                "fatG": 12,
+                "fiberG": 2,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "1-merenda",
+          "category": "afternoon_snack",
+          "label": "Merenda",
+          "time": "17:00",
+          "items": [
+            {
+              "name": "Yogurt greco 0%",
+              "quantity": 170,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 17,
+                "carbsG": 6,
+                "fatG": 0.5,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Banana",
+              "quantity": 120,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 107,
+                "proteinG": 1.3,
+                "carbsG": 27,
+                "fatG": 0.4,
+                "fiberG": 3,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "guidance": [
+            "Nei giorni di allenamento consumarla circa 60–90 minuti prima."
+          ],
+          "alternatives": []
+        },
+        {
+          "id": "1-cena",
+          "category": "dinner",
+          "label": "Cena",
+          "time": "20:30",
+          "items": [
+            {
+              "name": "Salmone",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "nutrition": {
+                "kcal": 310,
+                "proteinG": 30,
+                "carbsG": 0,
+                "fatG": 20,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Patate",
+              "quantity": 250,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 90,
+                "proteinG": 0,
+                "carbsG": 0,
+                "fatG": 10,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "1-cena-legumi",
+              "label": "Legumi",
+              "items": [
+                {
+                  "name": "Ceci",
+                  "quantity": 200,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Pane integrale",
+                  "quantity": 60,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": null,
+              "notes": "Valori nutrizionali da completare"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "giorno-2",
+      "weekday": 2,
+      "dayType": "training",
+      "meals": [
+        {
+          "id": "2-colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "08:00",
+          "items": [
+            {
+              "name": "Latte parzialmente scremato",
+              "quantity": 250,
+              "unit": "ml",
+              "quantityBasis": "packaged",
+              "nutrition": {
+                "kcal": 115,
+                "proteinG": 8.5,
+                "carbsG": 12.5,
+                "fatG": 4,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Fette biscottate",
+              "quantity": 3,
+              "unit": "pz",
+              "notes": "circa 8 g l'una: verificare in etichetta",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 2.7,
+                "carbsG": 19,
+                "fatG": 1.5,
+                "fiberG": null,
+                "source": "label"
+              }
+            },
+            {
+              "name": "Burro",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 75,
+                "proteinG": 0.1,
+                "carbsG": 0.1,
+                "fatG": 8.3,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Marmellata",
+              "quantity": 20,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 45,
+                "proteinG": 0.1,
+                "carbsG": 11,
+                "fatG": 0,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "2-colazione-skyr",
+              "label": "Skyr e avena",
+              "items": [
+                {
+                  "name": "Skyr",
+                  "quantity": 170,
+                  "unit": "g"
+                },
+                {
+                  "name": "Fiocchi d'avena",
+                  "quantity": 40,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                }
+              ],
+              "nutrition": {
+                "kcal": 257,
+                "proteinG": 24,
+                "carbsG": 31,
+                "fatG": 3,
+                "fiberG": 4,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "2-pranzo",
+          "category": "lunch",
+          "label": "Pranzo",
+          "time": "13:00",
+          "items": [
+            {
+              "name": "Pasta di semola",
+              "quantity": 80,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "notes": "pesata a secco"
+            },
+            {
+              "name": "Petto di pollo",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g"
+            },
+            {
+              "name": "Verdure di stagione",
+              "quantity": 200,
+              "unit": "g",
+              "quantityBasis": "raw"
+            }
+          ],
+          "nutrition": {
+            "kcal": 580,
+            "proteinG": 47,
+            "carbsG": 63,
+            "fatG": 14,
+            "fiberG": 7,
+            "source": "table"
+          },
+          "alternatives": [
+            {
+              "id": "2-pranzo-riso",
+              "label": "Riso e tonno",
+              "items": [
+                {
+                  "name": "Riso basmati",
+                  "quantity": 80,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                },
+                {
+                  "name": "Tonno al naturale",
+                  "quantity": 120,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Olio extravergine d'oliva",
+                  "quantity": 10,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": {
+                "kcal": 530,
+                "proteinG": 36,
+                "carbsG": 63,
+                "fatG": 12,
+                "fiberG": 2,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "2-merenda",
+          "category": "afternoon_snack",
+          "label": "Merenda",
+          "time": "17:00",
+          "items": [
+            {
+              "name": "Yogurt greco 0%",
+              "quantity": 170,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 17,
+                "carbsG": 6,
+                "fatG": 0.5,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Banana",
+              "quantity": 120,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 107,
+                "proteinG": 1.3,
+                "carbsG": 27,
+                "fatG": 0.4,
+                "fiberG": 3,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "guidance": [
+            "Nei giorni di allenamento consumarla circa 60–90 minuti prima."
+          ],
+          "alternatives": []
+        },
+        {
+          "id": "2-cena",
+          "category": "dinner",
+          "label": "Cena",
+          "time": "20:30",
+          "items": [
+            {
+              "name": "Salmone",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "nutrition": {
+                "kcal": 310,
+                "proteinG": 30,
+                "carbsG": 0,
+                "fatG": 20,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Patate",
+              "quantity": 250,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 90,
+                "proteinG": 0,
+                "carbsG": 0,
+                "fatG": 10,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "2-cena-legumi",
+              "label": "Legumi",
+              "items": [
+                {
+                  "name": "Ceci",
+                  "quantity": 200,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Pane integrale",
+                  "quantity": 60,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": null,
+              "notes": "Valori nutrizionali da completare"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "giorno-3",
+      "weekday": 3,
+      "dayType": "rest",
+      "meals": [
+        {
+          "id": "3-colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "08:00",
+          "items": [
+            {
+              "name": "Latte parzialmente scremato",
+              "quantity": 250,
+              "unit": "ml",
+              "quantityBasis": "packaged",
+              "nutrition": {
+                "kcal": 115,
+                "proteinG": 8.5,
+                "carbsG": 12.5,
+                "fatG": 4,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Fette biscottate",
+              "quantity": 3,
+              "unit": "pz",
+              "notes": "circa 8 g l'una: verificare in etichetta",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 2.7,
+                "carbsG": 19,
+                "fatG": 1.5,
+                "fiberG": null,
+                "source": "label"
+              }
+            },
+            {
+              "name": "Burro",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 75,
+                "proteinG": 0.1,
+                "carbsG": 0.1,
+                "fatG": 8.3,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Marmellata",
+              "quantity": 20,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 45,
+                "proteinG": 0.1,
+                "carbsG": 11,
+                "fatG": 0,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "3-colazione-skyr",
+              "label": "Skyr e avena",
+              "items": [
+                {
+                  "name": "Skyr",
+                  "quantity": 170,
+                  "unit": "g"
+                },
+                {
+                  "name": "Fiocchi d'avena",
+                  "quantity": 40,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                }
+              ],
+              "nutrition": {
+                "kcal": 257,
+                "proteinG": 24,
+                "carbsG": 31,
+                "fatG": 3,
+                "fiberG": 4,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "3-pranzo",
+          "category": "lunch",
+          "label": "Pranzo",
+          "time": "13:00",
+          "items": [
+            {
+              "name": "Pasta di semola",
+              "quantity": 80,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "notes": "pesata a secco"
+            },
+            {
+              "name": "Petto di pollo",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g"
+            },
+            {
+              "name": "Verdure di stagione",
+              "quantity": 200,
+              "unit": "g",
+              "quantityBasis": "raw"
+            }
+          ],
+          "nutrition": {
+            "kcal": 580,
+            "proteinG": 47,
+            "carbsG": 63,
+            "fatG": 14,
+            "fiberG": 7,
+            "source": "table"
+          },
+          "alternatives": [
+            {
+              "id": "3-pranzo-riso",
+              "label": "Riso e tonno",
+              "items": [
+                {
+                  "name": "Riso basmati",
+                  "quantity": 80,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                },
+                {
+                  "name": "Tonno al naturale",
+                  "quantity": 120,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Olio extravergine d'oliva",
+                  "quantity": 10,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": {
+                "kcal": 530,
+                "proteinG": 36,
+                "carbsG": 63,
+                "fatG": 12,
+                "fiberG": 2,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "3-merenda",
+          "category": "afternoon_snack",
+          "label": "Merenda",
+          "time": "17:00",
+          "items": [
+            {
+              "name": "Yogurt greco 0%",
+              "quantity": 170,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 17,
+                "carbsG": 6,
+                "fatG": 0.5,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Banana",
+              "quantity": 120,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 107,
+                "proteinG": 1.3,
+                "carbsG": 27,
+                "fatG": 0.4,
+                "fiberG": 3,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "guidance": [
+            "Nei giorni di allenamento consumarla circa 60–90 minuti prima."
+          ],
+          "alternatives": []
+        },
+        {
+          "id": "3-cena",
+          "category": "dinner",
+          "label": "Cena",
+          "time": "20:30",
+          "items": [
+            {
+              "name": "Salmone",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "nutrition": {
+                "kcal": 310,
+                "proteinG": 30,
+                "carbsG": 0,
+                "fatG": 20,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Patate",
+              "quantity": 250,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 90,
+                "proteinG": 0,
+                "carbsG": 0,
+                "fatG": 10,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "3-cena-legumi",
+              "label": "Legumi",
+              "items": [
+                {
+                  "name": "Ceci",
+                  "quantity": 200,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Pane integrale",
+                  "quantity": 60,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": null,
+              "notes": "Valori nutrizionali da completare"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "giorno-4",
+      "weekday": 4,
+      "dayType": "training",
+      "meals": [
+        {
+          "id": "4-colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "08:00",
+          "items": [
+            {
+              "name": "Latte parzialmente scremato",
+              "quantity": 250,
+              "unit": "ml",
+              "quantityBasis": "packaged",
+              "nutrition": {
+                "kcal": 115,
+                "proteinG": 8.5,
+                "carbsG": 12.5,
+                "fatG": 4,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Fette biscottate",
+              "quantity": 3,
+              "unit": "pz",
+              "notes": "circa 8 g l'una: verificare in etichetta",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 2.7,
+                "carbsG": 19,
+                "fatG": 1.5,
+                "fiberG": null,
+                "source": "label"
+              }
+            },
+            {
+              "name": "Burro",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 75,
+                "proteinG": 0.1,
+                "carbsG": 0.1,
+                "fatG": 8.3,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Marmellata",
+              "quantity": 20,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 45,
+                "proteinG": 0.1,
+                "carbsG": 11,
+                "fatG": 0,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "4-colazione-skyr",
+              "label": "Skyr e avena",
+              "items": [
+                {
+                  "name": "Skyr",
+                  "quantity": 170,
+                  "unit": "g"
+                },
+                {
+                  "name": "Fiocchi d'avena",
+                  "quantity": 40,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                }
+              ],
+              "nutrition": {
+                "kcal": 257,
+                "proteinG": 24,
+                "carbsG": 31,
+                "fatG": 3,
+                "fiberG": 4,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "4-pranzo",
+          "category": "lunch",
+          "label": "Pranzo",
+          "time": "13:00",
+          "items": [
+            {
+              "name": "Pasta di semola",
+              "quantity": 80,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "notes": "pesata a secco"
+            },
+            {
+              "name": "Petto di pollo",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g"
+            },
+            {
+              "name": "Verdure di stagione",
+              "quantity": 200,
+              "unit": "g",
+              "quantityBasis": "raw"
+            }
+          ],
+          "nutrition": {
+            "kcal": 580,
+            "proteinG": 47,
+            "carbsG": 63,
+            "fatG": 14,
+            "fiberG": 7,
+            "source": "table"
+          },
+          "alternatives": [
+            {
+              "id": "4-pranzo-riso",
+              "label": "Riso e tonno",
+              "items": [
+                {
+                  "name": "Riso basmati",
+                  "quantity": 80,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                },
+                {
+                  "name": "Tonno al naturale",
+                  "quantity": 120,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Olio extravergine d'oliva",
+                  "quantity": 10,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": {
+                "kcal": 530,
+                "proteinG": 36,
+                "carbsG": 63,
+                "fatG": 12,
+                "fiberG": 2,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "4-merenda",
+          "category": "afternoon_snack",
+          "label": "Merenda",
+          "time": "17:00",
+          "items": [
+            {
+              "name": "Yogurt greco 0%",
+              "quantity": 170,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 17,
+                "carbsG": 6,
+                "fatG": 0.5,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Banana",
+              "quantity": 120,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 107,
+                "proteinG": 1.3,
+                "carbsG": 27,
+                "fatG": 0.4,
+                "fiberG": 3,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "guidance": [
+            "Nei giorni di allenamento consumarla circa 60–90 minuti prima."
+          ],
+          "alternatives": []
+        },
+        {
+          "id": "4-cena",
+          "category": "dinner",
+          "label": "Cena",
+          "time": "20:30",
+          "items": [
+            {
+              "name": "Salmone",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "nutrition": {
+                "kcal": 310,
+                "proteinG": 30,
+                "carbsG": 0,
+                "fatG": 20,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Patate",
+              "quantity": 250,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 90,
+                "proteinG": 0,
+                "carbsG": 0,
+                "fatG": 10,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "4-cena-legumi",
+              "label": "Legumi",
+              "items": [
+                {
+                  "name": "Ceci",
+                  "quantity": 200,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Pane integrale",
+                  "quantity": 60,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": null,
+              "notes": "Valori nutrizionali da completare"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "giorno-5",
+      "weekday": 5,
+      "dayType": "training",
+      "meals": [
+        {
+          "id": "5-colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "08:00",
+          "items": [
+            {
+              "name": "Latte parzialmente scremato",
+              "quantity": 250,
+              "unit": "ml",
+              "quantityBasis": "packaged",
+              "nutrition": {
+                "kcal": 115,
+                "proteinG": 8.5,
+                "carbsG": 12.5,
+                "fatG": 4,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Fette biscottate",
+              "quantity": 3,
+              "unit": "pz",
+              "notes": "circa 8 g l'una: verificare in etichetta",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 2.7,
+                "carbsG": 19,
+                "fatG": 1.5,
+                "fiberG": null,
+                "source": "label"
+              }
+            },
+            {
+              "name": "Burro",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 75,
+                "proteinG": 0.1,
+                "carbsG": 0.1,
+                "fatG": 8.3,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Marmellata",
+              "quantity": 20,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 45,
+                "proteinG": 0.1,
+                "carbsG": 11,
+                "fatG": 0,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "5-colazione-skyr",
+              "label": "Skyr e avena",
+              "items": [
+                {
+                  "name": "Skyr",
+                  "quantity": 170,
+                  "unit": "g"
+                },
+                {
+                  "name": "Fiocchi d'avena",
+                  "quantity": 40,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                }
+              ],
+              "nutrition": {
+                "kcal": 257,
+                "proteinG": 24,
+                "carbsG": 31,
+                "fatG": 3,
+                "fiberG": 4,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "5-pranzo",
+          "category": "lunch",
+          "label": "Pranzo",
+          "time": "13:00",
+          "items": [
+            {
+              "name": "Pasta di semola",
+              "quantity": 80,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "notes": "pesata a secco"
+            },
+            {
+              "name": "Petto di pollo",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g"
+            },
+            {
+              "name": "Verdure di stagione",
+              "quantity": 200,
+              "unit": "g",
+              "quantityBasis": "raw"
+            }
+          ],
+          "nutrition": {
+            "kcal": 580,
+            "proteinG": 47,
+            "carbsG": 63,
+            "fatG": 14,
+            "fiberG": 7,
+            "source": "table"
+          },
+          "alternatives": [
+            {
+              "id": "5-pranzo-riso",
+              "label": "Riso e tonno",
+              "items": [
+                {
+                  "name": "Riso basmati",
+                  "quantity": 80,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                },
+                {
+                  "name": "Tonno al naturale",
+                  "quantity": 120,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Olio extravergine d'oliva",
+                  "quantity": 10,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": {
+                "kcal": 530,
+                "proteinG": 36,
+                "carbsG": 63,
+                "fatG": 12,
+                "fiberG": 2,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "5-merenda",
+          "category": "afternoon_snack",
+          "label": "Merenda",
+          "time": "17:00",
+          "items": [
+            {
+              "name": "Yogurt greco 0%",
+              "quantity": 170,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 17,
+                "carbsG": 6,
+                "fatG": 0.5,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Banana",
+              "quantity": 120,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 107,
+                "proteinG": 1.3,
+                "carbsG": 27,
+                "fatG": 0.4,
+                "fiberG": 3,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "guidance": [
+            "Nei giorni di allenamento consumarla circa 60–90 minuti prima."
+          ],
+          "alternatives": []
+        },
+        {
+          "id": "5-cena",
+          "category": "dinner",
+          "label": "Cena",
+          "time": "20:30",
+          "items": [
+            {
+              "name": "Salmone",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "nutrition": {
+                "kcal": 310,
+                "proteinG": 30,
+                "carbsG": 0,
+                "fatG": 20,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Patate",
+              "quantity": 250,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 90,
+                "proteinG": 0,
+                "carbsG": 0,
+                "fatG": 10,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "5-cena-legumi",
+              "label": "Legumi",
+              "items": [
+                {
+                  "name": "Ceci",
+                  "quantity": 200,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Pane integrale",
+                  "quantity": 60,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": null,
+              "notes": "Valori nutrizionali da completare"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "giorno-6",
+      "weekday": 6,
+      "dayType": "rest",
+      "meals": [
+        {
+          "id": "6-colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "08:00",
+          "items": [
+            {
+              "name": "Latte parzialmente scremato",
+              "quantity": 250,
+              "unit": "ml",
+              "quantityBasis": "packaged",
+              "nutrition": {
+                "kcal": 115,
+                "proteinG": 8.5,
+                "carbsG": 12.5,
+                "fatG": 4,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Fette biscottate",
+              "quantity": 3,
+              "unit": "pz",
+              "notes": "circa 8 g l'una: verificare in etichetta",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 2.7,
+                "carbsG": 19,
+                "fatG": 1.5,
+                "fiberG": null,
+                "source": "label"
+              }
+            },
+            {
+              "name": "Burro",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 75,
+                "proteinG": 0.1,
+                "carbsG": 0.1,
+                "fatG": 8.3,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Marmellata",
+              "quantity": 20,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 45,
+                "proteinG": 0.1,
+                "carbsG": 11,
+                "fatG": 0,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "6-colazione-skyr",
+              "label": "Skyr e avena",
+              "items": [
+                {
+                  "name": "Skyr",
+                  "quantity": 170,
+                  "unit": "g"
+                },
+                {
+                  "name": "Fiocchi d'avena",
+                  "quantity": 40,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                }
+              ],
+              "nutrition": {
+                "kcal": 257,
+                "proteinG": 24,
+                "carbsG": 31,
+                "fatG": 3,
+                "fiberG": 4,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "6-pranzo",
+          "category": "lunch",
+          "label": "Pranzo",
+          "time": "13:00",
+          "items": [
+            {
+              "name": "Pasta di semola",
+              "quantity": 80,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "notes": "pesata a secco"
+            },
+            {
+              "name": "Petto di pollo",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g"
+            },
+            {
+              "name": "Verdure di stagione",
+              "quantity": 200,
+              "unit": "g",
+              "quantityBasis": "raw"
+            }
+          ],
+          "nutrition": {
+            "kcal": 580,
+            "proteinG": 47,
+            "carbsG": 63,
+            "fatG": 14,
+            "fiberG": 7,
+            "source": "table"
+          },
+          "alternatives": [
+            {
+              "id": "6-pranzo-riso",
+              "label": "Riso e tonno",
+              "items": [
+                {
+                  "name": "Riso basmati",
+                  "quantity": 80,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                },
+                {
+                  "name": "Tonno al naturale",
+                  "quantity": 120,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Olio extravergine d'oliva",
+                  "quantity": 10,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": {
+                "kcal": 530,
+                "proteinG": 36,
+                "carbsG": 63,
+                "fatG": 12,
+                "fiberG": 2,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "6-merenda",
+          "category": "afternoon_snack",
+          "label": "Merenda",
+          "time": "17:00",
+          "items": [
+            {
+              "name": "Yogurt greco 0%",
+              "quantity": 170,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 17,
+                "carbsG": 6,
+                "fatG": 0.5,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Banana",
+              "quantity": 120,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 107,
+                "proteinG": 1.3,
+                "carbsG": 27,
+                "fatG": 0.4,
+                "fiberG": 3,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "guidance": [
+            "Nei giorni di allenamento consumarla circa 60–90 minuti prima."
+          ],
+          "alternatives": []
+        },
+        {
+          "id": "6-cena",
+          "category": "dinner",
+          "label": "Cena",
+          "time": "20:30",
+          "items": [
+            {
+              "name": "Salmone",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "nutrition": {
+                "kcal": 310,
+                "proteinG": 30,
+                "carbsG": 0,
+                "fatG": 20,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Patate",
+              "quantity": 250,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 90,
+                "proteinG": 0,
+                "carbsG": 0,
+                "fatG": 10,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "6-cena-legumi",
+              "label": "Legumi",
+              "items": [
+                {
+                  "name": "Ceci",
+                  "quantity": 200,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Pane integrale",
+                  "quantity": 60,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": null,
+              "notes": "Valori nutrizionali da completare"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "giorno-7",
+      "weekday": 7,
+      "dayType": "rest",
+      "meals": [
+        {
+          "id": "7-colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "08:00",
+          "items": [
+            {
+              "name": "Latte parzialmente scremato",
+              "quantity": 250,
+              "unit": "ml",
+              "quantityBasis": "packaged",
+              "nutrition": {
+                "kcal": 115,
+                "proteinG": 8.5,
+                "carbsG": 12.5,
+                "fatG": 4,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Fette biscottate",
+              "quantity": 3,
+              "unit": "pz",
+              "notes": "circa 8 g l'una: verificare in etichetta",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 2.7,
+                "carbsG": 19,
+                "fatG": 1.5,
+                "fiberG": null,
+                "source": "label"
+              }
+            },
+            {
+              "name": "Burro",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 75,
+                "proteinG": 0.1,
+                "carbsG": 0.1,
+                "fatG": 8.3,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Marmellata",
+              "quantity": 20,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 45,
+                "proteinG": 0.1,
+                "carbsG": 11,
+                "fatG": 0,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "7-colazione-skyr",
+              "label": "Skyr e avena",
+              "items": [
+                {
+                  "name": "Skyr",
+                  "quantity": 170,
+                  "unit": "g"
+                },
+                {
+                  "name": "Fiocchi d'avena",
+                  "quantity": 40,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                }
+              ],
+              "nutrition": {
+                "kcal": 257,
+                "proteinG": 24,
+                "carbsG": 31,
+                "fatG": 3,
+                "fiberG": 4,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "7-pranzo",
+          "category": "lunch",
+          "label": "Pranzo",
+          "time": "13:00",
+          "items": [
+            {
+              "name": "Pasta di semola",
+              "quantity": 80,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "notes": "pesata a secco"
+            },
+            {
+              "name": "Petto di pollo",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g"
+            },
+            {
+              "name": "Verdure di stagione",
+              "quantity": 200,
+              "unit": "g",
+              "quantityBasis": "raw"
+            }
+          ],
+          "nutrition": {
+            "kcal": 580,
+            "proteinG": 47,
+            "carbsG": 63,
+            "fatG": 14,
+            "fiberG": 7,
+            "source": "table"
+          },
+          "alternatives": [
+            {
+              "id": "7-pranzo-riso",
+              "label": "Riso e tonno",
+              "items": [
+                {
+                  "name": "Riso basmati",
+                  "quantity": 80,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                },
+                {
+                  "name": "Tonno al naturale",
+                  "quantity": 120,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Olio extravergine d'oliva",
+                  "quantity": 10,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": {
+                "kcal": 530,
+                "proteinG": 36,
+                "carbsG": 63,
+                "fatG": 12,
+                "fiberG": 2,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "7-merenda",
+          "category": "afternoon_snack",
+          "label": "Merenda",
+          "time": "17:00",
+          "items": [
+            {
+              "name": "Yogurt greco 0%",
+              "quantity": 170,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 17,
+                "carbsG": 6,
+                "fatG": 0.5,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Banana",
+              "quantity": 120,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 107,
+                "proteinG": 1.3,
+                "carbsG": 27,
+                "fatG": 0.4,
+                "fiberG": 3,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "guidance": [
+            "Nei giorni di allenamento consumarla circa 60–90 minuti prima."
+          ],
+          "alternatives": []
+        },
+        {
+          "id": "7-cena",
+          "category": "dinner",
+          "label": "Cena",
+          "time": "20:30",
+          "items": [
+            {
+              "name": "Salmone",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "nutrition": {
+                "kcal": 310,
+                "proteinG": 30,
+                "carbsG": 0,
+                "fatG": 20,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Patate",
+              "quantity": 250,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 90,
+                "proteinG": 0,
+                "carbsG": 0,
+                "fatG": 10,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "7-cena-legumi",
+              "label": "Legumi",
+              "items": [
+                {
+                  "name": "Ceci",
+                  "quantity": 200,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Pane integrale",
+                  "quantity": 60,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": null,
+              "notes": "Valori nutrizionali da completare"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "giorno-1-riposo",
+      "weekday": 1,
+      "dayType": "rest",
+      "meals": [
+        {
+          "id": "1r-colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "08:00",
+          "items": [
+            {
+              "name": "Latte parzialmente scremato",
+              "quantity": 250,
+              "unit": "ml",
+              "quantityBasis": "packaged",
+              "nutrition": {
+                "kcal": 115,
+                "proteinG": 8.5,
+                "carbsG": 12.5,
+                "fatG": 4,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Fette biscottate",
+              "quantity": 3,
+              "unit": "pz",
+              "notes": "circa 8 g l'una: verificare in etichetta",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 2.7,
+                "carbsG": 19,
+                "fatG": 1.5,
+                "fiberG": null,
+                "source": "label"
+              }
+            },
+            {
+              "name": "Burro",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 75,
+                "proteinG": 0.1,
+                "carbsG": 0.1,
+                "fatG": 8.3,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Marmellata",
+              "quantity": 20,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 45,
+                "proteinG": 0.1,
+                "carbsG": 11,
+                "fatG": 0,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "1r-colazione-skyr",
+              "label": "Skyr e avena",
+              "items": [
+                {
+                  "name": "Skyr",
+                  "quantity": 170,
+                  "unit": "g"
+                },
+                {
+                  "name": "Fiocchi d'avena",
+                  "quantity": 40,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                }
+              ],
+              "nutrition": {
+                "kcal": 257,
+                "proteinG": 24,
+                "carbsG": 31,
+                "fatG": 3,
+                "fiberG": 4,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "1r-pranzo",
+          "category": "lunch",
+          "label": "Pranzo",
+          "time": "13:00",
+          "items": [
+            {
+              "name": "Pasta di semola",
+              "quantity": 80,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "notes": "pesata a secco"
+            },
+            {
+              "name": "Petto di pollo",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g"
+            },
+            {
+              "name": "Verdure di stagione",
+              "quantity": 200,
+              "unit": "g",
+              "quantityBasis": "raw"
+            }
+          ],
+          "nutrition": {
+            "kcal": 580,
+            "proteinG": 47,
+            "carbsG": 63,
+            "fatG": 14,
+            "fiberG": 7,
+            "source": "table"
+          },
+          "alternatives": [
+            {
+              "id": "1r-pranzo-riso",
+              "label": "Riso e tonno",
+              "items": [
+                {
+                  "name": "Riso basmati",
+                  "quantity": 80,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                },
+                {
+                  "name": "Tonno al naturale",
+                  "quantity": 120,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Olio extravergine d'oliva",
+                  "quantity": 10,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": {
+                "kcal": 530,
+                "proteinG": 36,
+                "carbsG": 63,
+                "fatG": 12,
+                "fiberG": 2,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "1r-cena",
+          "category": "dinner",
+          "label": "Cena",
+          "time": "20:30",
+          "items": [
+            {
+              "name": "Salmone",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "nutrition": {
+                "kcal": 310,
+                "proteinG": 30,
+                "carbsG": 0,
+                "fatG": 20,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Patate",
+              "quantity": 250,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 90,
+                "proteinG": 0,
+                "carbsG": 0,
+                "fatG": 10,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "1r-cena-legumi",
+              "label": "Legumi",
+              "items": [
+                {
+                  "name": "Ceci",
+                  "quantity": 200,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Pane integrale",
+                  "quantity": 60,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": null,
+              "notes": "Valori nutrizionali da completare"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pranzo-fuori",
+      "date": "2026-11-04",
+      "dayType": "any",
+      "label": "Pranzo fuori casa",
+      "nutritionTarget": {
+        "kcal": 2400
+      },
+      "meals": [
+        {
+          "id": "d-colazione",
+          "category": "breakfast",
+          "label": "Colazione",
+          "time": "08:00",
+          "items": [
+            {
+              "name": "Latte parzialmente scremato",
+              "quantity": 250,
+              "unit": "ml",
+              "quantityBasis": "packaged",
+              "nutrition": {
+                "kcal": 115,
+                "proteinG": 8.5,
+                "carbsG": 12.5,
+                "fatG": 4,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Fette biscottate",
+              "quantity": 3,
+              "unit": "pz",
+              "notes": "circa 8 g l'una: verificare in etichetta",
+              "nutrition": {
+                "kcal": 100,
+                "proteinG": 2.7,
+                "carbsG": 19,
+                "fatG": 1.5,
+                "fiberG": null,
+                "source": "label"
+              }
+            },
+            {
+              "name": "Burro",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 75,
+                "proteinG": 0.1,
+                "carbsG": 0.1,
+                "fatG": 8.3,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Marmellata",
+              "quantity": 20,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 45,
+                "proteinG": 0.1,
+                "carbsG": 11,
+                "fatG": 0,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "d-colazione-skyr",
+              "label": "Skyr e avena",
+              "items": [
+                {
+                  "name": "Skyr",
+                  "quantity": 170,
+                  "unit": "g"
+                },
+                {
+                  "name": "Fiocchi d'avena",
+                  "quantity": 40,
+                  "unit": "g",
+                  "quantityBasis": "raw"
+                }
+              ],
+              "nutrition": {
+                "kcal": 257,
+                "proteinG": 24,
+                "carbsG": 31,
+                "fatG": 3,
+                "fiberG": 4,
+                "source": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "d-pranzo",
+          "category": "lunch",
+          "label": "Pranzo al ristorante",
+          "time": "13:30",
+          "items": [
+            {
+              "name": "Primo e contorno a scelta"
+            }
+          ],
+          "nutrition": null,
+          "alternatives": []
+        },
+        {
+          "id": "d-cena",
+          "category": "dinner",
+          "label": "Cena",
+          "time": "20:30",
+          "items": [
+            {
+              "name": "Salmone",
+              "quantity": 150,
+              "unit": "g",
+              "quantityBasis": "raw",
+              "nutrition": {
+                "kcal": 310,
+                "proteinG": 30,
+                "carbsG": 0,
+                "fatG": 20,
+                "fiberG": null,
+                "source": "table"
+              }
+            },
+            {
+              "name": "Patate",
+              "quantity": 250,
+              "unit": "g",
+              "quantityBasis": "raw"
+            },
+            {
+              "name": "Olio extravergine d'oliva",
+              "quantity": 10,
+              "unit": "g",
+              "nutrition": {
+                "kcal": 90,
+                "proteinG": 0,
+                "carbsG": 0,
+                "fatG": 10,
+                "fiberG": null,
+                "source": "table"
+              }
+            }
+          ],
+          "nutrition": null,
+          "alternatives": [
+            {
+              "id": "d-cena-legumi",
+              "label": "Legumi",
+              "items": [
+                {
+                  "name": "Ceci",
+                  "quantity": 200,
+                  "unit": "g",
+                  "quantityBasis": "drained"
+                },
+                {
+                  "name": "Pane integrale",
+                  "quantity": 60,
+                  "unit": "g"
+                }
+              ],
+              "nutrition": null,
+              "notes": "Valori nutrizionali da completare"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,10 +1,10 @@
-# Schema JSON pubblico — Palestra v3
+# Schema JSON pubblico — Palestra v4
 
 Questo documento descrive i file che l’app sa **importare** ed **esportare**. È uno schema stabile: file scritti a mano o generati con altri strumenti (ad esempio ChatGPT) sono importabili se lo rispettano. Esempi completi e validati automaticamente dai test: [`docs/examples/`](examples/).
 
 ## Regole generali
 
-- Ogni file ha `type` e `schemaVersion: 3`. File con `schemaVersion` maggiore di 3 vengono rifiutati.
+- Ogni file ha `type` e `schemaVersion` (attuale: `4`). I file `schemaVersion: 3` restano importabili senza modifiche; file con `schemaVersion` maggiore di 4 vengono rifiutati (e un’app ancora alla v3 rifiuta i file v4). La v4 cambia solo il piano alimentare e il diario dei pasti: gli altri tipi di file sono identici alla v3.
 - Date: `AAAA-MM-GG`. Istanti: ISO 8601 con offset, es. `2026-10-22T18:20:00+02:00`. Orari dei pasti: `HH:MM`.
 - Unità: peso **kg**, lunghezze **cm**, distanze **m**, durate **min**, tempi di esercizi e recuperi **secondi**, energia **kcal**.
 - `null` = dato non disponibile (diverso da `0`). Un carico `0` vale solo per il corpo libero.
@@ -154,14 +154,53 @@ Passo e numero di vasche sono calcolati solo da distanze misurate; con una dista
 | `author`, `goal`, `notes`, `validFrom`, `validTo` | facoltativi |
 | `days[]` | `{ weekday (1–7) oppure date, dayType: "any" \| "training" \| "rest", label, meals[] }` |
 
-Pasto: `{ id, category, label, time, items[], alternatives[], nutrition, notes }`
+| `nutritionTargets` | v4, facoltativo: obiettivi del piano (vedi sotto) |
+| `guidelines` | v4, facoltativo: guida del piano (vedi sotto) |
+
+Esempio completo: [`examples/piano-alimentare-v4.json`](examples/piano-alimentare-v4.json).
+
+Principio: **obiettivo ≠ programmato ≠ consumato**. L’obiettivo è quanto indicato dal piano, il programmato è la somma dei pasti previsti, il consumato è solo ciò che hai registrato. L’app non inventa nutrienti, non copia i valori del pasto principale sulle alternative e non conta due volte lo stesso pasto.
+
+### Valori nutrizionali (`nutrition`)
+
+`{ kcal, proteinG, carbsG, fatG, fiberG, source, sourceNote }` oppure `null`; ogni valore può essere `null` (= ND, diverso da 0).
+
+- `source` (facoltativo): `label` (etichetta) | `table` (tabelle nutrizionali) | `manual` | `calculated` | `unknown`.
+- Se kcal e macro non sono coerenti (|4·P + 4·C + 9·G − kcal| oltre 30 kcal e il 15%) l’import mostra un **avviso**, non un errore.
+- Valore di un’opzione (pasto principale o alternativa): vale il valore dichiarato sull’opzione; se manca, la somma degli alimenti **solo** se tutti gli alimenti hanno quel valore; altrimenti ND. Se dichiarato e somma non coincidono l’app lo segnala.
+
+### Obiettivi (`nutritionTargets`)
+
+```json
+{
+  "default":  { "kcal": 2200, "proteinG": 140, "carbsG": 264, "fatG": 65, "fiberG": 30, "waterMl": 2500 },
+  "training": { "kcal": 2300, "carbsG": 289 },
+  "rest":     { "kcal": 2000, "carbsG": 214 },
+  "weightLossKgPerWeek": { "min": 0.3, "max": 0.5 }
+}
+```
+
+Precedenza, nutriente per nutriente: `nutritionTarget` del giorno (anche a data specifica) > `training`/`rest` secondo il tipo di giorno > `default`. Un nutriente non indicato resta “non specificato”.
+
+### Guida (`guidelines`)
+
+`{ general[], foodWeighing[], hydration[], preWorkout, postWorkout, notes[] }`. Gli elenchi sono testi (accettata anche una stringa con una voce per riga). `preWorkout`/`postWorkout`: `{ timing, advice[], mealCategories[] }`; le categorie indicate vengono segnalate come pre/post-allenamento nei giorni di allenamento.
+
+### Giorni e pasti
+
+Giorno: `{ id, weekday (1–7) oppure date, dayType: "any" | "training" | "rest", label, nutritionTarget, meals[] }`. Stesso `weekday` con `dayType` diversi = varianti per giorni di allenamento e di riposo; un giorno con `date` ha la precedenza sul giorno della settimana.
+
+Pasto: `{ id, category, label, time, items[], alternatives[], nutrition, guidance[], notes }`
 
 - `category`: `breakfast` | `snack` | `lunch` | `afternoon_snack` | `dinner` | `other`.
-- Alimento: `{ name, quantity, unit, notes, alternatives: [alimento] }`.
-- `alternatives` del pasto: `[{ "label": "Alternativa salata", "items": [alimento] }]` (è accettato anche un elenco di alimenti).
-- `nutrition`: `{ kcal, proteinG, carbsG, fatG }` oppure `null`. Se mancano non vengono inventati: l’app mostra “ND”, e i totali del giorno sono “parziali” se mancano per alcuni pasti.
+- Alimento: `{ id, name, quantity, unit, quantityBasis, nutrition, notes, alternatives: [alimento] }`; `quantityBasis`: `raw` (a crudo) | `cooked` (cotto) | `drained` (sgocciolato) | `packaged` (confezione) | `unspecified`.
+- `alternatives` del pasto: `[{ "id": "colazione-skyr", "label": "Skyr e avena", "items": [alimento], "nutrition": {...}, "notes": "" }]` (è accettato anche un elenco di alimenti). Senza `id` viene assegnato `<idPasto>-alt-<n>`; `id` duplicati nello stesso pasto sono un errore. Ogni alternativa ha i **propri** valori: se mancano è ND.
+- `guidance`: indicazioni di testo per il pasto.
 
-Stesso `weekday` con `dayType` diversi = varianti per giorni di allenamento e di riposo.
+### Diario dei pasti e scelte per data (nel backup)
+
+- `dietLog[]`: `{ id, date, planId, planRevision, mealId, label, status: "followed" | "modified" | "skipped" | "extra", consumption, note }`. `consumption`: `{ source: "manual" | "plan" | "device", chosenAlternativeId, items[], nutrition }`. Un pasto saltato vale 0; “seguito” senza `consumption` indica l’aderenza ma i nutrienti restano ND; `extra` = cibo fuori piano. `note` è privata (esclusa dai report per impostazione).
+- `dietSelections[]`: `{ id, date, planId, planRevision, mealId, alternativeId }` — alternativa scelta per una data; non modifica il piano. Le registrazioni passate restano legate alla revisione su cui sono state fatte.
 
 ## Misure (`palestra-body-measurements`)
 
@@ -173,8 +212,8 @@ Campi: `at` (istante ISO) oppure `date` (`AAAA-MM-GG`) + `time` (`HH:MM`, facolt
 
 ## Backup (`palestra-backup`)
 
-Contiene lo stato completo: `profile`, `goals`, `measurements`, `programs`, `workoutTemplates` (con `programId`), `sessions`, `activeSessionId`, `calendar`, `dietPlans`, `dietLog`, `settings`, `meta`.
+Contiene lo stato completo: `profile`, `goals`, `measurements`, `programs`, `workoutTemplates` (con `programId`), `sessions`, `activeSessionId`, `calendar`, `dietPlans`, `dietLog`, `dietSelections` (v4), `settings`, `meta`. Al primo avvio della v4 i dati v3 vengono aggiornati automaticamente, con una copia di sicurezza `snapshot:pre-v4`.
 
 ## Report (`palestra-report`)
 
-È generato da *Progressi* e contiene `type`, `schemaVersion`, `generatedAt`, `period`, `units`, `filters`, `summary`, `dataQuality`, `notes` ed eventualmente `details`. Il CSV ha una riga per valore: `date,section,metric,value,min,max,unit,quality,source`, in formato Excel/Numbers italiano (`;` e virgola decimale) o standard (`,` e punto); i testi che inizierebbero una formula vengono preceduti da un apostrofo. Il PDF contiene gli stessi valori. Un report **non** è un backup e non è importabile.
+È generato da *Progressi* e contiene `type`, `schemaVersion`, `generatedAt`, `period`, `units`, `filters`, `summary`, `dataQuality`, `notes` ed eventualmente `details`. Il CSV ha una riga per valore: `date,section,metric,value,min,max,unit,quality,source`, in formato Excel/Numbers italiano (`;` e virgola decimale) o standard (`,` e punto); i testi che inizierebbero una formula vengono preceduti da un apostrofo. Per l’alimentazione il CSV ha, per ogni giorno, le righe `target_*`, `planned_*` e `consumed_*` (kcal e macro) con `quality` `declared` | `computed` | `partial` | `missing`: i valori parziali sono marcati e non vengono stimati. Note private del diario e guida del piano sono opzioni separate, entrambe escluse per impostazione. Il PDF contiene gli stessi valori. Un report **non** è un backup e non è importabile.

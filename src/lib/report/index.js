@@ -1,7 +1,8 @@
 // Report riepilogativi (JSON/CSV) ed esportazioni tipizzate.
 // Un report NON è un backup: non contiene dati ripristinabili.
-import { aggregateAll, periodSessions, weightSeries, measurementSeries } from './aggregate'
+import { aggregateAll, aggregateDiet, periodSessions, weightSeries, measurementSeries } from './aggregate'
 import { strengthStats, sessionDuration } from '../stats'
+import { consumptionQuality } from '../diet'
 import { swimDistances } from '../swim'
 import { toLocalISO, todayISO, localDate } from '../dates'
 import { FILE_TYPES, SCHEMA_VERSION } from '../../schema/constants'
@@ -66,18 +67,27 @@ function sessionDetail(s, excludeNotes) {
   return base
 }
 
-export function buildReport(state, period, { sections = Object.keys(REPORT_SECTIONS), detail = 'summary', excludeNotes = true } = {}) {
+// excludeNotes: note personali e sanitarie (sedute, misure, diario dei pasti). includePlanGuide: guida del piano alimentare.
+// Entrambe escluse per impostazione predefinita (report destinati alla condivisione).
+export function buildReport(state, period, { sections = Object.keys(REPORT_SECTIONS), detail = 'summary', excludeNotes = true, includePlanGuide = false } = {}) {
   const agg = aggregateAll(state, period)
   const summary = {}
   for (const k of sections) summary[k] = clone(agg[k])
-  if (summary.diet?.activePlan && excludeNotes) delete summary.diet.activePlan.validatedBy
+  if (summary.diet) {
+    delete summary.diet.daily // il dettaglio giornaliero va nei details
+    if (excludeNotes && summary.diet.activePlan) delete summary.diet.activePlan.validatedBy
+    if (includePlanGuide) {
+      const plan = state.dietPlans.find((d) => d.id === summary.diet.activePlan?.id)
+      summary.diet.guidelines = clone(plan?.guidelines ?? null)
+    }
+  }
   const report = {
     type: FILE_TYPES.report,
     schemaVersion: SCHEMA_VERSION,
     generatedAt: toLocalISO(),
     period,
     units: UNITS,
-    filters: { sections, detail, excludeNotes },
+    filters: { sections, detail, excludeNotes, includePlanGuide },
     summary,
     dataQuality: dataQuality(agg),
     notes: [
@@ -93,6 +103,12 @@ export function buildReport(state, period, { sections = Object.keys(REPORT_SECTI
       report.details.sessions = periodSessions(state, period)
         .filter((s) => (s.kind === 'swim' ? sections.includes('swim') || sections.includes('training') : sections.includes('strength') || sections.includes('training')))
         .map((s) => sessionDetail(s, excludeNotes))
+    }
+    if (sections.includes('diet')) {
+      report.details.diet = clone(agg.diet.daily)
+      report.details.dietLog = state.dietLog
+        .filter((l) => l.date >= period.from && l.date <= period.to)
+        .map((l) => ({ date: l.date, mealId: l.mealId, label: l.label || null, status: l.status, planRevision: l.planRevision ?? null, consumptionQuality: consumptionQuality(l), ...(excludeNotes ? {} : { note: l.note || null }) }))
     }
     if (sections.includes('body')) {
       report.details.measurements = state.measurements
@@ -170,6 +186,16 @@ export function reportToCSV(state, period, { sections = Object.keys(REPORT_SECTI
   if (sections.includes('diet')) {
     for (const l of state.dietLog.filter((x) => x.date >= period.from && x.date <= period.to)) {
       row(l.date, 'diet', `meal_${l.mealId}`, l.status, 'status', 'recorded')
+    }
+    // Obiettivo, programmato e consumato per giorno: qualità declared / computed / partial / missing
+    const Q = { complete: 'computed', partial: 'partial', missing: 'missing' }
+    const NAMES = { kcal: ['kcal', 'kcal'], proteinG: ['protein', 'g'], carbsG: ['carbs', 'g'], fatG: ['fat', 'g'] }
+    for (const d of aggregateDiet(state, period).daily) {
+      for (const [k, [name, unit]] of Object.entries(NAMES)) {
+        if (d.target?.[k] != null) row(d.date, 'diet', `target_${name}`, d.target[k], unit, 'declared', d.targetSource[k])
+        if (d.planned) row(d.date, 'diet', `planned_${name}`, d.planned[k].value, unit, Q[d.planned[k].status], '')
+        if (d.consumed) row(d.date, 'diet', `consumed_${name}`, d.consumed[k].value, unit, Q[d.consumed[k].status], '')
+      }
     }
   }
   rows.sort((a, b) => String(a[0]).localeCompare(String(b[0])))

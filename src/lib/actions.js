@@ -108,8 +108,39 @@ export function setActiveDiet(state, id) {
   return { ...state, dietPlans: state.dietPlans.map((d) => ({ ...d, active: d.id === id })) }
 }
 
-export function logMeal(state, { date, planId, planRevision, mealId, status, note = '' }) {
-  const rest = state.dietLog.filter((l) => !(l.date === date && l.planId === planId && l.mealId === mealId))
+// Diario: lo stato (seguito/modificato/saltato) e gli eventuali consumi registrati sono indipendenti dal piano;
+// le modifiche successive del piano non riscrivono il diario. status null = registrazione rimossa.
+export function logMeal(state, { date, planId, planRevision, mealId, status, note, consumption, label }) {
+  const same = (l) => l.date === date && l.planId === planId && l.mealId === mealId
+  const prev = state.dietLog.find(same)
+  const rest = state.dietLog.filter((l) => !same(l))
   if (!status) return { ...state, dietLog: rest }
-  return { ...state, dietLog: [...rest, { id: uid('meallog'), date, planId, planRevision, mealId, status, note }] }
+  const entry = {
+    id: prev?.id ?? uid('meallog'),
+    date,
+    planId,
+    planRevision: prev?.planRevision ?? planRevision,
+    mealId,
+    label: label ?? prev?.label ?? '',
+    status,
+    consumption: consumption !== undefined ? consumption : (prev?.consumption ?? null),
+    note: note ?? prev?.note ?? '',
+  }
+  return { ...state, dietLog: [...rest, entry] }
+}
+
+// Aggiunta fuori piano (es. uno spuntino non previsto)
+export function addExtraFood(state, { date, planId, planRevision, label, consumption, note = '' }) {
+  return { ...state, dietLog: [...state.dietLog, { id: uid('meallog'), date, planId, planRevision, mealId: uid('extra'), label, status: 'extra', consumption, note }] }
+}
+
+export function removeLog(state, id) {
+  return { ...state, dietLog: state.dietLog.filter((l) => l.id !== id) }
+}
+
+// Alternativa applicata a un pasto in una data (null = torna al principale). Non modifica il piano.
+export function selectAlternative(state, { date, planId, planRevision, mealId, alternativeId }) {
+  const rest = (state.dietSelections ?? []).filter((x) => !(x.date === date && x.planId === planId && x.mealId === mealId))
+  if (!alternativeId) return { ...state, dietSelections: rest }
+  return { ...state, dietSelections: [...rest, { id: uid('dietsel'), date, planId, planRevision, mealId, alternativeId }] }
 }

@@ -47,6 +47,9 @@ Strategia MVP: l’importazione si può annullare **solo finché non ci sono alt
 - Un giorno con data specifica ha la precedenza sul giorno della settimana; variante allenamento/riposo scelta in base alle attività del giorno, modificabile.
 - “Validato da professionista” richiede il nome di chi ha validato; altrimenti il piano resta bozza (anche in import, con avviso).
 
+### Alimentazione v4 (NUT-T01..T20)
+Obiettivo, programmato e consumato sono sempre distinti; nessun nutriente inventato, alternative con i propri valori, nessun doppio conteggio. Test logici in `tests/nutrition.test.js` (un caso per ogni NUT-Txx), flusso completo in `e2e/diet.e2e.js` (anteprima e scelta dell’alternativa per data, consumato, fuori piano, persistenza dopo ricaricamento, guida). La verifica visiva su iPhone (NUT-T18: tabella del giorno, fogli di registrazione, barra “Salva revisione”) è nella checklist manuale.
+
 ### Offline e schermata Home
 Un service worker conserva l’app sul dispositivo: dopo la prima apertura online, l’app si apre e salva i dati anche senza rete. Gli aggiornamenti vengono scaricati alla prima apertura con rete.
 
@@ -68,6 +71,7 @@ Un service worker conserva l’app sul dispositivo: dopo la prima apertura onlin
 | E2E-12 | Backup → nuovo browser → import | `e2e/import.e2e.js`, `tests/import.test.js` | automatico |
 | E2E-13 | iPhone, app in background durante il timer | `e2e/workout.e2e.js` (emulazione) | **da verificare su iPhone** |
 | E2E-14 | Funzionamento offline | `e2e/offline.e2e.js` (server spento davvero) | automatico (Chromium) |
+| NUT-T01..T20 | Alimentazione v4: obiettivi, alternative, consumato, report | `tests/nutrition.test.js`, `e2e/diet.e2e.js`, `e2e/upgrade.e2e.js` | automatico; NUT-T18 **da verificare su iPhone** |
 | E2E-15 | PDF | `e2e/report.e2e.js`, `tests/pdf.test.js` | automatico; download su iPhone **da verificare** |
 
 I test automatici girano con il motore Chromium e il profilo di iPhone 13 (dimensioni, touch). Safari/WebKit non è disponibile nell’ambiente di sviluppo: le voci seguenti vanno verificate a mano.
@@ -88,6 +92,7 @@ Da eseguire su Safari iOS e sull’app aggiunta alla schermata Home (*Condividi 
 - [ ] Import di un file JSON dall’app File (anche un file generato da ChatGPT seguendo `docs/SCHEMA.md`).
 - [ ] Download di backup JSON, report CSV (apertura in Numbers/Excel: colonne separate, accenti corretti) e PDF.
 - [ ] Modalità aereo dopo una prima apertura online: l’app si apre, i dati sono visibili, una nuova misura viene salvata e resta dopo la riapertura.
+- [ ] Alimentazione (NUT-T18): tabella Obiettivo/Programmato/Consumato leggibile senza scorrere in orizzontale; anteprima e scelta di un’alternativa; “Registra quantità” e “Fuori piano” con tastiera decimale; in modifica la barra “Salva revisione” resta visibile sopra la navigazione.
 - [ ] Schermo che resta acceso durante la modalità allenamento e si spegne normalmente dopo l’uscita.
 
 Annotare data, modello di iPhone, versione di iOS ed eventuali anomalie (con schermata) in una issue del repository.

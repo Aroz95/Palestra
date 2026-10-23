@@ -31,7 +31,7 @@ describe('persistenza e migrazione dei dati salvati', () => {
     expect(JSON.parse(localStorage.getItem(LEGACY_KEY))).toEqual(legacy) // copia di ripristino intatta
     const snap = await idbGet('legacy-snapshot')
     expect(snap.data).toEqual(legacy)
-    expect((await idbGet('state')).schemaVersion).toBe(3)
+    expect((await idbGet('state')).schemaVersion).toBe(4)
   })
 
   it('avvii successivi leggono IndexedDB e non rimigrano', async () => {

@@ -38,6 +38,7 @@ export function emptyState() {
     calendar: { overrides: {}, extra: [] },
     dietPlans: [],
     dietLog: [],
+    dietSelections: [], // alternative scelte per data: { date, planId, planRevision, mealId, alternativeId }
     settings: { restSeconds: DEFAULT_REST, autoRest: true, sound: true, reportExcludeNotes: true },
     meta: { createdAt: toLocalISO(), migratedFrom: null },
   }
@@ -287,6 +288,8 @@ export function newDietPlan(partial = {}) {
     goal: '',
     revision: 1,
     notes: '',
+    nutritionTargets: null, // { default, training, rest, weightLossKgPerWeek }: obiettivi, non consumi
+    guidelines: null, // { general, foodWeighing, hydration, preWorkout, postWorkout, notes }
     days: [],
     history: [],
     createdAt: toLocalISO(),

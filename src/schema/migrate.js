@@ -1,4 +1,6 @@
 import { DEFAULT_REST, SCHEMA_VERSION } from './constants'
+import { Validator } from '../lib/import/validate'
+import { normDietPlan, normDietLog } from '../lib/import/normalize'
 import { emptyState, emptyProfile, uid, clone } from './factories'
 import { toLocalISO, todayISO, combineDateTime } from '../lib/dates'
 
@@ -208,10 +210,32 @@ export function normalizeState(s) {
   }
 }
 
-// Punto di ingresso unico: qualunque versione → v3
-export function migrateToV3(data) {
+// v3 → v4: i piani alimentari acquisiscono i nuovi campi facoltativi (vuoti) con la stessa forma dell'import,
+// così export e reimport risultano identici. Nessun obiettivo o nutriente viene inventato;
+// stato, attivazione, revisioni e diario restano quelli registrati.
+function upgradeDiet(state) {
+  const plans = state.dietPlans.map((p) => {
+    const v = new Validator()
+    const n = normDietPlan(v, p, 'dietPlans')
+    return n && !v.errors.length ? { ...n, status: p.status, active: !!p.active, archived: !!p.archived } : { nutritionTargets: null, guidelines: null, ...p }
+  })
+  const log = state.dietLog.map((l) => {
+    const v = new Validator()
+    const n = normDietLog(v, l, 'dietLog')
+    return n && !v.errors.length ? n : l
+  })
+  return { ...state, dietPlans: plans, dietLog: log, dietSelections: state.dietSelections ?? [] }
+}
+
+// Punto di ingresso unico: qualunque versione → versione corrente
+export function migrateToLatest(data) {
   if (!data || typeof data !== 'object') return emptyState()
-  if ((data.schemaVersion ?? 0) >= 3) return normalizeState(clone(data))
+  if ((data.schemaVersion ?? 0) >= 3) {
+    const s = normalizeState(clone(data))
+    return (data.schemaVersion ?? 0) < 4 ? upgradeDiet(s) : s
+  }
   if (isLegacyBackup(data)) return migrateLegacyState(clone(data))
   return emptyState()
 }
+
+export const migrateToV3 = migrateToLatest // nome storico, usato dai test

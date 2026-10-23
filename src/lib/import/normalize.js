@@ -415,27 +415,134 @@ export function normGoal(v, raw, p) {
   }
 }
 
-// ---- Alimentazione ----
+// ---- Alimentazione (schema v4: campi nuovi tutti facoltativi, i piani v3 restano validi) ----
+
+export const NUTRIENT_KEYS = ['kcal', 'proteinG', 'carbsG', 'fatG', 'fiberG']
+const NUTRIENT_MAX = { kcal: 20000, proteinG: 2000, carbsG: 2000, fatG: 2000, fiberG: 500, waterMl: 20000 }
+const NUTRIENT_ALIASES = { proteinG: ['proteinG', 'protein'], carbsG: ['carbsG', 'carbs'], fatG: ['fatG', 'fat'], fiberG: ['fiberG', 'fiber'] }
+export const NUTRITION_SOURCES = ['label', 'table', 'manual', 'calculated', 'unknown']
+export const QUANTITY_BASIS = ['raw', 'cooked', 'drained', 'packaged', 'unspecified']
+const getN = (raw, k) => pick(raw, ...(NUTRIENT_ALIASES[k] ?? [k]))
+
+// Avviso (non errore): kcal dichiarate molto diverse da 4·P + 4·C + 9·G (arrotondamenti, fibre, alcol)
+function checkEnergy(v, n, p) {
+  if ([n.kcal, n.proteinG, n.carbsG, n.fatG].some((x) => x == null)) return
+  const fromMacros = 4 * n.proteinG + 4 * n.carbsG + 9 * n.fatG
+  if (Math.abs(fromMacros - n.kcal) > Math.max(30, 0.15 * n.kcal)) {
+    v.warn(p, `kcal dichiarate (${n.kcal}) lontane da quelle dei macro (${Math.round(fromMacros)}): verificare i valori`)
+  }
+}
+
+export function normNutrition(v, raw, p) {
+  if (!v.obj(raw, p)) return null
+  const n = {}
+  for (const k of NUTRIENT_KEYS) n[k] = v.num(getN(raw, k), `${p}.${k}`, { max: NUTRIENT_MAX[k] })
+  n.source = v.oneOf(raw.source, `${p}.source`, NUTRITION_SOURCES, null)
+  n.sourceNote = v.str(raw.sourceNote, `${p}.sourceNote`)
+  checkEnergy(v, n, p)
+  return n
+}
+
+function normNutritionGoal(v, raw, p) {
+  if (!v.obj(raw, p)) return null
+  const g = {}
+  for (const k of [...NUTRIENT_KEYS, 'waterMl']) g[k] = v.num(getN(raw, k), `${p}.${k}`, { max: NUTRIENT_MAX[k] })
+  checkEnergy(v, g, p)
+  return g
+}
+
+function normTargets(v, raw, p) {
+  if (!v.obj(raw, p)) return null
+  let loss = null
+  if (raw.weightLossKgPerWeek != null && v.obj(raw.weightLossKgPerWeek, `${p}.weightLossKgPerWeek`)) {
+    const min = v.num(raw.weightLossKgPerWeek.min, `${p}.weightLossKgPerWeek.min`, { max: 2 })
+    const max = v.num(raw.weightLossKgPerWeek.max, `${p}.weightLossKgPerWeek.max`, { max: 2, def: min })
+    if (min != null && max != null && min > max) v.err(`${p}.weightLossKgPerWeek`, `min (${min}) maggiore di max (${max})`)
+    loss = { min, max }
+  }
+  return {
+    default: normNutritionGoal(v, raw.default, `${p}.default`),
+    training: normNutritionGoal(v, raw.training, `${p}.training`),
+    rest: normNutritionGoal(v, raw.rest, `${p}.rest`),
+    weightLossKgPerWeek: loss,
+  }
+}
+
+// Elenchi di testo: accetta anche una stringa singola (una voce per riga)
+function normTextList(v, raw, p) {
+  if (raw == null) return []
+  if (typeof raw === 'string') return raw.split('\n').map((x) => x.trim()).filter(Boolean)
+  return v.arr(raw, p).map((x, i) => v.str(x, `${p}[${i}]`, { max: 2000 })).filter((x) => x.trim())
+}
+
+function normGuidance(v, raw, p) {
+  if (!v.obj(raw, p)) return null
+  return {
+    timing: v.str(raw.timing, `${p}.timing`, { max: 300 }),
+    advice: normTextList(v, raw.advice, `${p}.advice`),
+    mealCategories: v.arr(raw.mealCategories, `${p}.mealCategories`).map((c, i) => v.oneOf(c, `${p}.mealCategories[${i}]`, Object.keys(MEAL_CATEGORIES), null)).filter(Boolean),
+  }
+}
+
+function normGuidelines(v, raw, p) {
+  if (!v.obj(raw, p)) return null
+  return {
+    general: normTextList(v, raw.general, `${p}.general`),
+    foodWeighing: normTextList(v, raw.foodWeighing, `${p}.foodWeighing`),
+    hydration: normTextList(v, raw.hydration, `${p}.hydration`),
+    preWorkout: normGuidance(v, raw.preWorkout, `${p}.preWorkout`),
+    postWorkout: normGuidance(v, raw.postWorkout, `${p}.postWorkout`),
+    notes: normTextList(v, raw.notes, `${p}.notes`),
+  }
+}
 
 function normFood(v, raw, p) {
   if (typeof raw === 'string') raw = { name: raw }
   if (!v.obj(raw, p, { nullable: false })) return null
   return {
+    id: v.id(raw.id, `${p}.id`),
     name: v.str(pick(raw, 'name', 'food'), `${p}.name`, { nullable: false, max: 300 }),
     quantity: v.num(pick(raw, 'quantity', 'qty'), `${p}.quantity`, { max: 100000 }),
     unit: v.str(raw.unit, `${p}.unit`, { max: 30 }),
+    quantityBasis: v.oneOf(raw.quantityBasis, `${p}.quantityBasis`, QUANTITY_BASIS, null),
     notes: v.str(pick(raw, 'notes', 'note', 'preparation'), `${p}.notes`),
+    nutrition: normNutrition(v, raw.nutrition, `${p}.nutrition`),
     alternatives: v.arr(raw.alternatives, `${p}.alternatives`).map((a, i) => normFood(v, a, `${p}.alternatives[${i}]`)).filter(Boolean),
   }
 }
 
-function normNutrition(v, raw, p) {
-  if (!v.obj(raw, p)) return null
+function normMeal(v, m, mp, fallbackId) {
+  if (!v.obj(m, mp, { nullable: false })) return null
+  const category = v.oneOf(m.category, `${mp}.category`, Object.keys(MEAL_CATEGORIES), 'other')
+  const id = v.id(m.id, `${mp}.id`) ?? `${fallbackId}-${category}`
+  const alternatives = v
+    .arr(m.alternatives, `${mp}.alternatives`)
+    .map((a, k) => {
+      const ap = `${mp}.alternatives[${k}]`
+      // Alternativa di pasto { label, items, nutrition } oppure singolo alimento alternativo
+      const group = a && typeof a === 'object' && Array.isArray(a.items) ? a : { items: [a] }
+      if (group === a && !v.obj(a, ap, { nullable: false })) return null
+      return {
+        id: (group === a ? v.id(a.id, `${ap}.id`) : null) ?? `${id}-alt-${k + 1}`,
+        label: group === a ? v.str(a.label, `${ap}.label`) : '',
+        items: group.items.map((it, z) => normFood(v, it, group === a ? `${ap}.items[${z}]` : ap)).filter(Boolean),
+        nutrition: group === a ? normNutrition(v, a.nutrition, `${ap}.nutrition`) : null,
+        notes: group === a ? v.str(pick(a, 'notes', 'note'), `${ap}.notes`) : '',
+      }
+    })
+    .filter(Boolean)
+  const aids = alternatives.map((a) => a.id)
+  aids.forEach((x, k) => aids.indexOf(x) !== k && v.err(`${mp}.alternatives[${k}].id`, `id alternativa duplicato "${x}"`))
   return {
-    kcal: v.num(raw.kcal, `${p}.kcal`, { max: 20000 }),
-    proteinG: v.num(pick(raw, 'proteinG', 'protein'), `${p}.proteinG`, { max: 2000 }),
-    carbsG: v.num(pick(raw, 'carbsG', 'carbs'), `${p}.carbsG`, { max: 2000 }),
-    fatG: v.num(pick(raw, 'fatG', 'fat'), `${p}.fatG`, { max: 2000 }),
+    id,
+    category,
+    label: v.str(m.label, `${mp}.label`) || MEAL_CATEGORIES[category],
+    time: v.time(m.time, `${mp}.time`),
+    items: v.arr(m.items, `${mp}.items`).map((it, k) => normFood(v, it, `${mp}.items[${k}]`)).filter(Boolean),
+    alternatives,
+    nutrition: normNutrition(v, m.nutrition, `${mp}.nutrition`),
+    guidance: normTextList(v, m.guidance, `${mp}.guidance`),
+    notes: v.str(pick(m, 'notes', 'note'), `${mp}.notes`),
   }
 }
 
@@ -447,32 +554,7 @@ export function normDietPlan(v, raw, p) {
     const weekday = v.num(d.weekday, `${dp}.weekday`, { int: true, min: 1, max: 7 })
     const date = v.date(d.date, `${dp}.date`)
     if (weekday == null && !date) v.err(dp, 'indicare weekday (1 = lunedì … 7 = domenica) oppure date')
-    const meals = v.arr(d.meals, `${dp}.meals`).map((m, j) => {
-      const mp = `${dp}.meals[${j}]`
-      if (!v.obj(m, mp, { nullable: false })) return null
-      const category = v.oneOf(m.category, `${mp}.category`, Object.keys(MEAL_CATEGORIES), 'other')
-      let alternatives = v.arr(m.alternatives, `${mp}.alternatives`)
-      alternatives = alternatives
-        .map((a, k) => {
-          const ap = `${mp}.alternatives[${k}]`
-          if (a && typeof a === 'object' && Array.isArray(a.items)) {
-            return { label: v.str(a.label, `${ap}.label`), items: a.items.map((it, z) => normFood(v, it, `${ap}.items[${z}]`)).filter(Boolean) }
-          }
-          const item = normFood(v, a, ap)
-          return item ? { label: '', items: [item] } : null
-        })
-        .filter(Boolean)
-      return {
-        id: v.id(m.id, `${mp}.id`) ?? `${weekday ?? date}-${category}-${j}`,
-        category,
-        label: v.str(m.label, `${mp}.label`) || MEAL_CATEGORIES[category],
-        time: v.time(m.time, `${mp}.time`),
-        items: v.arr(m.items, `${mp}.items`).map((it, k) => normFood(v, it, `${mp}.items[${k}]`)).filter(Boolean),
-        alternatives,
-        nutrition: normNutrition(v, m.nutrition, `${mp}.nutrition`),
-        notes: v.str(pick(m, 'notes', 'note'), `${mp}.notes`),
-      }
-    }).filter(Boolean)
+    const meals = v.arr(d.meals, `${dp}.meals`).map((m, j) => normMeal(v, m, `${dp}.meals[${j}]`, `${weekday ?? date}-${j}`)).filter(Boolean)
     const mids = meals.map((m) => m.id)
     mids.forEach((id, j) => mids.indexOf(id) !== j && v.err(`${dp}.meals[${j}].id`, `id pasto duplicato "${id}"`))
     return {
@@ -481,6 +563,7 @@ export function normDietPlan(v, raw, p) {
       date,
       dayType: v.oneOf(d.dayType, `${dp}.dayType`, ['any', 'training', 'rest'], 'any'),
       label: v.str(d.label, `${dp}.label`),
+      nutritionTarget: normNutritionGoal(v, d.nutritionTarget, `${dp}.nutritionTarget`),
       meals,
     }
   }).filter(Boolean)
@@ -502,9 +585,50 @@ export function normDietPlan(v, raw, p) {
     goal: v.str(raw.goal, `${p}.goal`),
     revision: v.num(raw.revision, `${p}.revision`, { int: true, min: 1, def: 1 }),
     notes: v.str(raw.notes, `${p}.notes`),
+    nutritionTargets: normTargets(v, raw.nutritionTargets, `${p}.nutritionTargets`),
+    guidelines: normGuidelines(v, raw.guidelines, `${p}.guidelines`),
     days,
     history: Array.isArray(raw.history) ? raw.history : [],
     createdAt: v.datetime(raw.createdAt, `${p}.createdAt`),
     updatedAt: v.datetime(raw.updatedAt, `${p}.updatedAt`),
+  }
+}
+
+// ---- Diario alimentare e scelte delle alternative (contenuti nel backup) ----
+
+export function normConsumption(v, raw, p) {
+  if (!v.obj(raw, p)) return null
+  return {
+    source: v.oneOf(raw.source, `${p}.source`, ['manual', 'plan', 'device'], 'manual'),
+    chosenAlternativeId: v.id(raw.chosenAlternativeId, `${p}.chosenAlternativeId`),
+    items: v.arr(raw.items, `${p}.items`).map((it, i) => normFood(v, it, `${p}.items[${i}]`)).filter(Boolean),
+    nutrition: normNutrition(v, raw.nutrition, `${p}.nutrition`),
+  }
+}
+
+export function normDietLog(v, raw, p) {
+  if (!v.obj(raw, p, { nullable: false })) return null
+  return {
+    id: v.id(raw.id, `${p}.id`) ?? uid('meallog'),
+    date: v.date(raw.date, `${p}.date`, { nullable: false }),
+    planId: v.id(raw.planId, `${p}.planId`),
+    planRevision: v.num(raw.planRevision, `${p}.planRevision`, { int: true, min: 1 }),
+    mealId: v.id(raw.mealId, `${p}.mealId`),
+    label: v.str(raw.label, `${p}.label`),
+    status: v.oneOf(raw.status, `${p}.status`, ['followed', 'modified', 'skipped', 'extra'], 'followed'),
+    consumption: normConsumption(v, raw.consumption, `${p}.consumption`),
+    note: v.str(pick(raw, 'note', 'notes'), `${p}.note`),
+  }
+}
+
+export function normDietSelection(v, raw, p) {
+  if (!v.obj(raw, p, { nullable: false })) return null
+  return {
+    id: v.id(raw.id, `${p}.id`) ?? uid('dietsel'),
+    date: v.date(raw.date, `${p}.date`, { nullable: false }),
+    planId: v.id(raw.planId, `${p}.planId`),
+    planRevision: v.num(raw.planRevision, `${p}.planRevision`, { int: true, min: 1 }),
+    mealId: v.id(raw.mealId, `${p}.mealId`),
+    alternativeId: v.id(raw.alternativeId, `${p}.alternativeId`),
   }
 }

@@ -20,7 +20,7 @@ test('migrazione unica, storico invariato, snapshot recuperabile', async ({ page
   await expect(cards.filter({ hasText: '22 ott' })).toContainText('95 min')
 
   const s = await savedState(page)
-  expect(s.schemaVersion).toBe(3)
+  expect(s.schemaVersion).toBe(4)
   expect(s.sessions).toHaveLength(2)
   expect(s.sessions[1].startedAt).toBeNull() // orari non inventati
 
