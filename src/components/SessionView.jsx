@@ -74,18 +74,18 @@ export default function SessionView({ session, state, onChange, timers, settings
             value={session.title}
             onChange={(e) => set({ title: e.target.value })}
             aria-label="Titolo seduta"
-            className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-white outline-none"
+            className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-fg outline-none"
           />
           <input
             type="date"
             value={session.date}
             aria-label="Data seduta"
             onChange={(e) => e.target.value && set({ date: e.target.value })}
-            className="rounded-lg bg-slate-800 px-2 py-1 text-sm text-slate-200 [color-scheme:dark]"
+            className="rounded-lg border border-line-strong bg-surface px-2 py-1 text-sm text-fg"
           />
         </div>
-        <p className="text-sm capitalize text-slate-400">{fmtDate(session.date)}</p>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+        <p className="text-sm capitalize text-muted">{fmtDate(session.date)}</p>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
           <span className="w-40">
             <StatusSelect value={session.status} onChange={(status) => set({ status })} />
           </span>
@@ -104,7 +104,7 @@ export default function SessionView({ session, state, onChange, timers, settings
         <button
           onClick={onStartWorkout}
           disabled={!hasSteps}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-5 text-xl font-extrabold text-slate-950 shadow-lg shadow-emerald-500/20 transition active:scale-[0.98] disabled:opacity-40"
+          className="flex w-full items-center justify-center gap-3 rounded-2xl bg-primary py-5 text-xl font-extrabold text-on-primary shadow-lg transition active:scale-[0.98] disabled:opacity-40"
         >
           <span className="text-2xl">▶</span>
           {stats.doneSets > 0 || session.warmup.some((c) => c.done) ? 'Riprendi allenamento' : 'Inizia allenamento'}
@@ -113,13 +113,13 @@ export default function SessionView({ session, state, onChange, timers, settings
 
       <Card>
         <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="text-slate-300">Serie completate</span>
-          <span className="font-semibold text-white">
+          <span className="text-fg-soft">Serie completate</span>
+          <span className="font-semibold text-fg">
             {stats.doneSets}/{stats.totalSets} · {pct}%
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-slate-800" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-          <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
+        <div className="h-2 overflow-hidden rounded-full bg-surface-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
         </div>
         <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
           <Metric label="Ripetizioni" value={fmtNum(stats.reps, 0)} />
@@ -156,10 +156,10 @@ export default function SessionView({ session, state, onChange, timers, settings
 
       <div className="flex flex-wrap gap-2">
         {session.status !== 'completed' && (
-          <button onClick={finish} className="btn flex-1 bg-emerald-500 text-slate-950">Termina seduta</button>
+          <button onClick={finish} className="btn flex-1 bg-primary text-on-primary">Termina seduta</button>
         )}
         <button onClick={onExport} className="btn-ghost">Esporta JSON</button>
-        <button onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete()} className="rounded-xl px-3 py-2 text-sm text-rose-400">
+        <button onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete()} className="rounded-xl px-3 py-2 text-sm text-danger">
           Elimina
         </button>
       </div>
@@ -167,11 +167,11 @@ export default function SessionView({ session, state, onChange, timers, settings
       <Sheet open={adding} onClose={() => setAdding(false)} title="Aggiungi esercizio">
         <div className="space-y-1">
           {candidates.map(({ tex, from }) => (
-            <button key={tex.id} onClick={() => addExercise(tex)} className="block w-full rounded-lg px-3 py-2 text-left text-slate-200 active:bg-slate-800">
-              {tex.name} <span className="text-xs text-slate-500">· {tex.group || '—'} · {from}</span>
+            <button key={tex.id} onClick={() => addExercise(tex)} className="block w-full rounded-lg px-3 py-2 text-left text-fg active:bg-surface-muted">
+              {tex.name} <span className="text-xs text-muted">· {tex.group || '—'} · {from}</span>
             </button>
           ))}
-          <button onClick={() => addExercise(null)} className="block w-full rounded-lg px-3 py-2 text-left text-emerald-400 active:bg-slate-800">
+          <button onClick={() => addExercise(null)} className="block w-full rounded-lg px-3 py-2 text-left text-primary active:bg-surface-muted">
             + Esercizio libero
           </button>
         </div>

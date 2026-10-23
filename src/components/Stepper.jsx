@@ -14,13 +14,13 @@ export default function Stepper({ value, onChange, step = 1, min = 0, suffix, la
 
   return (
     <div className="flex flex-col items-center">
-      {label && <span className="mb-0.5 text-[10px] uppercase tracking-wider text-slate-400">{label}</span>}
-      <div className={`flex items-center rounded-xl bg-slate-800 ${disabled ? 'opacity-50' : ''}`}>
+      {label && <span className="mb-0.5 text-xs font-medium text-muted">{label}</span>}
+      <div className={`flex items-center rounded-xl border border-line-strong bg-surface ${disabled ? 'opacity-50' : ''}`}>
         <button
           type="button"
           disabled={disabled}
           onClick={() => bump(-1)}
-          className="h-10 w-9 rounded-l-xl text-xl text-slate-300 active:bg-slate-700"
+          className="h-11 w-9 rounded-l-xl text-xl text-fg-soft active:bg-surface-strong"
           aria-label="Diminuisci"
         >
           −
@@ -33,14 +33,14 @@ export default function Stepper({ value, onChange, step = 1, min = 0, suffix, la
           onBlur={(e) => commit(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
           onFocus={(e) => e.target.select()}
-          className="h-10 w-12 bg-transparent text-center text-lg font-semibold tabular-nums text-white outline-none"
+          className="h-11 w-10 bg-transparent sm:w-12 text-center text-lg font-semibold tabular-nums text-fg outline-none"
         />
-        {suffix && <span className="-ml-1 pr-1 text-xs text-slate-400">{suffix}</span>}
+        {suffix && <span className="-ml-1 pr-1 text-xs text-muted">{suffix}</span>}
         <button
           type="button"
           disabled={disabled}
           onClick={() => bump(1)}
-          className="h-10 w-9 rounded-r-xl text-xl text-slate-300 active:bg-slate-700"
+          className="h-11 w-9 rounded-r-xl text-xl text-fg-soft active:bg-surface-strong"
           aria-label="Aumenta"
         >
           +

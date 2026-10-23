@@ -61,12 +61,13 @@ export function templateName(state, id) {
   return t ? `${t.label ? `${t.label} · ` : ''}${t.name}` : 'Scheda non trovata'
 }
 
+// Stato dell'occorrenza: etichetta sempre visibile (il colore non è l'unico indicatore)
 export const OCC_STATUS = {
-  planned: { label: 'Prevista', cls: 'bg-slate-700 text-slate-200' },
-  in_progress: { label: 'In corso', cls: 'bg-amber-500 text-slate-950' },
-  completed: { label: 'Completata', cls: 'bg-emerald-500 text-slate-950' },
-  skipped: { label: 'Saltata', cls: 'bg-rose-900 text-rose-200' },
-  postponed: { label: 'Rinviata', cls: 'bg-sky-900 text-sky-200' },
-  missed: { label: 'Non registrata', cls: 'bg-slate-800 text-slate-400' },
-  rest: { label: 'Recupero', cls: 'bg-slate-800 text-slate-300' },
+  planned: { label: 'Prevista', cls: 'bg-surface-strong text-fg' },
+  in_progress: { label: 'In corso', cls: 'bg-primary-soft text-primary' },
+  completed: { label: 'Completata', cls: 'bg-primary text-on-primary' },
+  skipped: { label: 'Saltata', cls: 'bg-danger-soft text-danger' },
+  postponed: { label: 'Rinviata', cls: 'bg-warning-soft text-warning' },
+  missed: { label: 'Non registrata', cls: 'bg-surface-muted text-muted' },
+  rest: { label: 'Recupero', cls: 'bg-surface-muted text-fg-soft' },
 }

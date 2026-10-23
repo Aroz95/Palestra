@@ -7,7 +7,7 @@ const hundreds = Array(12).fill(100)
 
 test('nuoto: (100x3)x4 = 12 × 100 m, 2.100 m totali, export → reimport invariato', async ({ page }) => {
   await openApp(page)
-  await main(page).getByRole('button', { name: '🏊 Aggiungi nuoto' }).click()
+  await main(page).getByRole('button', { name: 'Aggiungi nuoto' }).click()
   const input = main(page).getByLabel('Nuovo blocco')
   const addBtn = main(page).getByRole('button', { name: 'Aggiungi', exact: true })
 

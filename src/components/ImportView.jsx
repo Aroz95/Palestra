@@ -6,10 +6,10 @@ import { downloadJSON } from '../lib/download'
 import { LIMITS } from '../schema/constants'
 
 const STATUS = {
-  new: { label: 'Nuovo', cls: 'bg-emerald-500/20 text-emerald-200' },
-  identical: { label: 'Identico a esistente', cls: 'bg-slate-700 text-slate-200' },
-  conflict: { label: 'Stesso id, contenuto diverso', cls: 'bg-amber-500/20 text-amber-200' },
-  duplicate: { label: 'Probabile duplicato', cls: 'bg-amber-500/20 text-amber-200' },
+  new: { label: 'Nuovo', cls: 'bg-primary-soft text-primary' },
+  identical: { label: 'Identico a esistente', cls: 'bg-surface-strong text-fg' },
+  conflict: { label: 'Stesso id, contenuto diverso', cls: 'bg-warning-soft text-warning' },
+  duplicate: { label: 'Probabile duplicato', cls: 'bg-warning-soft text-warning' },
 }
 
 export default function ImportView({ state, onApply, undo, onUndo }) {
@@ -73,7 +73,7 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-muted">
         Importa file JSON dell’app (backup, programmi A/B, sedute, nuoto, piani alimentari, misure) anche generati con altri strumenti secondo lo schema pubblico. Prima di salvare vedi un’anteprima: nulla viene modificato finché non confermi.
       </p>
 
@@ -88,10 +88,10 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
           setDrag(false)
           readFile(e.dataTransfer.files?.[0])
         }}
-        className={`rounded-2xl border-2 border-dashed p-6 text-center ${drag ? 'border-emerald-500 bg-emerald-950/30' : 'border-slate-700'}`}
+        className={`rounded-2xl border-2 border-dashed p-6 text-center ${drag ? 'border-primary bg-primary-soft' : 'border-line'}`}
       >
-        <button onClick={() => fileRef.current?.click()} className="btn bg-emerald-500 text-slate-950">Scegli file JSON</button>
-        <p className="mt-2 text-xs text-slate-500">oppure trascinalo qui · max {LIMITS.fileBytes / 1024 / 1024} MB</p>
+        <button onClick={() => fileRef.current?.click()} className="btn-primary">Scegli file JSON</button>
+        <p className="mt-2 text-xs text-muted">oppure trascinalo qui · max {LIMITS.fileBytes / 1024 / 1024} MB</p>
         <input
           ref={fileRef}
           type="file"
@@ -104,8 +104,8 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
         />
       </div>
 
-      <details className="rounded-2xl bg-slate-900 p-3">
-        <summary className="cursor-pointer text-sm text-slate-300">Incolla JSON</summary>
+      <details className="rounded-2xl bg-surface p-3">
+        <summary className="cursor-pointer text-sm text-fg-soft">Incolla JSON</summary>
         <div className="mt-2 space-y-2">
           <TextArea value={paste} onChange={setPaste} rows={6} placeholder='{"type": "palestra-program", ...}' aria-label="JSON da importare" />
           <button disabled={!paste.trim()} onClick={() => load(paste, 'testo incollato', paste.length)} className="btn-ghost text-sm disabled:opacity-40">Analizza</button>
@@ -114,24 +114,24 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
 
       {parsed && (
         <Card tone={parsed.errors.length ? 'warn' : 'default'} className="space-y-3">
-          <div className="text-sm text-slate-300">
-            <b className="text-white">{parsed.fileName}</b>
-            {parsed.batch.sources.length > 0 && <span className="text-slate-400"> · {[...new Set(parsed.batch.sources)].join(', ')}</span>}
+          <div className="text-sm text-fg-soft">
+            <b className="text-fg">{parsed.fileName}</b>
+            {parsed.batch.sources.length > 0 && <span className="text-muted"> · {[...new Set(parsed.batch.sources)].join(', ')}</span>}
           </div>
           {parsed.errors.length > 0 && (
             <div>
-              <p className="text-sm font-semibold text-rose-300">Il file contiene {parsed.errors.length} errori: nessun dato verrà importato.</p>
+              <p className="text-sm font-semibold text-danger">Il file contiene {parsed.errors.length} errori: nessun dato verrà importato.</p>
               <ul className="mt-1 max-h-60 space-y-1 overflow-auto text-xs">
                 {parsed.errors.slice(0, 100).map((e, i) => (
                   <li key={i}>
-                    <code className="text-rose-200">{e.path}</code> — {e.message}
+                    <code className="text-danger">{e.path}</code> — {e.message}
                   </li>
                 ))}
               </ul>
             </div>
           )}
           {parsed.warnings.length > 0 && (
-            <ul className="space-y-1 text-xs text-amber-200">
+            <ul className="space-y-1 text-xs text-warning">
               {parsed.warnings.map((w, i) => (
                 <li key={i}>⚠ {w.message}</li>
               ))}
@@ -139,21 +139,21 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
           )}
           {preview && (
             <>
-              <p className="text-sm text-white">Contenuto: {preview.summary}</p>
+              <p className="text-sm text-fg">Contenuto: {preview.summary}</p>
               {preview.canReplace && (
                 <Segmented value={mode} onChange={setMode} options={[{ id: 'merge', label: 'Unisci (consigliato)' }, { id: 'replace', label: 'Sostituisci tutto' }]} />
               )}
               {mode === 'replace' ? (
-                <div className="space-y-2 rounded-xl bg-rose-950/40 p-3 text-sm text-rose-200">
+                <div className="space-y-2 rounded-xl bg-danger-soft p-3 text-sm text-danger">
                   <p>Tutti i dati attuali verranno sostituiti dal backup. Richiede doppia conferma.</p>
                   <Toggle checked={safetyCopy} onChange={setSafetyCopy} label="Scarica prima una copia di sicurezza" />
                 </div>
               ) : (
                 <ul className="max-h-80 space-y-2 overflow-auto">
                   {preview.items.map((it) => (
-                    <li key={it.key} className="rounded-xl bg-slate-800/60 p-2 text-sm">
+                    <li key={it.key} className="rounded-xl bg-surface-muted/60 p-2 text-sm">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-slate-100">{it.label}</span>
+                        <span className="text-fg">{it.label}</span>
                         <Chip className={STATUS[it.status].cls}>{STATUS[it.status].label}</Chip>
                       </div>
                       {it.status !== 'new' && (
@@ -161,7 +161,7 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
                           value={decisions[it.key] ?? 'skip'}
                           onChange={(e) => setDecisions({ ...decisions, [it.key]: e.target.value })}
                           aria-label={`Azione per ${it.label}`}
-                          className="mt-2 w-full rounded-lg bg-slate-800 px-2 py-1.5 text-sm text-slate-100"
+                          className="mt-2 w-full rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg"
                         >
                           <option value="skip">Salta (mantieni l’esistente)</option>
                           <option value="update">Aggiorna l’esistente con il file</option>
@@ -175,7 +175,7 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
               {mode === 'merge' && parsed.batch.programs.length > 0 && <Toggle checked={setMain} onChange={setSetMain} label="Imposta il programma importato come principale" />}
               {mode === 'merge' && parsed.batch.dietPlans.length > 0 && <Toggle checked={activateDiet} onChange={setActivateDiet} label="Imposta il piano importato come attivo" />}
               <div className="flex gap-2">
-                <button onClick={apply} disabled={busy} className="btn flex-1 bg-emerald-500 text-slate-950 disabled:opacity-50">
+                <button onClick={apply} disabled={busy} className="btn flex-1 bg-primary text-on-primary disabled:opacity-50">
                   {busy ? 'Salvataggio…' : mode === 'replace' ? 'Sostituisci' : 'Importa'}
                 </button>
                 <button onClick={() => setParsed(null)} className="btn-ghost">Annulla</button>
@@ -186,7 +186,7 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
       )}
 
       {failure && (
-        <div role="alert" className="rounded-2xl bg-rose-950/60 p-3 text-sm text-rose-200">
+        <div role="alert" className="rounded-2xl bg-danger-soft p-3 text-sm text-danger">
           {failure}
         </div>
       )}
@@ -194,10 +194,10 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
       {log && (
         <Section title="Risultato importazione">
           <Card className="space-y-2 text-sm">
-            <p className="text-slate-200">
+            <p className="text-fg">
               Inseriti {log.inserted.length} · aggiornati {log.updated.length} · saltati {log.skipped.length}
             </p>
-            <ul className="space-y-0.5 text-xs text-slate-400">
+            <ul className="space-y-0.5 text-xs text-muted">
               {log.inserted.map((x, i) => <li key={`i${i}`}>+ {x}</li>)}
               {log.updated.map((x, i) => <li key={`u${i}`}>↻ {x}</li>)}
               {log.skipped.map((x, i) => <li key={`s${i}`}>– {x}</li>)}
@@ -210,7 +210,7 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
       {undo && (
         <Card tone="info" className="space-y-2 text-sm">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-slate-200">Ultima importazione: {undo.label}</span>
+            <span className="text-fg">Ultima importazione: {undo.label}</span>
             {undo.available && (
               <button
                 onClick={async () => {
@@ -227,7 +227,7 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
             )}
           </div>
           {!undo.available && (
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted">
               Annullamento non più disponibile: dopo l’importazione ci sono state altre modifiche, che verrebbero perse. Lo stato precedente all’importazione resta salvato come copia di sicurezza in Altro → Opzioni.
             </p>
           )}

@@ -14,8 +14,8 @@ export default function CardioList({ title, items, onChange }) {
   return (
     <section>
       <div className="mb-2 flex items-baseline justify-between px-1">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">{title}</h2>
-        <span className="text-xs text-slate-400">
+        <h2 className="text-lg font-semibold leading-tight text-fg">{title}</h2>
+        <span className="text-xs text-muted">
           {fmtNum(doneMin)} min · {fmtNum(km, 2)} km
         </span>
       </div>
@@ -23,17 +23,17 @@ export default function CardioList({ title, items, onChange }) {
         {items.map((c) => (
           <div
             key={c.id}
-            className={`rounded-2xl border p-3 ${c.done ? 'border-emerald-700/60 bg-emerald-950/30' : 'border-slate-800 bg-slate-900'}`}
+            className={`rounded-2xl border p-3 ${c.done ? 'border-primary/50 bg-primary-soft' : 'border-line bg-surface'}`}
           >
             <div className="flex items-center gap-2">
               <input
                 value={c.name}
                 onChange={(e) => update(c.id, { name: e.target.value })}
-                className="min-w-0 flex-1 bg-transparent font-semibold text-white outline-none"
+                className="min-w-0 flex-1 bg-transparent font-semibold text-fg outline-none"
               />
               <button
                 onClick={() => confirm('Eliminare questa attività?') && remove(c.id)}
-                className="px-2 text-slate-500"
+                className="px-2 text-muted"
                 aria-label="Elimina"
               >
                 ✕
@@ -46,13 +46,13 @@ export default function CardioList({ title, items, onChange }) {
                 onClick={() => update(c.id, { done: !c.done })}
                 aria-label={c.done ? 'Segna come non fatta' : 'Segna come fatta'}
                 className={`ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 text-xl font-bold ${
-                  c.done ? 'border-emerald-500 bg-emerald-500 text-slate-950' : 'border-slate-600 text-transparent'
+                  c.done ? 'border-primary bg-primary text-on-primary' : 'border-line text-transparent'
                 }`}
               >
-                ✓
+                <span className="anim-check inline-block">✓</span>
               </button>
             </div>
-            {c.note && <p className="mt-2 text-xs text-slate-400">{c.note}</p>}
+            {c.note && <p className="mt-2 text-xs text-muted">{c.note}</p>}
           </div>
         ))}
         <button onClick={add} className="btn-ghost w-full text-sm">+ Aggiungi attività</button>

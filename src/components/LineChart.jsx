@@ -1,10 +1,10 @@
 // Grafico a linee leggero in SVG: un solo asse Y, tooltip al tocco/hover, legenda per ≥ 2 serie, tabella dei valori.
-// Colori validati (scripts dataviz) su sfondo #0f172a: serie 1 #059669, serie 2 #0284c7.
+// Colori dai token del tema (--chart-1 palestra/peso, --chart-2 nuoto/seconda serie); la leggenda distingue sempre le serie anche per tratto.
 import { useMemo, useRef, useState } from 'react'
 import { parseDate, fmtDate } from '../lib/dates'
 import { fmtNum } from '../lib/stats'
 
-export const SERIES_COLORS = ['#059669', '#0284c7']
+export const SERIES_COLORS = ['var(--chart-1)', 'var(--chart-2)']
 // Dimensioni vicine a quelle reali su telefono, così testo e punti non vengono rimpiccioliti
 const W = 360
 const H = 200
@@ -32,7 +32,7 @@ export default function LineChart({ series, unit = '', digits = 1, label }) {
   const all = series.flatMap((s) => s.points)
   const dates = useMemo(() => [...new Set(all.map((p) => p.date))].sort(), [all])
 
-  if (!all.length) return <p className="py-6 text-center text-sm text-slate-500">Nessun dato nel periodo.</p>
+  if (!all.length) return <p className="py-6 text-center text-sm text-muted">Nessun dato nel periodo.</p>
 
   const xs = dates.map((d) => parseDate(d).getTime())
   const xMin = Math.min(...xs)
@@ -57,11 +57,11 @@ export default function LineChart({ series, unit = '', digits = 1, label }) {
   return (
     <figure className="space-y-2">
       {series.length > 1 && (
-        <figcaption className="flex flex-wrap gap-3 text-xs text-slate-300">
+        <figcaption className="flex flex-wrap gap-3 text-xs text-fg-soft">
           {series.map((s, i) => (
             <span key={s.name} className="flex items-center gap-1.5">
               <svg width="18" height="8" aria-hidden="true">
-                <line x1="0" y1="4" x2="18" y2="4" stroke={s.color ?? SERIES_COLORS[i]} strokeWidth="2" strokeDasharray={s.dashed ? '4 3' : undefined} />
+                <line x1="0" y1="4" x2="18" y2="4" style={{ stroke: s.color ?? SERIES_COLORS[i] }} strokeWidth="2" strokeDasharray={s.dashed ? '4 3' : undefined} />
               </svg>
               {s.name}
             </span>
@@ -72,7 +72,7 @@ export default function LineChart({ series, unit = '', digits = 1, label }) {
         <svg
           ref={ref}
           viewBox={`0 0 ${W} ${H}`}
-          className="h-auto w-full touch-none select-none"
+          className="h-auto w-full max-w-lg touch-none select-none"
           role="img"
           aria-label={label}
           onPointerMove={onMove}
@@ -81,18 +81,18 @@ export default function LineChart({ series, unit = '', digits = 1, label }) {
         >
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="#1e293b" strokeWidth="1" />
-              <text x={PAD.l - 6} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#94a3b8">
+              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} style={{ stroke: 'var(--chart-grid)' }} strokeWidth="1" />
+              <text x={PAD.l - 6} y={y(t) + 4} textAnchor="end" fontSize="11" style={{ fill: 'var(--text-muted)' }}>
                 {fmtNum(t, digits)}
               </text>
             </g>
           ))}
           {xLabels.map((d, i) => (
-            <text key={d} x={x(d)} y={H - 8} textAnchor={i === 0 && xLabels.length > 1 ? 'start' : i === xLabels.length - 1 && xLabels.length > 1 ? 'end' : 'middle'} fontSize="11" fill="#94a3b8">
+            <text key={d} x={x(d)} y={H - 8} textAnchor={i === 0 && xLabels.length > 1 ? 'start' : i === xLabels.length - 1 && xLabels.length > 1 ? 'end' : 'middle'} fontSize="11" style={{ fill: 'var(--text-muted)' }}>
               {fmtDate(d, { day: 'numeric', month: 'short' })}
             </text>
           ))}
-          {hover && <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="#475569" strokeWidth="1" />}
+          {hover && <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} style={{ stroke: 'var(--text-muted)' }} strokeWidth="1" />}
           {series.map((s, i) => {
             const color = s.color ?? SERIES_COLORS[i]
             const pts = s.points
@@ -101,7 +101,7 @@ export default function LineChart({ series, unit = '', digits = 1, label }) {
                 {pts.length > 1 && (
                   <polyline
                     fill="none"
-                    stroke={color}
+                    style={{ stroke: color }}
                     strokeWidth="2"
                     strokeLinejoin="round"
                     strokeLinecap="round"
@@ -115,8 +115,7 @@ export default function LineChart({ series, unit = '', digits = 1, label }) {
                     cx={x(p.date)}
                     cy={y(p.value)}
                     r={hover === p.date ? 5 : 4}
-                    fill={s.dashed ? '#0f172a' : color}
-                    stroke={s.dashed ? color : '#0f172a'}
+                    style={{ fill: s.dashed ? 'var(--surface)' : color, stroke: s.dashed ? color : 'var(--surface)' }}
                     strokeWidth="2"
                   />
                 ))}
@@ -126,20 +125,20 @@ export default function LineChart({ series, unit = '', digits = 1, label }) {
         </svg>
         {hover && hoverVals.length > 0 && (
           <div
-            className="pointer-events-none absolute top-1 rounded-lg border border-slate-700 bg-slate-900/95 px-2 py-1 text-xs shadow-lg"
+            className="pointer-events-none absolute top-1 rounded-lg border border-line bg-surface/95 px-2 py-1 text-xs shadow-lg"
             style={{ left: `${Math.min(70, Math.max(0, (x(hover) / W) * 100 - 15))}%` }}
           >
-            <div className="text-slate-400">{fmtDate(hover, { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+            <div className="text-muted">{fmtDate(hover, { day: 'numeric', month: 'short', year: 'numeric' })}</div>
             {hoverVals.map(({ s, p }) => (
-              <div key={s.name} className="text-slate-100">
-                {series.length > 1 && <span className="text-slate-400">{s.name}: </span>}
+              <div key={s.name} className="text-fg">
+                {series.length > 1 && <span className="text-muted">{s.name}: </span>}
                 {fmtNum(p.value, digits)} {unit}
               </div>
             ))}
           </div>
         )}
       </div>
-      <details className="text-xs text-slate-400">
+      <details className="text-xs text-muted">
         <summary className="cursor-pointer">Tabella valori</summary>
         <table className="mt-1 w-full text-left">
           <thead>
@@ -152,12 +151,12 @@ export default function LineChart({ series, unit = '', digits = 1, label }) {
           </thead>
           <tbody>
             {dates.map((d) => (
-              <tr key={d} className="border-t border-slate-800">
+              <tr key={d} className="border-t border-line">
                 <td className="py-1">{d}</td>
                 {series.map((s) => {
                   const p = s.points.find((q) => q.date === d)
                   return (
-                    <td key={s.name} className="py-1 text-slate-200">
+                    <td key={s.name} className="py-1 text-fg">
                       {p ? `${fmtNum(p.value, digits)} ${unit}` : '—'}
                     </td>
                   )

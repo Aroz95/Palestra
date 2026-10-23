@@ -111,21 +111,21 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
   }
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="Modalità allenamento" className="fixed inset-0 z-50 flex flex-col bg-slate-950 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] text-slate-100">
+    <div role="dialog" aria-modal="true" aria-label="Modalità allenamento" className="fixed inset-0 z-50 flex flex-col bg-bg pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] text-fg">
       {/* Barra superiore */}
-      <div className="border-b border-slate-800 px-4 py-2">
+      <div className="border-b border-line px-4 py-2">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <button onClick={onClose} className="btn-ghost text-sm">✕ Esci</button>
-          <div className="flex-1 text-center text-xs text-slate-400">
+          <div className="flex-1 text-center text-xs text-muted">
             {step ? `${step.section} · ${idx + 1}/${steps.length}` : 'Fine'}
-            <div className="text-sm font-semibold text-slate-200">
+            <div className="text-sm font-semibold text-fg">
               Serie {stats.doneSets}/{stats.totalSets}
             </div>
           </div>
           <button
             onClick={timers.running ? timers.pauseStopwatch : timers.startStopwatch}
             className={`rounded-xl px-3 py-1.5 font-mono text-lg font-bold tabular-nums ${
-              timers.running ? 'bg-slate-800 text-emerald-400' : 'bg-slate-800 text-slate-400'
+              timers.running ? 'bg-surface-muted text-primary' : 'bg-surface-muted text-muted'
             }`}
             title={timers.running ? 'Metti in pausa il tempo totale' : 'Riprendi il tempo totale'}
           >
@@ -133,9 +133,9 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
             {fmtClock(timers.elapsed)}
           </button>
         </div>
-        <div className="mx-auto mt-2 h-1.5 max-w-2xl overflow-hidden rounded-full bg-slate-800">
+        <div className="mx-auto mt-2 h-1.5 max-w-2xl overflow-hidden rounded-full bg-surface-muted">
           <div
-            className="h-full rounded-full bg-emerald-500 transition-all"
+            className="h-full rounded-full bg-primary transition-all"
             style={{ width: `${stats.totalSets ? (stats.doneSets / stats.totalSets) * 100 : 0}%` }}
           />
         </div>
@@ -174,7 +174,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
 
       {/* Navigazione */}
       {step && (
-        <div className="border-t border-slate-800 px-4 py-2">
+        <div className="border-t border-line px-4 py-2">
           <div className="mx-auto flex max-w-2xl items-center gap-2">
             <button onClick={() => go(-1)} disabled={idx === 0} className="btn-ghost text-sm disabled:opacity-30">
               ‹ Precedente
@@ -210,15 +210,15 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
   return (
     <div className="flex flex-1 flex-col">
       <div className="text-center">
-        {resting && cur && <div className="text-xs font-semibold uppercase tracking-wider text-sky-400">Prossima serie</div>}
-        <h1 className="text-2xl font-bold text-white">{ex.name}</h1>
-        <p className="text-sm text-slate-400">{ex.group}</p>
+        {resting && cur && <div className="text-xs font-semibold text-fg-soft">Prossima serie</div>}
+        <h1 className="text-2xl font-bold text-fg">{ex.name}</h1>
+        <p className="text-sm text-muted">{ex.group}</p>
         {target && (
-          <p className="mt-1 text-sm text-sky-300">
-            Obiettivo: <span className="text-slate-200">{target}</span>
+          <p className="mt-1 text-sm text-swim">
+            Obiettivo: <span className="text-fg">{target}</span>
           </p>
         )}
-        {hint && <p className="mt-1 text-xs text-amber-300/90">{hint}</p>}
+        {hint && <p className="mt-1 text-xs text-warning">{hint}</p>}
       </div>
 
       {/* Serie: quelle fatte vengono scalate */}
@@ -228,24 +228,24 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
             key={j}
             className={`flex h-9 min-w-9 items-center justify-center rounded-full px-2 text-sm font-semibold ${
               s.done
-                ? 'bg-emerald-500/20 text-emerald-400 line-through'
+                ? 'bg-primary-soft text-primary line-through'
                 : j === i
-                  ? 'bg-white text-slate-900 ring-2 ring-emerald-400'
-                  : 'bg-slate-800 text-slate-300'
+                  ? 'bg-fg text-bg ring-2 ring-primary'
+                  : 'bg-surface-muted text-fg-soft'
             }`}
           >
-            {s.done ? '✓' : j + 1}
+            {s.done ? <span className="anim-check inline-block">✓</span> : j + 1}
           </span>
         ))}
       </div>
-      <p className="mt-2 text-center text-base text-slate-300">
+      <p className="mt-2 text-center text-base text-fg-soft">
         {cur ? (
           <>
-            Serie <b className="text-white">{i + 1}</b> di {ex.sets.length} ·{' '}
-            <b className="text-white">{left === 1 ? 'ultima serie' : `ne restano ${left}`}</b>
+            Serie <b className="text-fg">{i + 1}</b> di {ex.sets.length} ·{' '}
+            <b className="text-fg">{left === 1 ? 'ultima serie' : `ne restano ${left}`}</b>
           </>
         ) : (
-          <span className="font-semibold text-emerald-400">Esercizio completato ✓</span>
+          <span className="font-semibold text-primary">Esercizio completato ✓</span>
         )}
       </p>
 
@@ -273,7 +273,7 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
             <Countdown timers={timers} color="sky" title="Recupero" />
             {rirPrompt && (
               <div className="mt-4 text-center">
-                <div className="mb-1 text-xs text-slate-400">RIR della serie appena fatta · {rirPrompt.name} (facoltativo)</div>
+                <div className="mb-1 text-xs text-muted">RIR della serie appena fatta · {rirPrompt.name} (facoltativo)</div>
                 <div className="flex justify-center gap-1">
                   {[0, 1, 2, 3, 4, 5].map((n) => (
                     <button
@@ -281,7 +281,7 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
                       onClick={() => rirPrompt.onChange(rirPrompt.value === n ? null : n)}
                       aria-pressed={rirPrompt.value === n}
                       aria-label={`RIR ${n}`}
-                      className={`h-10 w-10 rounded-lg text-sm font-semibold ${rirPrompt.value === n ? 'bg-sky-400 text-slate-950' : 'bg-slate-800 text-slate-300'}`}
+                      className={`h-10 w-10 rounded-lg text-sm font-semibold ${rirPrompt.value === n ? 'bg-swim text-on-swim' : 'bg-surface-muted text-fg-soft'}`}
                     >
                       {n}
                     </button>
@@ -319,16 +319,16 @@ function CardioStep({ c, section, onChange, resting, working, timers, onStart })
   return (
     <div className="flex flex-1 flex-col">
       <div className="text-center">
-        <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">{section}</div>
-        <h1 className="text-2xl font-bold text-white">{c.name}</h1>
-        {c.note && <p className="text-sm text-slate-400">{c.note}</p>}
-        {c.done && <p className="mt-1 font-semibold text-emerald-400">Completato ✓</p>}
+        <div className="text-xs font-semibold text-muted">{section}</div>
+        <h1 className="text-2xl font-bold text-fg">{c.name}</h1>
+        {c.note && <p className="text-sm text-muted">{c.note}</p>}
+        {c.done && <p className="mt-1 font-semibold text-primary">Completato ✓</p>}
       </div>
       <div className="mt-4 flex justify-center gap-4">
         <Stepper label="Minuti" value={c.minutes} step={0.5} onChange={(minutes) => onChange({ ...c, minutes })} />
         <Stepper label="km/h" value={c.speed} step={0.5} onChange={(speed) => onChange({ ...c, speed })} />
       </div>
-      <p className="mt-2 text-center text-sm text-slate-400">
+      <p className="mt-2 text-center text-sm text-muted">
         ≈ {fmtNum(((Number(c.minutes) || 0) / 60) * (Number(c.speed) || 0), 2)} km
       </p>
       <div className="flex flex-1 flex-col items-center justify-center py-6">
@@ -356,8 +356,9 @@ function CardioStep({ c, section, onChange, resting, working, timers, onStart })
 }
 
 const RING = {
-  sky: { stroke: 'stroke-sky-400', text: 'text-sky-300' },
-  amber: { stroke: 'stroke-amber-400', text: 'text-amber-300' },
+  // recupero: neutro; tempo di lavoro: colore delle azioni (l'ambra resta riservata agli avvisi)
+  sky: { stroke: 'stroke-fg-soft', text: 'text-fg-soft' },
+  amber: { stroke: 'stroke-primary', text: 'text-primary' },
 }
 
 // Conto alla rovescia grande: si ferma da solo a zero
@@ -370,7 +371,7 @@ function Countdown({ timers, color, title }) {
     <div className="flex flex-col items-center">
       <div className="relative h-64 w-64">
         <svg viewBox="0 0 240 240" className="h-full w-full -rotate-90">
-          <circle cx="120" cy="120" r={r} className="fill-none stroke-slate-800" strokeWidth="14" />
+          <circle cx="120" cy="120" r={r} className="fill-none stroke-line" strokeWidth="14" />
           <circle
             cx="120"
             cy="120"
@@ -384,14 +385,14 @@ function Countdown({ timers, color, title }) {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className={`text-sm font-semibold uppercase tracking-widest ${RING[color].text}`}>{title}</span>
-          <span className="font-mono text-6xl font-bold tabular-nums text-white">{fmtClock(left + 999)}</span>
-          {color === 'amber' && <span className="mt-1 max-w-44 truncate text-xs text-slate-400">{label}</span>}
+          <span className="font-mono text-6xl font-bold tabular-nums text-fg">{fmtClock(left + 999)}</span>
+          {color === 'amber' && <span className="mt-1 max-w-44 truncate text-xs text-muted">{label}</span>}
         </div>
       </div>
       <div className="mt-4 flex gap-2">
         <button onClick={() => timers.addRest(-15)} className="btn-ghost">−15s</button>
         <button onClick={() => timers.addRest(15)} className="btn-ghost">+15s</button>
-        <button onClick={timers.stopRest} className="btn bg-white text-slate-900">
+        <button onClick={timers.stopRest} className="btn bg-fg text-bg">
           {color === 'sky' ? 'Salta recupero' : 'Stop'}
         </button>
       </div>
@@ -400,15 +401,15 @@ function Countdown({ timers, color, title }) {
 }
 
 const BIG = {
-  emerald: 'bg-emerald-500 text-slate-950 shadow-emerald-500/30 active:bg-emerald-400',
-  amber: 'bg-amber-400 text-slate-950 shadow-amber-400/30 active:bg-amber-300',
+  emerald: 'bg-primary text-on-primary active:bg-primary',
+  amber: 'bg-primary text-on-primary active:bg-primary',
 }
 
 function BigButton({ onClick, color, children }) {
   return (
     <button
       onClick={onClick}
-      className={`flex h-64 w-64 flex-col items-center justify-center rounded-full shadow-2xl transition active:scale-95 ${BIG[color]}`}
+      className={`flex h-64 w-64 flex-col items-center justify-center rounded-full shadow-lg transition-transform duration-150 active:scale-[0.98] ${BIG[color]}`}
     >
       {children}
     </button>
@@ -420,7 +421,7 @@ function StepPicker({ steps, currentId, onPick }) {
     <select
       value={currentId ?? ''}
       onChange={(e) => onPick(e.target.value)}
-      className="min-w-0 flex-1 rounded-xl bg-slate-800 px-2 py-2 text-center text-sm text-slate-200"
+      className="min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-2 py-2 text-center text-sm text-fg"
       aria-label="Vai al passo"
     >
       {steps.map((s, i) => (
@@ -448,7 +449,7 @@ function Finished({ stats, timers, session, onChange, onClose }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center">
       <div className="text-6xl">🎉</div>
-      <h1 className="mt-3 text-3xl font-bold text-white">Allenamento completato!</h1>
+      <h1 className="mt-3 text-3xl font-bold text-fg">Allenamento completato!</h1>
       <dl className="mt-6 grid w-full grid-cols-2 gap-2">
         <Tile label="Tempo totale" value={fmtClock(timers.elapsed)} />
         <Tile label="Serie" value={stats.doneSets} />
@@ -457,7 +458,7 @@ function Finished({ stats, timers, session, onChange, onClose }) {
         <Tile label="Cardio" value={`${fmtNum(stats.cardioMin)} min`} />
         <Tile label="Distanza" value={`${fmtNum(stats.cardioKm, 2)} km`} />
       </dl>
-      <button onClick={save} className="btn mt-6 w-full bg-emerald-500 py-4 text-lg text-slate-950">
+      <button onClick={save} className="btn mt-6 w-full bg-primary py-4 text-lg text-on-primary">
         Salva {minutes > 0 ? `durata (${minutes} min) ` : ''}e chiudi
       </button>
     </div>
@@ -466,9 +467,9 @@ function Finished({ stats, timers, session, onChange, onClose }) {
 
 function Tile({ label, value }) {
   return (
-    <div className="rounded-xl bg-slate-900 px-3 py-3">
-      <dt className="text-[10px] uppercase tracking-wider text-slate-400">{label}</dt>
-      <dd className="text-xl font-semibold text-white">{value}</dd>
+    <div className="rounded-xl bg-surface px-3 py-3">
+      <dt className="text-xs font-medium text-muted">{label}</dt>
+      <dd className="text-xl font-semibold text-fg">{value}</dd>
     </div>
   )
 }

@@ -33,7 +33,7 @@ export default function ProgramsView({ state, update, onStartTemplate, onImport 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        <button onClick={addProgram} className="btn bg-emerald-500 text-slate-950">+ Programma</button>
+        <button onClick={addProgram} className="btn-primary">+ Programma</button>
         <button onClick={onImport} className="btn-ghost">Importa JSON</button>
         <button onClick={loadExample} className="btn-ghost">Carica esempio</button>
       </div>
@@ -90,19 +90,19 @@ function ProgramCard({ program: p, state, update, open, onToggle, onEditTemplate
     <Card tone={p.isMain ? 'info' : 'default'} className="space-y-3">
       <button onClick={onToggle} className="flex w-full items-center gap-2 text-left" aria-expanded={open}>
         <div className="min-w-0 flex-1">
-          <div className="font-semibold text-white">{p.name}</div>
+          <div className="font-semibold text-fg">{p.name}</div>
           <div className="mt-1 flex flex-wrap gap-1">
-            {p.isMain && <Chip className="bg-sky-600 text-white">Principale</Chip>}
+            {p.isMain && <Chip className="bg-swim text-on-swim">Principale</Chip>}
             <Chip>{{ active: 'Attivo', draft: 'Bozza', archived: 'Archiviato' }[p.status]}</Chip>
             <Chip>{templates.filter((t) => !t.archived).length} schede</Chip>
             {p.validFrom && <Chip>dal {p.validFrom}</Chip>}
           </div>
         </div>
-        <span className={`text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
+        <span className={`text-muted transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
       </button>
 
       {open && (
-        <div className="space-y-4 border-t border-slate-800 pt-3">
+        <div className="space-y-4 border-t border-line pt-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Nome">
               <TextInput value={p.name} onChange={(name) => set({ name })} />
@@ -119,10 +119,10 @@ function ProgramCard({ program: p, state, update, open, onToggle, onEditTemplate
               />
             </Field>
             <Field label="Valido dal">
-              <input type="date" value={p.validFrom ?? ''} onChange={(e) => set({ validFrom: e.target.value || null })} className="w-full rounded-xl bg-slate-800 px-3 py-2 text-slate-100 [color-scheme:dark]" />
+              <input type="date" value={p.validFrom ?? ''} onChange={(e) => set({ validFrom: e.target.value || null })} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" />
             </Field>
             <Field label="Valido fino al (facoltativo)">
-              <input type="date" value={p.validTo ?? ''} onChange={(e) => set({ validTo: e.target.value || null })} className="w-full rounded-xl bg-slate-800 px-3 py-2 text-slate-100 [color-scheme:dark]" />
+              <input type="date" value={p.validTo ?? ''} onChange={(e) => set({ validTo: e.target.value || null })} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" />
             </Field>
           </div>
           <Field label="Descrizione">
@@ -132,7 +132,7 @@ function ProgramCard({ program: p, state, update, open, onToggle, onEditTemplate
             <button onClick={() => update((s) => A.setMainProgram(s, p.id))} className="btn-ghost text-sm">Imposta come principale</button>
           )}
 
-          <Section title="Schede" right={<button onClick={() => update((s) => A.addTemplate(s, p.id, nextLabel).state)} className="text-sm text-emerald-400">+ Scheda {nextLabel}</button>}>
+          <Section title="Schede" right={<button onClick={() => update((s) => A.addTemplate(s, p.id, nextLabel).state)} className="text-sm text-primary">+ Scheda {nextLabel}</button>}>
             <TemplateList templates={templates} update={update} onEdit={onEditTemplate} onStart={onStartTemplate} />
           </Section>
 
@@ -140,7 +140,7 @@ function ProgramCard({ program: p, state, update, open, onToggle, onEditTemplate
 
           <div className="flex flex-wrap gap-2">
             <button onClick={() => downloadJSON(fileNames.program(p), exportProgram(state, p.id))} className="btn-ghost text-sm">Esporta JSON</button>
-            <button onClick={remove} className="rounded-xl px-3 py-2 text-sm text-rose-400">Elimina programma</button>
+            <button onClick={remove} className="rounded-xl px-3 py-2 text-sm text-danger">Elimina programma</button>
           </div>
         </div>
       )}
@@ -153,24 +153,24 @@ function TemplateList({ templates, update, onEdit, onStart }) {
   return (
     <div className="space-y-2">
       {templates.map((t) => (
-        <div key={t.id} className={`rounded-xl bg-slate-800/60 p-3 ${t.archived ? 'opacity-60' : ''}`}>
+        <div key={t.id} className={`rounded-xl bg-surface-muted/60 p-3 ${t.archived ? 'opacity-60' : ''}`}>
           <div className="flex items-start gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-700 font-bold text-white">{t.label || '·'}</span>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-strong font-bold text-fg">{t.label || '·'}</span>
             <div className="min-w-0 flex-1">
-              <div className="font-medium text-white">{t.name}</div>
-              <div className="text-xs text-slate-400">
+              <div className="font-medium text-fg">{t.name}</div>
+              <div className="text-xs text-muted">
                 {t.exercises.length} esercizi · revisione {t.revision}
                 {t.estimatedMinutes ? ` · ~${t.estimatedMinutes} min` : ''}
                 {t.archived ? ' · archiviata' : ''}
-                {!t.exercises.length && <span className="text-amber-300"> · incompleta</span>}
+                {!t.exercises.length && <span className="text-warning"> · incompleta</span>}
               </div>
             </div>
-            <button onClick={() => update((s) => A.moveTemplate(s, t.id, -1))} className="px-1 text-slate-400" aria-label={`Sposta su ${t.name}`}>↑</button>
-            <button onClick={() => update((s) => A.moveTemplate(s, t.id, 1))} className="px-1 text-slate-400" aria-label={`Sposta giù ${t.name}`}>↓</button>
+            <button onClick={() => update((s) => A.moveTemplate(s, t.id, -1))} className="px-1 text-muted" aria-label={`Sposta su ${t.name}`}>↑</button>
+            <button onClick={() => update((s) => A.moveTemplate(s, t.id, 1))} className="px-1 text-muted" aria-label={`Sposta giù ${t.name}`}>↓</button>
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {!t.archived && (
-              <button onClick={() => onStart(t.id)} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-slate-950">▶ Avvia</button>
+              <button onClick={() => onStart(t.id)} className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-on-primary">▶ Avvia</button>
             )}
             <button onClick={() => onEdit(t.id)} className="btn-ghost py-1.5 text-sm">Modifica</button>
             <button onClick={() => update((s) => A.duplicateTemplate(s, t.id))} className="btn-ghost py-1.5 text-sm">Duplica</button>
@@ -192,23 +192,23 @@ function ScheduleEditor({ program, templates, onChange }) {
   const swimSlot = slots.find((s) => s.id === swimEdit)
   return (
     <Section title="Calendario settimanale">
-      <p className="mb-2 px-1 text-xs text-slate-500">Le ricorrenze creano attività previste, non sedute svolte. Puoi mettere più attività nello stesso giorno.</p>
+      <p className="mb-2 px-1 text-xs text-muted">Le ricorrenze creano attività previste, non sedute svolte. Puoi mettere più attività nello stesso giorno.</p>
       <div className="space-y-2">
         {[1, 2, 3, 4, 5, 6, 7].map((wd) => (
-          <div key={wd} className="rounded-xl bg-slate-800/40 p-2">
+          <div key={wd} className="rounded-xl bg-surface-muted/40 p-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-200">{WEEKDAYS[wd]}</span>
-              <button onClick={() => add(wd)} className="text-xs text-emerald-400" aria-label={`Aggiungi attività ${WEEKDAYS[wd]}`}>+ attività</button>
+              <span className="text-sm font-semibold text-fg">{WEEKDAYS[wd]}</span>
+              <button onClick={() => add(wd)} className="text-xs text-primary" aria-label={`Aggiungi attività ${WEEKDAYS[wd]}`}>+ attività</button>
             </div>
             {slots.filter((s) => s.weekday === wd).map((s) => (
               <div key={s.id} className="mt-2 flex flex-wrap items-center gap-2">
-                <select value={s.kind} onChange={(e) => upd(s.id, { kind: e.target.value, swimPlan: null })} className="rounded-lg bg-slate-800 px-2 py-1.5 text-sm text-slate-100" aria-label="Tipo attività">
+                <select value={s.kind} onChange={(e) => upd(s.id, { kind: e.target.value, swimPlan: null })} className="rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" aria-label="Tipo attività">
                   {Object.entries(ACTIVITY_KINDS).map(([k, l]) => (
                     <option key={k} value={k}>{l}</option>
                   ))}
                 </select>
                 {s.kind === 'strength' && (
-                  <select value={s.templateId ?? ''} onChange={(e) => upd(s.id, { templateId: e.target.value || null })} className="min-w-0 flex-1 rounded-lg bg-slate-800 px-2 py-1.5 text-sm text-slate-100" aria-label="Scheda">
+                  <select value={s.templateId ?? ''} onChange={(e) => upd(s.id, { templateId: e.target.value || null })} className="min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" aria-label="Scheda">
                     <option value="">— scheda —</option>
                     {templates.filter((t) => !t.archived).map((t) => (
                       <option key={t.id} value={t.id}>{t.label ? `${t.label} · ` : ''}{t.name}</option>
@@ -221,9 +221,9 @@ function ScheduleEditor({ program, templates, onChange }) {
                   </button>
                 )}
                 {(s.kind === 'other' || s.kind === 'rest') && (
-                  <input value={s.label} onChange={(e) => upd(s.id, { label: e.target.value })} placeholder="Etichetta" className="min-w-0 flex-1 rounded-lg bg-slate-800 px-2 py-1.5 text-sm text-slate-100" />
+                  <input value={s.label} onChange={(e) => upd(s.id, { label: e.target.value })} placeholder="Etichetta" className="min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
                 )}
-                <button onClick={() => onChange(slots.filter((x) => x.id !== s.id))} className="px-2 text-rose-400" aria-label="Rimuovi attività">✕</button>
+                <button onClick={() => onChange(slots.filter((x) => x.id !== s.id))} className="px-2 text-danger" aria-label="Rimuovi attività">✕</button>
               </div>
             ))}
           </div>
@@ -280,21 +280,21 @@ export function BlocksEditor({ blocks, onChange }) {
   return (
     // Non dentro un <label>: un tocco sul testo attiverebbe il primo pulsante (✕ del primo blocco)
     <div role="group" aria-labelledby="blocks-label">
-      <span id="blocks-label" className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Blocchi previsti</span>
+      <span id="blocks-label" className="text-[13px] font-medium text-fg-soft">Blocchi previsti</span>
       <div className="mt-1 space-y-2">
         {blocks.map((b) => {
           const issue = issues.find((i) => i.id === b.id)
           return (
-            <div key={b.id} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${issue ? 'bg-amber-900/40' : 'bg-slate-800'}`} data-testid="swim-block">
-              <span className="flex-1 font-mono text-slate-100">{formatBlock(b)}</span>
-              <span className="text-xs text-slate-400">{expandedSegments(b).length} tratti</span>
-              <span className="text-slate-300">{fmtNum(blockTotal(b), 0)} m</span>
-              <button onClick={() => onChange(blocks.filter((x) => x.id !== b.id))} className="text-rose-400" aria-label={`Rimuovi blocco ${formatBlock(b)}`}>✕</button>
+            <div key={b.id} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${issue ? 'bg-warning-soft' : 'bg-surface-muted'}`} data-testid="swim-block">
+              <span className="flex-1 font-mono text-fg">{formatBlock(b)}</span>
+              <span className="text-xs text-muted">{expandedSegments(b).length} tratti</span>
+              <span className="text-fg-soft">{fmtNum(blockTotal(b), 0)} m</span>
+              <button onClick={() => onChange(blocks.filter((x) => x.id !== b.id))} className="text-danger" aria-label={`Rimuovi blocco ${formatBlock(b)}`}>✕</button>
             </div>
           )
         })}
         {issues.length > 0 && (
-          <div role="alert" className="space-y-2 rounded-xl border border-amber-700 bg-amber-900/30 p-3 text-xs text-amber-100">
+          <div role="alert" className="space-y-2 rounded-xl border border-warning/60 bg-warning-soft p-3 text-xs text-fg">
             <p>
               {issues.length === 1 ? 'Un blocco salvato ha' : `${issues.length} blocchi salvati hanno`} tratti che non corrispondono al testo (errore di lettura di una versione precedente):
             </p>
@@ -305,23 +305,23 @@ export function BlocksEditor({ blocks, onChange }) {
                 </li>
               ))}
             </ul>
-            <button onClick={regenerate} className="rounded-lg bg-amber-400 px-3 py-1.5 font-semibold text-slate-950">Rigenera i tratti dal testo</button>
+            <button onClick={regenerate} className="rounded-lg bg-warning px-3 py-1.5 font-semibold text-on-warning">Rigenera i tratti dal testo</button>
           </div>
         )}
         <div className="flex gap-2">
-          <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="(100×3)×4" className="min-w-0 flex-1 rounded-xl bg-slate-800 px-3 py-2 font-mono text-slate-100" aria-label="Nuovo blocco" aria-invalid={pv?.ok === false} />
+          <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="(100×3)×4" className="min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-3 py-2 font-mono text-fg" aria-label="Nuovo blocco" aria-invalid={pv?.ok === false} />
           <button onClick={add} disabled={!pv?.ok} className="btn-ghost disabled:opacity-40">Aggiungi</button>
         </div>
         {pv?.ok && (
-          <p className="text-xs text-sky-200" aria-live="polite" data-testid="block-preview">
+          <p className="text-xs text-fg-soft" aria-live="polite" data-testid="block-preview">
             Anteprima: {pv.count} {pv.count === 1 ? 'tratto' : 'tratti'} · {fmtNum(pv.totalM, 0)} m
-            {pv.count > 1 && pv.count <= 30 && <span className="text-slate-400"> ({pv.segments.join(' + ')})</span>}
+            {pv.count > 1 && pv.count <= 30 && <span className="text-muted"> ({pv.segments.join(' + ')})</span>}
           </p>
         )}
-        {pv?.ok === false && <p className="text-xs text-rose-400" aria-live="polite">{pv.error}</p>}
-        {blocks.length > 0 && <p className="text-sm text-slate-300">Totale previsto: <b className="text-white">{fmtNum(blocksTotal(blocks), 0)} m</b></p>}
+        {pv?.ok === false && <p className="text-xs text-danger" aria-live="polite">{pv.error}</p>}
+        {blocks.length > 0 && <p className="text-sm text-fg-soft">Totale previsto: <b className="text-fg">{fmtNum(blocksTotal(blocks), 0)} m</b></p>}
       </div>
-      <span className="mt-1 block text-xs text-slate-500">Es. 500 · (200)×2 · (100×3)×4 · (200+100+2×75)×2. In «4×100» o «100×4» il numero minore di 25 indica le ripetizioni; accanto a un gruppo tra parentesi ogni numero è un numero di ripetizioni. Separatori: x, ×, *.</span>
+      <span className="mt-1 block text-xs text-muted">Es. 500 · (200)×2 · (100×3)×4 · (200+100+2×75)×2. In «4×100» o «100×4» il numero minore di 25 indica le ripetizioni; accanto a un gruppo tra parentesi ogni numero è un numero di ripetizioni. Separatori: x, ×, *.</span>
     </div>
   )
 }
@@ -340,7 +340,7 @@ function TemplateEditor({ template: t, sessions, onChange }) {
 
   return (
     <div className="space-y-4">
-      <p className="rounded-xl bg-slate-800/60 p-3 text-xs text-slate-300">
+      <p className="rounded-xl bg-surface-muted/60 p-3 text-xs text-fg-soft">
         Revisione {t.revision}
         {t.revisionInUse ? ' — già usata: la prossima modifica crea una nuova revisione.' : '.'} {used} sedute svolte con questa scheda mantengono gli obiettivi del momento.
         {t.history?.length ? ` Revisioni precedenti: ${t.history.map((h) => `${h.revision} (${h.savedAt.slice(0, 10)})`).join(', ')}.` : ''}
@@ -362,13 +362,13 @@ function TemplateEditor({ template: t, sessions, onChange }) {
       <Section title="Esercizi">
         <div className="space-y-3">
           {t.exercises.map((ex, i) => (
-            <div key={ex.id} className="space-y-3 rounded-xl bg-slate-800/60 p-3">
+            <div key={ex.id} className="space-y-3 rounded-xl bg-surface-muted/60 p-3">
               <div className="flex items-center gap-2">
-                <span className="w-5 text-sm font-semibold text-slate-500">{i + 1}</span>
-                <input value={ex.name} onChange={(e) => updEx(ex.id, { name: e.target.value })} aria-label="Nome esercizio" className="min-w-0 flex-1 bg-transparent font-semibold text-white outline-none" />
-                <button onClick={() => move(i, -1)} className="px-1 text-slate-400" aria-label="Sposta su">↑</button>
-                <button onClick={() => move(i, 1)} className="px-1 text-slate-400" aria-label="Sposta giù">↓</button>
-                <button onClick={() => confirm(`Eliminare "${ex.name}" dalla scheda?`) && set({ exercises: t.exercises.filter((e) => e.id !== ex.id) })} className="px-1 text-rose-400" aria-label="Elimina esercizio">✕</button>
+                <span className="w-5 text-sm font-semibold text-muted">{i + 1}</span>
+                <input value={ex.name} onChange={(e) => updEx(ex.id, { name: e.target.value })} aria-label="Nome esercizio" className="min-w-0 flex-1 bg-transparent font-semibold text-fg outline-none" />
+                <button onClick={() => move(i, -1)} className="px-1 text-muted" aria-label="Sposta su">↑</button>
+                <button onClick={() => move(i, 1)} className="px-1 text-muted" aria-label="Sposta giù">↓</button>
+                <button onClick={() => confirm(`Eliminare "${ex.name}" dalla scheda?`) && set({ exercises: t.exercises.filter((e) => e.id !== ex.id) })} className="px-1 text-danger" aria-label="Elimina esercizio">✕</button>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 <Field label="Gruppo">
@@ -410,7 +410,7 @@ function TemplateEditor({ template: t, sessions, onChange }) {
                   <NumberInput value={ex.restSeconds} onChange={(restSeconds) => updEx(ex.id, { restSeconds })} step={15} />
                 </Field>
               </div>
-              {ex.repMin != null && ex.repMax != null && ex.repMin > ex.repMax && <p className="text-xs text-rose-400">Le ripetizioni minime superano le massime.</p>}
+              {ex.repMin != null && ex.repMax != null && ex.repMin > ex.repMax && <p className="text-xs text-danger">Le ripetizioni minime superano le massime.</p>}
               {ex.equipment === 'dumbbell' && <Toggle checked={ex.perHand} onChange={(perHand) => updEx(ex.id, { perHand })} label="Carico per mano (volume ×2)" />}
               <Field label="Variante">
                 <TextInput value={ex.variant} onChange={(variant) => updEx(ex.id, { variant })} placeholder="es. presa stretta" />
@@ -448,7 +448,7 @@ function CardioTemplate({ title, items, onChange }) {
             <Field label="km/h">
               <NumberInput value={c.speed} onChange={(speed) => upd(c.id, { speed })} step={0.5} />
             </Field>
-            <button onClick={() => onChange(items.filter((x) => x.id !== c.id))} className="pb-2 text-rose-400" aria-label="Rimuovi attività">✕</button>
+            <button onClick={() => onChange(items.filter((x) => x.id !== c.id))} className="pb-2 text-danger" aria-label="Rimuovi attività">✕</button>
           </div>
         ))}
         <button onClick={() => onChange([...items, newCardio()])} className="btn-ghost w-full text-sm">+ Aggiungi attività</button>

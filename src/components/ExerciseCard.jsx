@@ -53,43 +53,43 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
   const markAll = () => onChange({ ...ex, sets: ex.sets.map((s) => ({ ...s, done: !allDone, at: !allDone ? (s.at ?? toLocalISO()) : null })) })
 
   return (
-    <div className={`rounded-2xl border ${allDone ? 'border-emerald-700/60 bg-emerald-950/30' : 'border-slate-800 bg-slate-900'}`}>
+    <div className={`rounded-2xl border ${allDone ? 'border-primary/50 bg-primary-soft' : 'border-line bg-surface'}`}>
       <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center gap-3 px-4 py-3 text-left" aria-expanded={open}>
         <span
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-            allDone ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'
+            allDone ? 'bg-primary text-on-primary' : 'bg-surface-muted text-fg-soft'
           }`}
         >
           {allDone ? '✓' : index + 1}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold text-white">{ex.name}</div>
-          <div className="truncate text-xs text-slate-400">
+          <div className="truncate font-semibold text-fg">{ex.name}</div>
+          <div className="truncate text-xs text-muted">
             {ex.group}
             {!open && ex.sets.length > 0 && <> · {summaryText(ex)}</>}
           </div>
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${allDone ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-300'}`}>
+        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${allDone ? 'bg-primary-soft text-primary' : 'bg-surface-muted text-fg-soft'}`}>
           {doneCount}/{ex.sets.length}
         </span>
-        <span className={`text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
+        <span className={`text-muted transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
       </button>
 
       {open && (
-        <div className="border-t border-slate-800 px-3 pb-3 pt-2">
+        <div className="border-t border-line px-3 pb-3 pt-2">
           {(target || hint || ex.instructions) && (
             <div className="mb-2 space-y-1 px-1 text-xs">
               {target && (
-                <div className="text-slate-300">
-                  <span className="font-semibold text-sky-300">Obiettivo</span> {target} · recupero {fmtClock((ex.rest ?? DEFAULT_REST) * 1000)}
+                <div className="text-fg-soft">
+                  <span className="font-semibold text-swim">Obiettivo</span> {target} · recupero {fmtClock((ex.rest ?? DEFAULT_REST) * 1000)}
                 </div>
               )}
-              {ex.instructions && <div className="text-slate-400">{ex.instructions}</div>}
-              {hint && <div className="text-amber-300/90">{hint}</div>}
+              {ex.instructions && <div className="text-muted">{ex.instructions}</div>}
+              {hint && <div className="text-warning">{hint}</div>}
             </div>
           )}
           {ex.sets.length > 0 && (
-            <div className="mb-1 grid grid-cols-[1.75rem_1fr_1fr_3rem] items-center gap-2 px-1 text-[10px] uppercase tracking-wider text-slate-500">
+            <div className="mb-1 grid grid-cols-[1.75rem_1fr_1fr_3rem] items-center gap-2 px-1 text-xs font-medium text-muted">
               <span>#</span>
               <span className="text-center">{isTime ? '' : `Kg eseguiti${ex.perHand ? ' / mano' : ''}`}</span>
               <span className="text-center">{isTime ? 'Secondi' : 'Ripetizioni'}</span>
@@ -98,11 +98,11 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
           )}
           <ul className="space-y-2">
             {ex.sets.map((s, i) => (
-              <li key={i} className={`rounded-xl px-1 py-1 ${s.done ? 'bg-emerald-500/10' : ''}`}>
+              <li key={i} className={`rounded-xl px-1 py-1 ${s.done ? 'bg-primary-soft' : ''}`}>
                 <div className="grid grid-cols-[1.75rem_1fr_1fr_3rem] items-center gap-2">
                   <button
                     onClick={() => setDetail(i)}
-                    className="h-9 rounded-lg bg-slate-800 text-sm font-semibold text-slate-300"
+                    className="h-9 rounded-lg bg-surface-muted text-sm font-semibold text-fg-soft"
                     aria-label={`Dettagli serie ${i + 1}`}
                     title="RIR, fastidio, note, elimina"
                   >
@@ -112,7 +112,7 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
                     {isTime ? (
                       <button
                         onClick={() => onStartTimer?.(ex, i)}
-                        className="rounded-xl bg-sky-700 px-3 py-2 text-sm font-semibold text-white active:bg-sky-600"
+                        className="rounded-xl bg-swim px-3 py-2 text-sm font-semibold text-on-swim active:bg-swim"
                       >
                         ▶ Avvia {s.durationSec}s
                       </button>
@@ -132,18 +132,18 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
                     aria-label={s.done ? `Serie ${i + 1}: segna come non fatta` : `Serie ${i + 1}: segna come fatta`}
                     aria-pressed={s.done}
                     className={`mx-auto flex h-11 w-11 items-center justify-center rounded-xl border-2 text-xl font-bold transition ${
-                      s.done ? 'border-emerald-500 bg-emerald-500 text-slate-950' : 'border-slate-600 text-transparent active:border-emerald-500'
+                      s.done ? 'border-primary bg-primary text-on-primary' : 'border-line text-transparent active:border-primary'
                     }`}
                   >
-                    ✓
+                    <span className="anim-check inline-block">✓</span>
                   </button>
                 </div>
                 {(s.rir != null || s.rpe != null || s.pain || s.note) && (
                   <div className="mt-1 flex flex-wrap gap-1 pl-9 text-[11px]">
-                    {s.rir != null && <span className="rounded bg-slate-800 px-1.5 text-slate-300">RIR {s.rir}</span>}
-                    {s.rpe != null && <span className="rounded bg-slate-800 px-1.5 text-slate-300">RPE {s.rpe}</span>}
-                    {s.pain && <span className="rounded bg-rose-900/60 px-1.5 text-rose-200">Fastidio {s.pain.location} {s.pain.intensity ?? ''}</span>}
-                    {s.note && <span className="rounded bg-slate-800 px-1.5 text-slate-400">{s.note}</span>}
+                    {s.rir != null && <span className="rounded bg-surface-muted px-1.5 text-fg-soft">RIR {s.rir}</span>}
+                    {s.rpe != null && <span className="rounded bg-surface-muted px-1.5 text-fg-soft">RPE {s.rpe}</span>}
+                    {s.pain && <span className="rounded bg-danger-soft px-1.5 text-danger">Fastidio {s.pain.location} {s.pain.intensity ?? ''}</span>}
+                    {s.note && <span className="rounded bg-surface-muted px-1.5 text-muted">{s.note}</span>}
                   </div>
                 )}
               </li>
@@ -165,7 +165,7 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
             )}
             <button
               onClick={() => confirm(`Rimuovere "${ex.name}" da questa seduta?`) && onRemove()}
-              className="ml-auto rounded-xl px-3 py-2 text-sm text-rose-400 active:bg-rose-950"
+              className="ml-auto rounded-xl px-3 py-2 text-sm text-danger active:bg-danger-soft"
             >
               Rimuovi
             </button>
@@ -177,7 +177,7 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
             placeholder="Note (sensazioni, regolazioni macchina…)"
             aria-label={`Note ${ex.name}`}
             rows={1}
-            className="mt-2 w-full resize-y rounded-xl bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-emerald-500"
+            className="mt-2 w-full resize-y rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       )}
@@ -208,7 +208,7 @@ export function SetDetail({ open, set, index, isTime, onClose, onChange, onRemov
     <Sheet open={open} onClose={onClose} title={`Serie ${index + 1}`}>
       <div className="space-y-4">
         {t && (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted">
             Obiettivo:{' '}
             {isTime
               ? `${t.durationSec ?? '—'} s`
@@ -242,8 +242,8 @@ export function SetDetail({ open, set, index, isTime, onClose, onChange, onRemov
           <TextInput value={set.note} onChange={(note) => onChange({ note })} placeholder="Nota sulla serie" />
         </Field>
         <div className="flex justify-between">
-          <button onClick={onRemove} className="rounded-xl px-3 py-2 text-sm text-rose-400 active:bg-rose-950">Elimina serie</button>
-          <button onClick={onClose} className="btn bg-emerald-500 text-slate-950">Fatto</button>
+          <button onClick={onRemove} className="rounded-xl px-3 py-2 text-sm text-danger active:bg-danger-soft">Elimina serie</button>
+          <button onClick={onClose} className="btn-primary">Fatto</button>
         </div>
       </div>
     </Sheet>

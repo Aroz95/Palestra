@@ -39,7 +39,7 @@ export default function DietView({ state, update, onImport }) {
       <Empty
         action={
           <div className="flex flex-wrap justify-center gap-2">
-            <button onClick={onImport} className="btn bg-emerald-500 text-slate-950">Importa piano JSON</button>
+            <button onClick={onImport} className="btn-primary">Importa piano JSON</button>
             <button onClick={createPlan} className="btn-ghost">Crea piano vuoto</button>
           </div>
         }
@@ -118,19 +118,19 @@ export default function DietView({ state, update, onImport }) {
       {plan && (
         <Card className="space-y-2">
           <div className="flex flex-wrap items-center gap-1">
-            {plan.active && <Chip className="bg-emerald-600 text-white">Attivo</Chip>}
+            {plan.active && <Chip className="bg-primary text-on-primary">Attivo</Chip>}
             {isValidated(plan) ? (
-              <Chip className="bg-sky-700 text-white">Validato{plan.validatedBy ? ` da ${plan.validatedBy}` : ''}</Chip>
+              <Chip className="bg-swim text-on-swim">Validato{plan.validatedBy ? ` da ${plan.validatedBy}` : ''}</Chip>
             ) : (
-              <Chip className="bg-amber-500/20 text-amber-200">Bozza — non validato da un professionista</Chip>
+              <Chip className="bg-warning-soft text-warning">Bozza — non validato da un professionista</Chip>
             )}
             <Chip>rev. {plan.revision}</Chip>
             {(plan.validFrom || plan.validTo) && <Chip>{plan.validFrom ?? '…'} → {plan.validTo ?? '…'}</Chip>}
           </div>
-          {plan.author && <p className="text-xs text-slate-400">Autore: {plan.author}</p>}
-          {plan.goal && <p className="text-sm text-slate-300">{plan.goal}</p>}
-          {plan.notes && <p className="text-xs text-slate-400">{plan.notes}</p>}
-          <p className="text-[11px] text-slate-500">Strumento di consultazione: l’app non crea prescrizioni né calcola nutrienti non indicati nel piano.</p>
+          {plan.author && <p className="text-xs text-muted">Autore: {plan.author}</p>}
+          {plan.goal && <p className="text-sm text-fg-soft">{plan.goal}</p>}
+          {plan.notes && <p className="text-xs text-muted">{plan.notes}</p>}
+          <p className="text-[11px] text-muted">Strumento di consultazione: l’app non crea prescrizioni né calcola nutrienti non indicati nel piano.</p>
           {!editing && (
             <div className="flex flex-wrap gap-2 pt-1">
               {!plan.active && !plan.archived && <button onClick={() => update((s) => A.setActiveDiet(s, plan.id))} className="btn-ghost py-1.5 text-sm">Imposta attivo</button>}
@@ -152,14 +152,14 @@ export default function DietView({ state, update, onImport }) {
               <button onClick={createPlan} className="btn-ghost py-1.5 text-sm">+ Nuovo</button>
               <button
                 onClick={() => confirm(`Eliminare il piano "${plan.name}"? Il diario dei pasti collegato resta.`) && (update((s) => A.removeIn(s, 'dietPlans', plan.id)), setPlanId(null))}
-                className="rounded-xl px-3 py-1.5 text-sm text-rose-400"
+                className="rounded-xl px-3 py-1.5 text-sm text-danger"
               >
                 Elimina
               </button>
             </div>
           )}
           {plan.history?.length > 0 && !editing && (
-            <details className="text-xs text-slate-400">
+            <details className="text-xs text-muted">
               <summary>Revisioni precedenti ({plan.history.length})</summary>
               <ul className="mt-1 space-y-1">
                 {plan.history.map((h) => (
@@ -188,9 +188,9 @@ export default function DietView({ state, update, onImport }) {
       )}
 
       {editing && (
-        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-slate-800 bg-slate-950/95 px-4 py-2 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-line bg-bg/95 px-4 py-2 backdrop-blur">
           <div className="mx-auto flex max-w-2xl gap-2">
-            <button onClick={saveRevision} className="btn flex-1 bg-emerald-500 text-slate-950">Salva revisione {editing.revision + 1}</button>
+            <button onClick={saveRevision} className="btn flex-1 bg-primary text-on-primary">Salva revisione {editing.revision + 1}</button>
             <button onClick={() => setEditing(null)} className="btn-ghost">Annulla</button>
           </div>
         </div>
@@ -221,7 +221,7 @@ export default function DietView({ state, update, onImport }) {
                   setDayType(null)
                 }}
                 aria-pressed={n === wd}
-                className={`flex-1 rounded-lg py-2 text-xs font-semibold ${n === wd ? 'bg-emerald-500 text-slate-950' : d === todayISO() ? 'bg-slate-700 text-white' : 'bg-slate-800 text-slate-300'}`}
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold ${n === wd ? 'bg-primary text-on-primary' : d === todayISO() ? 'bg-surface-strong text-fg' : 'bg-surface-muted text-fg-soft'}`}
               >
                 {WEEKDAYS_SHORT[n]}
               </button>
@@ -230,19 +230,19 @@ export default function DietView({ state, update, onImport }) {
         </div>
       )}
       <div className="flex items-center justify-between px-1 text-sm">
-        <span className="capitalize text-slate-300">{fmtDate(date)}</span>
+        <span className="capitalize text-fg-soft">{fmtDate(date)}</span>
         {(
           <span className="flex gap-1">
-            <button onClick={() => setDate(addDays(date, -7))} className="text-slate-400" aria-label="Settimana precedente">‹</button>
-            <button onClick={() => setDate(todayISO())} className="text-xs text-emerald-400">oggi</button>
-            <button onClick={() => setDate(addDays(date, 7))} className="text-slate-400" aria-label="Settimana successiva">›</button>
+            <button onClick={() => setDate(addDays(date, -7))} className="text-muted" aria-label="Settimana precedente">‹</button>
+            <button onClick={() => setDate(todayISO())} className="text-xs text-primary">oggi</button>
+            <button onClick={() => setDate(addDays(date, 7))} className="text-muted" aria-label="Settimana successiva">›</button>
           </span>
         )}
       </div>
       {types.length > 1 && (
         <div className="flex gap-1">
           {types.map((t) => (
-            <button key={t} onClick={() => setDayType(t)} aria-pressed={effType === t} className={`flex-1 rounded-lg py-1.5 text-xs font-semibold ${effType === t ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-300'}`}>
+            <button key={t} onClick={() => setDayType(t)} aria-pressed={effType === t} className={`flex-1 rounded-lg py-1.5 text-xs font-semibold ${effType === t ? 'bg-swim text-on-swim' : 'bg-surface-muted text-fg-soft'}`}>
               {{ training: 'Giorno di allenamento', rest: 'Giorno di riposo', any: 'Generico' }[t]}
             </button>
           ))}
@@ -252,8 +252,8 @@ export default function DietView({ state, update, onImport }) {
       {day && target && !editing && (
         <Card className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-1">
-            <span className="text-sm font-semibold text-white">{training ? 'Giorno di allenamento' : 'Giorno di riposo'}</span>
-            {previewing && <Chip className="bg-amber-500/20 text-amber-200">anteprima alternative</Chip>}
+            <span className="text-sm font-semibold text-fg">{training ? 'Giorno di allenamento' : 'Giorno di riposo'}</span>
+            {previewing && <Chip className="bg-warning-soft text-warning">anteprima alternative</Chip>}
           </div>
           <DayTable
             rows={[
@@ -264,7 +264,7 @@ export default function DietView({ state, update, onImport }) {
               ...(consumed && hasTargets(target) ? [{ label: 'Scostamento', kind: 'delta', hint: 'consumato − obiettivo', cells: deltaToTarget(consumed, target), muted: true }] : []),
             ]}
           />
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-muted">
             ND = non disponibile. Gli scostamenti compaiono solo con totali completi. {completeness?.total ? `Pasti del piano con valori completi: ${completeness.complete}/${completeness.total}.` : ''}
           </p>
         </Card>
@@ -318,20 +318,20 @@ export default function DietView({ state, update, onImport }) {
       )}
 
       {day && !editing && plan && (
-        <Section title="Fuori piano" right={<button onClick={() => setExtraOpen(true)} className="text-sm text-emerald-400">+ Aggiungi</button>}>
+        <Section title="Fuori piano" right={<button onClick={() => setExtraOpen(true)} className="text-sm text-primary">+ Aggiungi</button>}>
           {extras.length === 0 ? (
-            <p className="px-1 text-xs text-slate-500">Nessuna aggiunta registrata per questo giorno.</p>
+            <p className="px-1 text-xs text-muted">Nessuna aggiunta registrata per questo giorno.</p>
           ) : (
             <div className="space-y-2">
               {extras.map((l) => (
                 <Card key={l.id} className="flex items-center justify-between gap-2 py-3 text-sm">
                   <div>
-                    <div className="font-medium text-white">{l.label}</div>
+                    <div className="font-medium text-fg">{l.label}</div>
                     <div className="text-xs">
                       <NutritionLine n={optionNutrition(l.consumption ?? { items: [] })} />
                     </div>
                   </div>
-                  <button onClick={() => update((s) => A.removeLog(s, l.id))} className="text-xs text-rose-400 underline">Elimina</button>
+                  <button onClick={() => update((s) => A.removeLog(s, l.id))} className="text-xs text-danger underline">Elimina</button>
                 </Card>
               ))}
             </div>
@@ -377,10 +377,10 @@ function PlanMetaEditor({ plan, onChange, onSave, onCancel }) {
             </Field>
           )}
           <Field label="Valido dal">
-            <input type="date" value={plan.validFrom ?? ''} onChange={(e) => set({ validFrom: e.target.value || null })} className="w-full rounded-xl bg-slate-800 px-3 py-2 text-slate-100 [color-scheme:dark]" />
+            <input type="date" value={plan.validFrom ?? ''} onChange={(e) => set({ validFrom: e.target.value || null })} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" />
           </Field>
           <Field label="Valido fino al">
-            <input type="date" value={plan.validTo ?? ''} onChange={(e) => set({ validTo: e.target.value || null })} className="w-full rounded-xl bg-slate-800 px-3 py-2 text-slate-100 [color-scheme:dark]" />
+            <input type="date" value={plan.validTo ?? ''} onChange={(e) => set({ validTo: e.target.value || null })} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" />
           </Field>
         </div>
         <Field label="Obiettivo">
@@ -389,9 +389,9 @@ function PlanMetaEditor({ plan, onChange, onSave, onCancel }) {
         <Field label="Note">
           <TextArea value={plan.notes} onChange={(notes) => set({ notes })} />
         </Field>
-        <p className="text-xs text-slate-500">Modifica i pasti qui sotto, giorno per giorno, poi salva.</p>
+        <p className="text-xs text-muted">Modifica i pasti qui sotto, giorno per giorno, poi salva.</p>
         <div className="flex gap-2">
-          <button onClick={onSave} className="btn flex-1 bg-emerald-500 text-slate-950">Salva revisione</button>
+          <button onClick={onSave} className="btn flex-1 bg-primary text-on-primary">Salva revisione</button>
           <button onClick={onCancel} className="btn-ghost">Annulla</button>
         </div>
       </Card>

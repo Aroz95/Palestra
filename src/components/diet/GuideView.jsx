@@ -19,13 +19,13 @@ function Guidance({ g }) {
   return (
     <div className="space-y-1">
       {g.timing && (
-        <p className="text-slate-200">
-          <span className="text-slate-400">Quando: </span>
+        <p className="text-fg">
+          <span className="text-muted">Quando: </span>
           {g.timing}
         </p>
       )}
       <List items={g.advice} />
-      {g.mealCategories?.length > 0 && <p className="text-xs text-slate-500">Pasti interessati: {g.mealCategories.map((c) => MEAL_CATEGORIES[c]).join(', ')}</p>}
+      {g.mealCategories?.length > 0 && <p className="text-xs text-muted">Pasti interessati: {g.mealCategories.map((c) => MEAL_CATEGORIES[c]).join(', ')}</p>}
     </div>
   )
 }
@@ -46,9 +46,9 @@ export function GuideView({ plan }) {
   const loss = plan.nutritionTargets?.weightLossKgPerWeek
   if (!hasGuide(gl) && !loss) return <Empty>Il piano non contiene una guida alimentare. Puoi aggiungerla con “Modifica”.</Empty>
   return (
-    <div className="space-y-2 text-sm text-slate-300">
+    <div className="space-y-2 text-sm text-fg-soft">
       {loss && (loss.min != null || loss.max != null) && (
-        <p className="rounded-xl bg-slate-900 p-3 text-xs text-slate-400">
+        <p className="rounded-xl bg-surface p-3 text-xs text-muted">
           Andamento di peso indicato dal piano: {fmtNum(loss.min, 1)}–{fmtNum(loss.max, 1)} kg a settimana. È un obiettivo orientativo, non una promessa di risultato.
         </p>
       )}
@@ -57,8 +57,8 @@ export function GuideView({ plan }) {
         const empty = Array.isArray(v) ? !v.length : isEmptyGuidance(v)
         if (empty) return null
         return (
-          <details key={k} open={k === 'general'} className="rounded-2xl border border-slate-800 bg-slate-900 p-3">
-            <summary className="cursor-pointer font-semibold text-white">{label}</summary>
+          <details key={k} open={k === 'general'} className="rounded-2xl border border-line bg-surface p-3">
+            <summary className="cursor-pointer font-semibold text-fg">{label}</summary>
             <div className="mt-2">{Array.isArray(v) ? <List items={v} /> : <Guidance g={v} />}</div>
           </details>
         )
@@ -73,7 +73,7 @@ export function WorkoutTips({ plan, training, onOpenGuide }) {
   if (!training || !gl || (isEmptyGuidance(gl.preWorkout) && isEmptyGuidance(gl.postWorkout))) return null
   const line = (g) => [g.timing, g.advice?.[0]].filter(Boolean).join(' · ')
   return (
-    <div className="space-y-1 rounded-2xl border border-sky-800/60 bg-sky-950/40 p-3 text-xs text-sky-100">
+    <div className="space-y-1 rounded-2xl border border-swim/40 bg-swim-soft p-3 text-xs text-fg">
       {!isEmptyGuidance(gl.preWorkout) && (
         <p>
           <b>Prima dell’allenamento:</b> {line(gl.preWorkout)}

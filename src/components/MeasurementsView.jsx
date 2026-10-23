@@ -28,7 +28,7 @@ export default function MeasurementsView({ state, update }) {
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
-        <button onClick={startNew} className="btn bg-emerald-500 text-slate-950">+ Registra misura</button>
+        <button onClick={startNew} className="btn-primary">+ Registra misura</button>
         {list.length > 0 && <button onClick={() => downloadJSON(fileNames.measurements(), exportMeasurements(state))} className="btn-ghost">Esporta JSON</button>}
       </div>
 
@@ -36,13 +36,13 @@ export default function MeasurementsView({ state, update }) {
         <Card className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Data">
-              <input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} className="w-full rounded-xl bg-slate-800 px-3 py-2 text-slate-100 [color-scheme:dark]" />
+              <input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" />
             </Field>
             <Field label="Ora">
-              <input type="time" value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} className="w-full rounded-xl bg-slate-800 px-3 py-2 text-slate-100 [color-scheme:dark]" />
+              <input type="time" value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" />
             </Field>
           </div>
-          <p className="text-xs text-slate-500">Puoi compilare solo alcuni campi: quelli vuoti restano “non misurati”.</p>
+          <p className="text-xs text-muted">Puoi compilare solo alcuni campi: quelli vuoti restano “non misurati”.</p>
           <div className="grid grid-cols-2 gap-3">
             {MEASUREMENT_FIELDS.map((f) => (
               <Field key={f.key} label={`${f.label} (${f.unit})`} hint={f.hint}>
@@ -57,7 +57,7 @@ export default function MeasurementsView({ state, update }) {
             <TextInput value={draft.notes} onChange={(notes) => setDraft({ ...draft, notes })} />
           </Field>
           <div className="flex gap-2">
-            <button onClick={save} className="btn flex-1 bg-emerald-500 text-slate-950">Salva</button>
+            <button onClick={save} className="btn flex-1 bg-primary text-on-primary">Salva</button>
             <button onClick={() => setDraft(null)} className="btn-ghost">Annulla</button>
           </div>
         </Card>
@@ -84,22 +84,22 @@ export default function MeasurementsView({ state, update }) {
           {list.map((m) => (
             <Card key={m.id} className="space-y-1 py-3">
               <div className="flex items-baseline justify-between">
-                <span className="font-semibold capitalize text-white">
+                <span className="font-semibold capitalize text-fg">
                   {fmtDateShort(localDate(m.at))} {timeOf(m.at) !== '00:00' ? timeOf(m.at) : ''}
                 </span>
-                <span className="text-xs text-slate-400">{SOURCES[m.source]}</span>
+                <span className="text-xs text-muted">{SOURCES[m.source]}</span>
               </div>
-              <div className="flex flex-wrap gap-x-3 text-sm text-slate-300">
+              <div className="flex flex-wrap gap-x-3 text-sm text-fg-soft">
                 {MEASUREMENT_FIELDS.filter((f) => m[f.key] != null).map((f) => (
                   <span key={f.key}>
-                    {f.label}: <b className="text-white">{fmtNum(m[f.key], 1)}</b> {f.unit}
+                    {f.label}: <b className="text-fg">{fmtNum(m[f.key], 1)}</b> {f.unit}
                   </span>
                 ))}
               </div>
-              {m.notes && <p className="text-xs text-slate-400">{m.notes}</p>}
+              {m.notes && <p className="text-xs text-muted">{m.notes}</p>}
               <div className="flex gap-3 pt-1 text-xs">
-                <button onClick={() => setDraft({ ...m, date: localDate(m.at), time: timeOf(m.at) })} className="text-slate-300 underline">Modifica</button>
-                <button onClick={() => confirm('Eliminare questa misura?') && update((s) => A.removeIn(s, 'measurements', m.id))} className="text-rose-400 underline">Elimina</button>
+                <button onClick={() => setDraft({ ...m, date: localDate(m.at), time: timeOf(m.at) })} className="text-fg-soft underline">Modifica</button>
+                <button onClick={() => confirm('Eliminare questa misura?') && update((s) => A.removeIn(s, 'measurements', m.id))} className="text-danger underline">Elimina</button>
               </div>
             </Card>
           ))}

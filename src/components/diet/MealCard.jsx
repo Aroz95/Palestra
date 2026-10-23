@@ -9,28 +9,28 @@ import * as A from '../../lib/actions'
 
 const BASIS = { raw: 'a crudo', cooked: 'cotto', drained: 'scolato', packaged: 'confezionato', unspecified: '' }
 const QUALITY = {
-  complete: { label: 'consumo completo', cls: 'bg-emerald-500/20 text-emerald-200' },
-  partial: { label: 'consumo parziale', cls: 'bg-amber-500/20 text-amber-200' },
-  missing: { label: 'quantità non registrate', cls: 'bg-slate-700 text-slate-300' },
+  complete: { label: 'consumo completo', cls: 'bg-primary-soft text-primary' },
+  partial: { label: 'consumo parziale', cls: 'bg-warning-soft text-warning' },
+  missing: { label: 'quantità non registrate', cls: 'bg-surface-strong text-fg-soft' },
 }
 const SHORT = Object.fromEntries(NUTRIENTS.map((n) => [n.key, n.short]))
 
 export function ItemList({ items }) {
-  if (!items?.length) return <p className="text-sm text-slate-500">Nessun alimento indicato.</p>
+  if (!items?.length) return <p className="text-sm text-muted">Nessun alimento indicato.</p>
   return (
     <ul className="space-y-1 text-sm">
       {items.map((it, i) => (
         <li key={i}>
-          <span className="text-slate-100">{it.name}</span>
+          <span className="text-fg">{it.name}</span>
           {it.quantity != null && (
-            <span className="text-slate-400">
+            <span className="text-muted">
               {' '}
               · {fmtNum(it.quantity, 1)} {it.unit}
               {it.quantityBasis && BASIS[it.quantityBasis] ? ` ${BASIS[it.quantityBasis]}` : ''}
             </span>
           )}
-          {it.notes && <div className="text-xs text-slate-500">{it.notes}</div>}
-          {it.alternatives?.length > 0 && <div className="text-xs text-slate-400">oppure: {it.alternatives.map((a) => `${a.name}${a.quantity != null ? ` ${fmtNum(a.quantity, 1)} ${a.unit}` : ''}`).join(' · ')}</div>}
+          {it.notes && <div className="text-xs text-muted">{it.notes}</div>}
+          {it.alternatives?.length > 0 && <div className="text-xs text-muted">oppure: {it.alternatives.map((a) => `${a.name}${a.quantity != null ? ` ${fmtNum(a.quantity, 1)} ${a.unit}` : ''}`).join(' · ')}</div>}
         </li>
       ))}
     </ul>
@@ -52,11 +52,11 @@ export default function MealCard({ meal: m, plan, date, state, update, next, wor
     <Card tone={next ? 'info' : 'default'} className="space-y-2">
       <div className="flex items-baseline justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1">
-          <span className="font-semibold text-white">{m.label}</span>
-          {next && <span className="text-xs text-sky-300">prossimo</span>}
-          {workoutRole && <Chip className="bg-sky-800 text-sky-100">{workoutRole === 'pre' ? 'pre-allenamento' : 'post-allenamento'}</Chip>}
+          <span className="font-semibold text-fg">{m.label}</span>
+          {next && <span className="text-xs text-swim">prossimo</span>}
+          {workoutRole && <Chip className="bg-swim-soft text-fg">{workoutRole === 'pre' ? 'pre-allenamento' : 'post-allenamento'}</Chip>}
         </div>
-        <span className="text-sm text-slate-400">{m.time ?? ''}</span>
+        <span className="text-sm text-muted">{m.time ?? ''}</span>
       </div>
 
       {options.length > 1 && (
@@ -66,7 +66,7 @@ export default function MealCard({ meal: m, plan, date, state, update, next, wor
               key={o.id ?? 'main'}
               onClick={() => onPreview(o.id)}
               aria-pressed={option.id === o.id}
-              className={`rounded-lg px-2 py-1 text-xs font-medium ${option.id === o.id ? 'bg-white text-slate-900' : 'bg-slate-800 text-slate-300'}`}
+              className={`rounded-lg px-2 py-1 text-xs font-medium ${option.id === o.id ? 'bg-fg text-bg' : 'bg-surface-muted text-fg-soft'}`}
             >
               {o.label}
               {savedId === o.id && o.id != null ? ' ✓' : ''}
@@ -80,52 +80,52 @@ export default function MealCard({ meal: m, plan, date, state, update, next, wor
         <NutritionLine n={n} items={option.items} />
       </div>
       {n.mismatch.length > 0 && (
-        <p className="text-[11px] text-amber-300">
+        <p className="text-[11px] text-warning">
           Attenzione: il valore dichiarato non coincide con la somma degli alimenti ({n.mismatch.map((x) => `${SHORT[x.key]} ${fmtNum(x.declared, 0)} vs ${fmtNum(x.items, 0)}`).join(', ')}). Verificare il piano.
         </p>
       )}
       {isAlt && (
-        <p className="text-[11px] text-slate-400">
+        <p className="text-[11px] text-muted">
           Rispetto al principale: {MAIN_KEYS.map((k) => `${SHORT[k]} ${fmtDelta(delta[k], k)}`).join(' · ')}
           {MAIN_KEYS.some((k) => delta[k] == null) && ' (— = non confrontabile, dati mancanti)'}
         </p>
       )}
-      {option.notes && <p className="text-xs text-slate-400">{option.notes}</p>}
+      {option.notes && <p className="text-xs text-muted">{option.notes}</p>}
       {m.guidance?.length > 0 && (
-        <ul className="list-disc space-y-0.5 pl-5 text-xs text-sky-200">
+        <ul className="list-disc space-y-0.5 pl-5 text-xs text-fg-soft">
           {m.guidance.map((g, i) => (
             <li key={i}>{g}</li>
           ))}
         </ul>
       )}
-      {m.notes && <p className="text-xs text-slate-400">{m.notes}</p>}
+      {m.notes && <p className="text-xs text-muted">{m.notes}</p>}
 
       {options.length > 1 && selectedId !== savedId && (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-slate-800/60 p-2 text-[11px] text-slate-300">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-surface-muted/60 p-2 text-[11px] text-fg-soft">
           <span>Anteprima: i totali del giorno mostrano questa opzione; nulla è registrato.</span>
-          <button onClick={() => update((s) => A.selectAlternative(s, { ...ref, alternativeId: selectedId }))} className="rounded-lg bg-emerald-500 px-2 py-1 font-semibold text-slate-950">
+          <button onClick={() => update((s) => A.selectAlternative(s, { ...ref, alternativeId: selectedId }))} className="rounded-lg bg-primary px-2 py-1 font-semibold text-on-primary">
             {isAlt ? 'Scegli per questa data' : 'Torna al principale per questa data'}
           </button>
         </div>
       )}
-      {savedId && selectedId === savedId && <p className="text-[11px] text-emerald-300">Alternativa scelta per questa data (il piano non cambia).</p>}
+      {savedId && selectedId === savedId && <p className="text-[11px] text-primary">Alternativa scelta per questa data (il piano non cambia).</p>}
 
       {log && log.planRevision != null && log.planRevision !== plan.revision && (
-        <p className="text-[11px] text-amber-300">Registrato come “{ADHERENCE[log.status]}” sulla revisione {log.planRevision} del piano (il pasto può essere cambiato).</p>
+        <p className="text-[11px] text-warning">Registrato come “{ADHERENCE[log.status]}” sulla revisione {log.planRevision} del piano (il pasto può essere cambiato).</p>
       )}
       <div className="flex flex-wrap items-center gap-1 pt-1">
-        <span className="text-[11px] text-slate-500">Diario (facoltativo):</span>
+        <span className="text-[11px] text-muted">Diario (facoltativo):</span>
         {Object.entries(ADHERENCE).map(([k, label]) => (
           <button
             key={k}
             onClick={() => update((s) => A.logMeal(s, { ...ref, status: log?.status === k ? null : k }))}
             aria-pressed={log?.status === k}
-            className={`rounded-lg px-2 py-1 text-xs font-medium ${log?.status === k ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`}
+            className={`rounded-lg px-2 py-1 text-xs font-medium ${log?.status === k ? 'bg-primary text-on-primary' : 'bg-surface-muted text-fg-soft'}`}
           >
             {label}
           </button>
         ))}
-        <button onClick={() => setLogging(true)} className="rounded-lg px-2 py-1 text-xs text-emerald-400 underline">
+        <button onClick={() => setLogging(true)} className="rounded-lg px-2 py-1 text-xs text-primary underline">
           {log?.consumption ? 'Modifica quantità' : 'Registra quantità'}
         </button>
       </div>
@@ -133,7 +133,7 @@ export default function MealCard({ meal: m, plan, date, state, update, next, wor
         <div className="flex flex-wrap items-center gap-1 text-[11px]">
           <Chip className={QUALITY[consumptionQuality(log)].cls}>{QUALITY[consumptionQuality(log)].label}</Chip>
           {log.consumption && <NutritionLine n={optionNutrition(log.consumption)} />}
-          {!log.consumption && <span className="text-slate-500">“{ADHERENCE[log.status]}” indica l’aderenza, non i nutrienti consumati.</span>}
+          {!log.consumption && <span className="text-muted">“{ADHERENCE[log.status]}” indica l’aderenza, non i nutrienti consumati.</span>}
         </div>
       )}
 
@@ -194,7 +194,7 @@ export function ConsumptionSheet({ title, option, log, onClose, onSave, onRemove
         ) : (
           <div className="flex gap-1">
             {Object.entries(ADHERENCE).map(([k, l]) => (
-              <button key={k} onClick={() => setStatus(k)} aria-pressed={status === k} className={`flex-1 rounded-lg py-1.5 text-xs font-semibold ${status === k ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`}>
+              <button key={k} onClick={() => setStatus(k)} aria-pressed={status === k} className={`flex-1 rounded-lg py-1.5 text-xs font-semibold ${status === k ? 'bg-primary text-on-primary' : 'bg-surface-muted text-fg-soft'}`}>
                 {l}
               </button>
             ))}
@@ -202,9 +202,9 @@ export function ConsumptionSheet({ title, option, log, onClose, onSave, onRemove
         )}
         {status !== 'skipped' && (
           <>
-            <p className="text-xs text-slate-400">Modifica quantità e alimenti come li hai consumati. Nutrienti facoltativi: lasciali vuoti se non li conosci.</p>
+            <p className="text-xs text-muted">Modifica quantità e alimenti come li hai consumati. Nutrienti facoltativi: lasciali vuoti se non li conosci.</p>
             {items.map((it, i) => (
-              <div key={i} className="space-y-2 rounded-xl bg-slate-800/60 p-2">
+              <div key={i} className="space-y-2 rounded-xl bg-surface-muted/60 p-2">
                 <div className="grid grid-cols-[1fr_4.5rem_3.5rem_1.5rem] items-end gap-2">
                   <Field label="Alimento">
                     <TextInput value={it.name} onChange={(name) => updItem(i, { name })} />
@@ -215,7 +215,7 @@ export function ConsumptionSheet({ title, option, log, onClose, onSave, onRemove
                   <Field label="Unità">
                     <TextInput value={it.unit} onChange={(unit) => updItem(i, { unit })} />
                   </Field>
-                  <button onClick={() => setItems(items.filter((_, j) => j !== i))} className="pb-2 text-rose-400" aria-label={`Rimuovi ${it.name}`}>
+                  <button onClick={() => setItems(items.filter((_, j) => j !== i))} className="pb-2 text-danger" aria-label={`Rimuovi ${it.name}`}>
                     ✕
                   </button>
                 </div>
@@ -232,7 +232,7 @@ export function ConsumptionSheet({ title, option, log, onClose, onSave, onRemove
               + Alimento
             </button>
             <div>
-              <div className="mb-1 text-[11px] uppercase tracking-wider text-slate-400">Totale del pasto (facoltativo: se indicato prevale sulla somma degli alimenti)</div>
+              <div className="mb-1 text-[13px] font-medium text-muted">Totale del pasto (facoltativo: se indicato prevale sulla somma degli alimenti)</div>
               <div className="grid grid-cols-4 gap-2">
                 {MAIN_KEYS.map((k) => (
                   <NumberInput key={k} value={mealN?.[k] ?? null} onChange={(v) => setMealN({ ...(mealN ?? emptyN()), [k]: v })} aria-label={`Totale ${SHORT[k]}`} placeholder={SHORT[k]} />
@@ -247,7 +247,7 @@ export function ConsumptionSheet({ title, option, log, onClose, onSave, onRemove
         <div className="flex items-center justify-between text-xs">
           <Chip className={QUALITY[quality].cls}>{status === 'skipped' ? 'pasto saltato (0)' : QUALITY[quality].label}</Chip>
           {onRemove && (
-            <button onClick={onRemove} className="text-rose-400 underline">
+            <button onClick={onRemove} className="text-danger underline">
               Elimina registrazione
             </button>
           )}
@@ -255,7 +255,7 @@ export function ConsumptionSheet({ title, option, log, onClose, onSave, onRemove
         <button
           disabled={extra && !label.trim()}
           onClick={() => onSave({ status, consumption: status === 'skipped' ? null : consumption, note, label })}
-          className="btn w-full bg-emerald-500 text-slate-950 disabled:opacity-40"
+          className="btn w-full bg-primary text-on-primary disabled:opacity-40"
         >
           Salva
         </button>

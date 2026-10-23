@@ -1,14 +1,249 @@
 @import "tailwindcss";
 
-@layer components {
-  .btn {
-    @apply rounded-xl px-4 py-2 font-semibold transition active:scale-95;
-  }
-  .btn-ghost {
-    @apply rounded-xl bg-slate-800 px-3 py-2 font-medium text-slate-200 transition active:bg-slate-700;
+/*
+ * Design token (docs/ui-audit.md, specifica UI/UX "Performance Editorial").
+ * Tema chiaro di base; scuro con prefers-color-scheme oppure scelta esplicita (html[data-theme]).
+ * I componenti usano solo i colori semantici qui sotto (bg-surface, text-muted, bg-primary, ...):
+ * niente HEX o palette Tailwind sparse nei componenti. Contrasti verificati in tests/tokens.test.js.
+ */
+:root {
+  --bg: #f6f8f9;
+  --surface: #ffffff;
+  --surface-muted: #edf2f3;
+  --surface-strong: #dce5e8;
+  --text: #15262b;
+  --text-soft: #2c3f45;
+  --text-muted: #52656c;
+  --border: #d7e1e4;
+  --border-strong: #7f9298;
+  --primary: #077365; /* spec #087f70 scurito: 4.5:1 anche su primary-soft e surface-muted */
+  --on-primary: #ffffff;
+  --primary-soft: #ddf4ee;
+  --swim: #1769aa;
+  --on-swim: #ffffff;
+  --swim-soft: #e4f2fc;
+  --warning: #936200;
+  --on-warning: #ffffff;
+  --warning-soft: #fff3d6;
+  --danger: #b53f46;
+  --on-danger: #ffffff;
+  --danger-soft: #fcebed;
+  --focus: #135fa7;
+  --chart-1: #077365;
+  --chart-2: #1769aa;
+  --chart-grid: #d7e1e4;
+  --backdrop: rgb(16 25 29 / 0.45);
+
+  --motion-fast: 140ms;
+  --motion-base: 200ms;
+  --motion-slow: 260ms;
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #10191d;
+    --surface: #18252a;
+    --surface-muted: #223238;
+    --surface-strong: #2c4047;
+    --text: #f0f6f6;
+    --text-soft: #d7e3e5;
+    --text-muted: #b8c8cc;
+    --border: #354a51;
+  --border-strong: #6b848b;
+    --border-strong: #6b848b;
+    --primary: #67d9c2;
+    --on-primary: #102823;
+    --primary-soft: #1a433e;
+    --swim: #80c5f8;
+    --on-swim: #0c2233;
+    --swim-soft: #193c54;
+    --warning: #ffd27c;
+    --on-warning: #2e2104;
+    --warning-soft: #49381d;
+    --danger: #ff9ba0;
+    --on-danger: #3a0f14;
+    --danger-soft: #4b252b;
+    --focus: #9fcdff;
+    --chart-1: #67d9c2;
+    --chart-2: #80c5f8;
+    --chart-grid: #2c4047;
+    --backdrop: rgb(0 0 0 / 0.6);
+    color-scheme: dark;
   }
 }
 
-html {
-  -webkit-tap-highlight-color: transparent;
+:root[data-theme='dark'] {
+  --bg: #10191d;
+  --surface: #18252a;
+  --surface-muted: #223238;
+  --surface-strong: #2c4047;
+  --text: #f0f6f6;
+  --text-soft: #d7e3e5;
+  --text-muted: #b8c8cc;
+  --border: #354a51;
+  --border-strong: #6b848b;
+  --primary: #67d9c2;
+  --on-primary: #102823;
+  --primary-soft: #1a433e;
+  --swim: #80c5f8;
+  --on-swim: #0c2233;
+  --swim-soft: #193c54;
+  --warning: #ffd27c;
+  --on-warning: #2e2104;
+  --warning-soft: #49381d;
+  --danger: #ff9ba0;
+  --on-danger: #3a0f14;
+  --danger-soft: #4b252b;
+  --focus: #9fcdff;
+  --chart-1: #67d9c2;
+  --chart-2: #80c5f8;
+  --chart-grid: #2c4047;
+  --backdrop: rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-strong: var(--surface-strong);
+  --color-fg: var(--text);
+  --color-fg-soft: var(--text-soft);
+  --color-muted: var(--text-muted);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-swim: var(--swim);
+  --color-on-swim: var(--on-swim);
+  --color-swim-soft: var(--swim-soft);
+  --color-warning: var(--warning);
+  --color-on-warning: var(--on-warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-on-danger: var(--on-danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-focus: var(--focus);
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    background: var(--bg);
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+  }
+  /* Numeri allineati: pesi, ripetizioni, metri, kcal, tempi */
+  input,
+  table,
+  time {
+    font-variant-numeric: tabular-nums;
+  }
+  :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Pulsanti: un solo primary per area decisionale; target tattile minimo 44 px */
+  .btn,
+  .btn-primary,
+  .btn-ghost,
+  .btn-secondary,
+  .btn-danger {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold select-none;
+    transition:
+      background-color var(--motion-fast) ease-out,
+      border-color var(--motion-fast) ease-out,
+      color var(--motion-fast) ease-out,
+      transform var(--motion-fast) ease-out;
+  }
+  .btn:active:not(:disabled),
+  .btn-primary:active:not(:disabled),
+  .btn-ghost:active:not(:disabled),
+  .btn-secondary:active:not(:disabled),
+  .btn-danger:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn-primary {
+    @apply bg-primary text-on-primary;
+  }
+  .btn-ghost,
+  .btn-secondary {
+    @apply border border-line bg-surface-muted px-3 font-medium text-fg;
+  }
+  .btn-ghost:active,
+  .btn-secondary:active {
+    @apply bg-surface-strong;
+  }
+  .btn-danger {
+    @apply bg-danger text-on-danger;
+  }
+  :where(.btn, .btn-primary, .btn-ghost, .btn-secondary, .btn-danger):disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .anim-fade-up {
+    animation: fade-up var(--motion-base) var(--ease-out-soft) both;
+  }
+  .anim-sheet {
+    animation: sheet-in var(--motion-slow) var(--ease-out-soft) both;
+  }
+  .anim-backdrop {
+    animation: fade-in var(--motion-base) ease-out both;
+  }
+  .anim-check {
+    animation: check-in 180ms ease-out both;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0.6;
+  }
+}
+@media (min-width: 640px) {
+  @keyframes sheet-in {
+    from {
+      transform: scale(0.98);
+      opacity: 0;
+    }
+  }
+}
+@keyframes check-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Riduzione del movimento: solo stati finali, nessuna traslazione o scala */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

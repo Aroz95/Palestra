@@ -21,26 +21,26 @@ export function OccurrenceItem({ state, occ, update, onOpenSession, onStart }) {
 
 
   return (
-    <div className="rounded-xl bg-slate-800/60 p-3">
+    <div className="rounded-xl bg-surface-muted/60 p-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="text-xs uppercase tracking-wider text-slate-400">{ACTIVITY_KINDS[occ.kind]}</div>
-          <div className="font-semibold text-white">{occurrenceTitle(state, occ)}</div>
-          {template?.estimatedMinutes && <div className="text-xs text-slate-400">~{template.estimatedMinutes} min</div>}
-          {occ.movedFrom && <div className="text-xs text-sky-300">Rinviata dal {occ.movedFrom}</div>}
-          {occ.status === 'postponed' && occ.movedTo && <div className="text-xs text-sky-300">Spostata al {occ.movedTo}</div>}
+          <div className="text-xs font-medium text-muted">{ACTIVITY_KINDS[occ.kind]}</div>
+          <div className="font-semibold text-fg">{occurrenceTitle(state, occ)}</div>
+          {template?.estimatedMinutes && <div className="text-xs text-muted">~{template.estimatedMinutes} min</div>}
+          {occ.movedFrom && <div className="text-xs text-swim">Rinviata dal {occ.movedFrom}</div>}
+          {occ.status === 'postponed' && occ.movedTo && <div className="text-xs text-swim">Spostata al {occ.movedTo}</div>}
         </div>
         <Chip className={st.cls}>{st.label}</Chip>
       </div>
       {startable && !['skipped', 'postponed'].includes(occ.status) && (
         <div className="mt-2 flex flex-wrap gap-2">
           {occ.sessionId ? (
-            <button onClick={() => onOpenSession(occ.sessionId)} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-slate-950">
+            <button onClick={() => onOpenSession(occ.sessionId)} className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-on-primary">
               {occ.status === 'completed' ? 'Apri' : 'Riprendi'}
             </button>
           ) : (
             <>
-              <button onClick={() => onStart({ occ })} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-slate-950">▶ Avvia</button>
+              <button onClick={() => onStart({ occ })} className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-on-primary">▶ Avvia</button>
               <button onClick={() => update((s) => A.setOccurrenceStatus(s, occ, 'skipped'))} className="btn-ghost py-1.5 text-sm">Salta</button>
               <button onClick={() => setPostpone(true)} className="btn-ghost py-1.5 text-sm">Rinvia</button>
             </>
@@ -48,20 +48,20 @@ export function OccurrenceItem({ state, occ, update, onOpenSession, onStart }) {
         </div>
       )}
       {['skipped', 'postponed'].includes(occ.status) && !occ.sessionId && (
-        <button onClick={() => update((s) => A.setOccurrenceStatus(s, occ, null))} className="mt-2 text-xs text-slate-400 underline">
+        <button onClick={() => update((s) => A.setOccurrenceStatus(s, occ, null))} className="mt-2 text-xs text-muted underline">
           Annulla ({OCC_STATUS[occ.status].label.toLowerCase()})
         </button>
       )}
       <Sheet open={postpone} onClose={() => setPostpone(false)} title="Rinvia attività">
         <Field label="Nuova data">
-          <input type="date" value={date} min={todayISO()} onChange={(e) => setDate(e.target.value)} className="w-full rounded-xl bg-slate-800 px-3 py-2 text-slate-100 [color-scheme:dark]" />
+          <input type="date" value={date} min={todayISO()} onChange={(e) => setDate(e.target.value)} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" />
         </Field>
         <button
           onClick={() => {
             update((s) => A.setOccurrenceStatus(s, occ, 'postponed', date))
             setPostpone(false)
           }}
-          className="btn mt-4 w-full bg-emerald-500 text-slate-950"
+          className="btn mt-4 w-full bg-primary text-on-primary"
         >
           Rinvia al {date}
         </button>
@@ -78,10 +78,10 @@ export function freeSessionsOn(state, date, occs) {
 
 export function SessionChip({ session, onOpen }) {
   return (
-    <button onClick={() => onOpen(session.id)} className="flex w-full items-center justify-between rounded-xl bg-slate-800/60 p-3 text-left">
+    <button onClick={() => onOpen(session.id)} className="flex w-full items-center justify-between rounded-xl bg-surface-muted/60 p-3 text-left">
       <span>
-        <span className="block text-xs uppercase tracking-wider text-slate-400">{session.kind === 'swim' ? 'Nuoto' : 'Sala pesi'} · attività libera</span>
-        <span className="font-semibold text-white">{session.title || (session.kind === 'swim' ? 'Nuoto' : 'Seduta')}</span>
+        <span className="block text-xs font-medium text-muted">{session.kind === 'swim' ? 'Nuoto' : 'Sala pesi'} · attività libera</span>
+        <span className="font-semibold text-fg">{session.title || (session.kind === 'swim' ? 'Nuoto' : 'Seduta')}</span>
       </span>
       <Chip>{SESSION_STATUS[session.status]}</Chip>
     </button>
@@ -99,10 +99,10 @@ export default function CalendarView({ state, update, onOpenSession, onStart }) 
       <div className="flex items-center justify-between">
         <button onClick={() => setWeekStart(addDays(weekStart, -7))} className="btn-ghost text-sm" aria-label="Settimana precedente">‹</button>
         <div className="text-center text-sm">
-          <div className="font-semibold text-white">
+          <div className="font-semibold text-fg">
             {fmtDate(days[0], { day: 'numeric', month: 'short' })} – {fmtDate(days[6], { day: 'numeric', month: 'short', year: 'numeric' })}
           </div>
-          <div className="text-xs text-slate-400">{program ? program.name : 'Nessun programma principale'}</div>
+          <div className="text-xs text-muted">{program ? program.name : 'Nessun programma principale'}</div>
         </div>
         <button onClick={() => setWeekStart(addDays(weekStart, 7))} className="btn-ghost text-sm" aria-label="Settimana successiva">›</button>
       </div>
@@ -111,10 +111,10 @@ export default function CalendarView({ state, update, onOpenSession, onStart }) 
         const occs = occurrencesOn(state, d)
         const free = freeSessionsOn(state, d, occs)
         return (
-          <div key={d} className={`rounded-2xl border p-3 ${d === today ? 'border-emerald-600 bg-slate-900' : 'border-slate-800 bg-slate-900/60'}`}>
-            <div className="mb-2 text-sm font-semibold text-slate-200">
+          <div key={d} className={`rounded-2xl border p-3 ${d === today ? 'border-primary bg-surface' : 'border-line bg-surface/60'}`}>
+            <div className="mb-2 text-sm font-semibold text-fg">
               {WEEKDAYS_SHORT[weekdayOf(d)]} {fmtDate(d, { day: 'numeric', month: 'short' })}
-              {d === today && <span className="ml-2 text-xs text-emerald-400">oggi</span>}
+              {d === today && <span className="ml-2 text-xs text-primary">oggi</span>}
             </div>
             <div className="space-y-2">
               {occs.map((o) => (
@@ -123,7 +123,7 @@ export default function CalendarView({ state, update, onOpenSession, onStart }) 
               {free.map((s) => (
                 <SessionChip key={s.id} session={s} onOpen={onOpenSession} />
               ))}
-              {!occs.length && !free.length && <div className="text-xs text-slate-500">Nessuna attività</div>}
+              {!occs.length && !free.length && <div className="text-xs text-muted">Nessuna attività</div>}
             </div>
           </div>
         )

@@ -40,18 +40,18 @@ export function TimesCard({ session, onChange, timers }) {
       <Card className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Inizio">
-            <input type="time" value={timeOf(session.startedAt)} onChange={(e) => setTime('startedAt', e.target.value)} className="w-full rounded-xl bg-slate-800 px-3 py-2 text-slate-100 [color-scheme:dark]" aria-label="Ora di inizio" />
+            <input type="time" value={timeOf(session.startedAt)} onChange={(e) => setTime('startedAt', e.target.value)} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" aria-label="Ora di inizio" />
           </Field>
           <Field label="Fine">
-            <input type="time" value={timeOf(session.endedAt)} onChange={(e) => setTime('endedAt', e.target.value)} className="w-full rounded-xl bg-slate-800 px-3 py-2 text-slate-100 [color-scheme:dark]" aria-label="Ora di fine" />
+            <input type="time" value={timeOf(session.endedAt)} onChange={(e) => setTime('endedAt', e.target.value)} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" aria-label="Ora di fine" />
           </Field>
         </div>
-        <div className="text-sm text-slate-300">
-          Durata: <b className="text-white">{d.min != null ? `${d.min} min` : 'non registrata'}</b>
-          {d.source && <span className="text-slate-400"> · {DURATION_SOURCES[d.source]}</span>}
+        <div className="text-sm text-fg-soft">
+          Durata: <b className="text-fg">{d.min != null ? `${d.min} min` : 'non registrata'}</b>
+          {d.source && <span className="text-muted"> · {DURATION_SOURCES[d.source]}</span>}
         </div>
         {d.mismatch && (
-          <p className="rounded-xl bg-amber-950/50 p-2 text-xs text-amber-200">
+          <p className="rounded-xl bg-warning-soft p-2 text-xs text-warning">
             La durata inserita ({d.min} min) è diversa da quella degli orari ({d.computed} min). Entrambi i valori restano salvati.
           </p>
         )}
@@ -122,18 +122,18 @@ export function EnergyCard({ session, onChange, measurements }) {
       <Card className="space-y-3">
         {e ? (
           <div className="space-y-1 text-sm">
-            <div className="text-slate-200">
-              Attive: <b className="text-white">{fmtRange(e.activeKcal, 0, 'kcal')}</b> · Totali: <b className="text-white">{fmtRange(e.totalKcal, 0, 'kcal')}</b>
+            <div className="text-fg">
+              Attive: <b className="text-fg">{fmtRange(e.activeKcal, 0, 'kcal')}</b> · Totali: <b className="text-fg">{fmtRange(e.totalKcal, 0, 'kcal')}</b>
             </div>
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-muted">
               {e.source === 'estimate' ? `Stima — ${e.method}, peso ${e.bodyWeightKg} kg, ${e.durationMin} min` : 'Da dispositivo/inserite a mano'}
             </div>
-            <button onClick={() => onChange({ ...session, energy: null })} className="text-xs text-rose-400 underline">Rimuovi</button>
+            <button onClick={() => onChange({ ...session, energy: null })} className="text-xs text-danger underline">Rimuovi</button>
           </div>
         ) : (
-          <p className="text-sm text-slate-400">Nessun dato. Le calorie non vengono mai calcolate in automatico.</p>
+          <p className="text-sm text-muted">Nessun dato. Le calorie non vengono mai calcolate in automatico.</p>
         )}
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-muted">
           Attive = solo dovute all’allenamento; totali = incluse quelle a riposo. Errore realistico ±20–30%.
         </p>
         <div className="flex flex-wrap gap-2">
@@ -147,7 +147,7 @@ export function EnergyCard({ session, onChange, measurements }) {
           <button onClick={() => setDevice((v) => !v)} className="btn-ghost text-sm">Inserisci da orologio</button>
         </div>
         {!canEstimate && (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted">
             Per stimare servono {!bw ? 'una misura del peso (Altro → Misure)' : ''}
             {!bw && !d.min ? ' e ' : ''}
             {!d.min ? 'la durata della seduta' : ''}.

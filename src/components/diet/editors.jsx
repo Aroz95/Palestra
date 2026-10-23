@@ -20,7 +20,7 @@ function GoalGrid({ goal, onChange, label }) {
   }
   return (
     <div>
-      <div className="mb-1 text-xs font-semibold text-slate-300">{label}</div>
+      <div className="mb-1 text-xs font-semibold text-fg-soft">{label}</div>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
         {GOAL_KEYS.map(([k, l]) => (
           <Field key={k} label={l}>
@@ -42,7 +42,7 @@ export function TargetsEditor({ targets, onChange }) {
   return (
     <Section title="Obiettivi nutrizionali">
       <Card className="space-y-3">
-        <p className="text-xs text-slate-500">Obiettivi, non consumi. I campi vuoti restano “non specificati”; allenamento e riposo prevalgono sul generale solo per i valori indicati.</p>
+        <p className="text-xs text-muted">Obiettivi, non consumi. I campi vuoti restano “non specificati”; allenamento e riposo prevalgono sul generale solo per i valori indicati.</p>
         <GoalGrid label="Generale" goal={t.default} onChange={(g) => set({ default: g })} />
         <GoalGrid label="Giorni di allenamento" goal={t.training} onChange={(g) => set({ training: g })} />
         <GoalGrid label="Giorni di riposo" goal={t.rest} onChange={(g) => set({ rest: g })} />
@@ -82,11 +82,11 @@ export function GuidelinesEditor({ guidelines, onChange }) {
   return (
     <Section title="Guida alimentare">
       <Card className="space-y-3">
-        <p className="text-xs text-slate-500">Una voce per riga.</p>
+        <p className="text-xs text-muted">Una voce per riga.</p>
         {GUIDE_SECTIONS.map(([k, label]) =>
           k === 'preWorkout' || k === 'postWorkout' ? (
-            <div key={k} className="space-y-2 rounded-xl bg-slate-800/40 p-2">
-              <div className="text-xs font-semibold text-slate-300">{label}</div>
+            <div key={k} className="space-y-2 rounded-xl bg-surface-muted/40 p-2">
+              <div className="text-xs font-semibold text-fg-soft">{label}</div>
               <Field label="Quando (orientativo)">
                 <TextInput value={g[k]?.timing ?? ''} onChange={(timing) => setGuidance(k, { timing })} placeholder="es. circa 60–90 minuti prima" />
               </Field>
@@ -101,7 +101,7 @@ export function GuidelinesEditor({ guidelines, onChange }) {
                       key={c}
                       onClick={() => setGuidance(k, { mealCategories: on ? g[k].mealCategories.filter((x) => x !== c) : [...(g[k]?.mealCategories ?? []), c] })}
                       aria-pressed={!!on}
-                      className={`rounded-lg px-2 py-1 text-xs ${on ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-300'}`}
+                      className={`rounded-lg px-2 py-1 text-xs ${on ? 'bg-swim text-on-swim' : 'bg-surface-muted text-fg-soft'}`}
                     >
                       {l}
                     </button>
@@ -158,7 +158,7 @@ function ItemsEditor({ items, onChange }) {
   return (
     <div className="space-y-2">
       {items.map((it, i) => (
-        <div key={i} className="space-y-2 rounded-xl bg-slate-800/40 p-2">
+        <div key={i} className="space-y-2 rounded-xl bg-surface-muted/40 p-2">
           <div className="grid grid-cols-[1fr_4.5rem_3.5rem_1.5rem] items-end gap-2">
             <Field label="Alimento">
               <TextInput value={it.name} onChange={(name) => upd(i, { name })} />
@@ -169,12 +169,12 @@ function ItemsEditor({ items, onChange }) {
             <Field label="Unità">
               <TextInput value={it.unit} onChange={(unit) => upd(i, { unit })} />
             </Field>
-            <button onClick={() => onChange(items.filter((_, j) => j !== i))} className="pb-2 text-rose-400" aria-label="Rimuovi alimento">
+            <button onClick={() => onChange(items.filter((_, j) => j !== i))} className="pb-2 text-danger" aria-label="Rimuovi alimento">
               ✕
             </button>
           </div>
           <details>
-            <summary className="cursor-pointer text-xs text-slate-400">Base della quantità e nutrienti dell’alimento</summary>
+            <summary className="cursor-pointer text-xs text-muted">Base della quantità e nutrienti dell’alimento</summary>
             <div className="mt-2 space-y-2">
               <Select
                 value={it.quantityBasis ?? ''}
@@ -204,7 +204,7 @@ export function MealEditor({ meal: m, onChange, onRemove }) {
           <TextInput value={m.label} onChange={(label) => set({ label })} />
         </Field>
         <Field label="Ora">
-          <input type="time" value={m.time ?? ''} onChange={(e) => set({ time: e.target.value || null })} className="w-full rounded-xl bg-slate-800 px-2 py-2 text-slate-100 [color-scheme:dark]" />
+          <input type="time" value={m.time ?? ''} onChange={(e) => set({ time: e.target.value || null })} className="w-full rounded-lg border border-line-strong bg-surface px-2 py-2 text-fg" />
         </Field>
       </div>
       <Field label="Categoria">
@@ -212,7 +212,7 @@ export function MealEditor({ meal: m, onChange, onRemove }) {
       </Field>
       <ItemsEditor items={m.items} onChange={(items) => set({ items })} />
       <div>
-        <div className="mb-1 text-[11px] uppercase tracking-wider text-slate-400">Totale dichiarato del pasto (facoltativo)</div>
+        <div className="mb-1 text-[13px] font-medium text-muted">Totale dichiarato del pasto (facoltativo)</div>
         <NutritionFields nutrition={m.nutrition} onChange={(nutrition) => set({ nutrition })} label="Pasto" />
       </div>
       <Field label="Indicazioni del pasto (una per riga)">
@@ -223,19 +223,19 @@ export function MealEditor({ meal: m, onChange, onRemove }) {
       </Field>
 
       <div className="space-y-2">
-        <div className="text-xs font-semibold text-slate-300">Alternative</div>
+        <div className="text-xs font-semibold text-fg-soft">Alternative</div>
         {m.alternatives.map((a, i) => (
-          <div key={a.id} className="space-y-2 rounded-xl border border-slate-700 p-2">
+          <div key={a.id} className="space-y-2 rounded-xl border border-line p-2">
             <div className="flex items-end gap-2">
               <Field label="Nome alternativa" className="flex-1">
                 <TextInput value={a.label} onChange={(label) => updAlt(i, { label })} />
               </Field>
-              <button onClick={() => confirm('Eliminare questa alternativa?') && set({ alternatives: m.alternatives.filter((_, j) => j !== i) })} className="pb-2 text-sm text-rose-400">
+              <button onClick={() => confirm('Eliminare questa alternativa?') && set({ alternatives: m.alternatives.filter((_, j) => j !== i) })} className="pb-2 text-sm text-danger">
                 Elimina
               </button>
             </div>
             <ItemsEditor items={a.items} onChange={(items) => updAlt(i, { items })} />
-            <div className="text-[11px] uppercase tracking-wider text-slate-400">Totale dell’alternativa (facoltativo, mai copiato dal principale)</div>
+            <div className="text-[13px] font-medium text-muted">Totale dell’alternativa (facoltativo, mai copiato dal principale)</div>
             <NutritionFields nutrition={a.nutrition} onChange={(nutrition) => updAlt(i, { nutrition })} label={a.label || 'alternativa'} />
           </div>
         ))}
@@ -243,7 +243,7 @@ export function MealEditor({ meal: m, onChange, onRemove }) {
           + Alternativa
         </button>
       </div>
-      <button onClick={() => confirm('Eliminare questo pasto?') && onRemove()} className="text-sm text-rose-400">Elimina pasto</button>
+      <button onClick={() => confirm('Eliminare questo pasto?') && onRemove()} className="text-sm text-danger">Elimina pasto</button>
     </Card>
   )
 }

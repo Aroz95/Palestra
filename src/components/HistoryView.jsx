@@ -27,46 +27,46 @@ export default function HistoryView({ state, onOpen, onDelete }) {
         ]}
       />
       <div className="grid grid-cols-2 gap-2">
-        <label className="text-xs text-slate-400">
+        <label className="text-xs text-muted">
           Dal
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 w-full rounded-xl bg-slate-800 px-2 py-1.5 text-sm text-slate-100 [color-scheme:dark]" />
+          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 w-full rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
         </label>
-        <label className="text-xs text-slate-400">
+        <label className="text-xs text-muted">
           Al
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 w-full rounded-xl bg-slate-800 px-2 py-1.5 text-sm text-slate-100 [color-scheme:dark]" />
+          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 w-full rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
         </label>
       </div>
-      <p className="px-1 text-xs text-slate-500">{list.length} sedute</p>
+      <p className="px-1 text-xs text-muted">{list.length} sedute</p>
       {list.length === 0 && <Empty>Nessuna seduta registrata con questi filtri.</Empty>}
       {list.map((s) => {
         const d = sessionDuration(s)
         return (
-          <div key={s.id} className={`rounded-2xl border p-4 ${s.id === state.activeSessionId ? 'border-emerald-600 bg-slate-900' : 'border-slate-800 bg-slate-900'}`}>
+          <div key={s.id} className={`rounded-2xl border p-4 ${s.id === state.activeSessionId ? 'border-primary bg-surface' : 'border-line bg-surface'}`}>
             <button onClick={() => onOpen(s.id)} className="block w-full text-left">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="font-semibold capitalize text-white">{fmtDateShort(s.date)}</span>
+                <span className="font-semibold capitalize text-fg">{fmtDateShort(s.date)}</span>
                 <Chip>{SESSION_STATUS[s.status]}</Chip>
               </div>
-              <div className="text-sm text-slate-400">
+              <div className="text-sm text-muted">
                 {s.kind === 'swim' ? '🏊 Nuoto' : '🏋️ Palestra'} · {s.title || '—'}
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {s.kind === 'swim' ? <SwimChips s={s} /> : <StrengthChips s={s} />}
                 {d.min != null && <Chip>{d.min} min</Chip>}
-                {s.energy?.activeKcal && <Chip className="bg-amber-500/20 text-amber-200">{fmtRange(s.energy.activeKcal, 0, 'kcal attive')}{s.energy.source === 'estimate' ? ' (stima)' : ''}</Chip>}
+                {s.energy?.activeKcal && <Chip className="bg-warning-soft text-warning">{fmtRange(s.energy.activeKcal, 0, 'kcal attive')}{s.energy.source === 'estimate' ? ' (stima)' : ''}</Chip>}
               </div>
             </button>
             <div className="mt-3 flex gap-2">
               <button onClick={() => onOpen(s.id)} className="btn-ghost text-sm">Apri</button>
               <button onClick={() => downloadJSON(fileNames.session(s), exportSession(s))} className="btn-ghost text-sm">Esporta JSON</button>
-              <button onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete(s.id)} className="ml-auto rounded-xl px-3 py-2 text-sm text-rose-400 active:bg-rose-950">
+              <button onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete(s.id)} className="ml-auto rounded-xl px-3 py-2 text-sm text-danger active:bg-danger-soft">
                 Elimina
               </button>
             </div>
           </div>
         )
       })}
-      <p className="px-1 text-xs text-slate-500">
+      <p className="px-1 text-xs text-muted">
         Volume nominale (ripetizioni × carico; manubri ×2): indicativo e non confrontabile tra macchine diverse.
       </p>
     </div>
@@ -91,7 +91,7 @@ function SwimChips({ s }) {
   return (
     <>
       {d.measured != null && <Chip>{fmtNum(d.measured, 0)} m</Chip>}
-      {d.estimated && <Chip className="bg-amber-500/20 text-amber-200">{fmtRange(d.estimated, 0, 'm')} stimati</Chip>}
+      {d.estimated && <Chip className="bg-warning-soft text-warning">{fmtRange(d.estimated, 0, 'm')} stimati</Chip>}
       {d.quality === 'unknown' && <Chip>distanza non nota</Chip>}
       {d.planned != null && <Chip>{fmtNum(d.planned, 0)} m previsti</Chip>}
       {d.isPartial && <Chip>abbreviata</Chip>}

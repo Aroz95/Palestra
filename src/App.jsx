@@ -21,13 +21,15 @@ import { DEFAULT_REST } from './schema/constants'
 import * as A from './lib/actions'
 import { exportBackup, exportSession, fileNames } from './lib/report'
 import { downloadJSON } from './lib/download'
+import { Icon } from './components/icons'
+import { useTheme } from './lib/theme'
 
 const TABS = [
-  { id: 'today', label: 'Oggi', icon: '🏠' },
-  { id: 'training', label: 'Allenamenti', icon: '🏋️' },
-  { id: 'diet', label: 'Alimentazione', icon: '🥗' },
-  { id: 'progress', label: 'Progressi', icon: '📈' },
-  { id: 'more', label: 'Altro', icon: '⋯' },
+  { id: 'today', label: 'Oggi' },
+  { id: 'training', label: 'Allenamenti' },
+  { id: 'diet', label: 'Alimentazione' },
+  { id: 'progress', label: 'Progressi' },
+  { id: 'more', label: 'Altro' },
 ]
 
 const TRAINING_TABS = [
@@ -43,6 +45,7 @@ export default function App() {
   const [sub, setSub] = useLocalStorage('palestra:subtabs', { training: 'session', more: 'profile' })
   const [workout, setWorkout] = useLocalStorage('palestra:workout-mode', false)
   const [undo, setUndo] = useState(null)
+  const [theme, setTheme] = useTheme()
   const [hideMigrated, setHideMigrated] = useState(false)
   const stateRef = useRef(state)
   stateRef.current = state
@@ -72,7 +75,11 @@ export default function App() {
   }
 
   if (status.loading || !state) {
-    return <div className="flex min-h-dvh items-center justify-center bg-slate-950 text-slate-400">Caricamento…</div>
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-bg text-muted" role="status">
+        Caricamento dei dati…
+      </div>
+    )
   }
 
   const update = (fn) => setState((s) => fn(s))
@@ -96,22 +103,22 @@ export default function App() {
   const updateSession = (session) => setState((s) => A.upsertSession(s, session))
   const deleteSession = (id) => setState((s) => A.deleteSession(s, id))
   const hintFor = (ex) => progressionHint(lastPerformance(state.sessions, ex.exerciseId, { excludeSessionId: active?.id, beforeDate: active?.date }), ex.step)
-  const showTimer = tab === 'today' || tab === 'training' || timers.running || timers.rest.active
+  const showTimer = tab === 'training' || timers.running || timers.rest.active || timers.elapsed > 0
 
   return (
-    <div className="min-h-dvh bg-slate-950 text-slate-100">
+    <div className="min-h-dvh bg-bg text-fg lg:pl-60">
       {status.error && (
-        <div role="alert" className="sticky top-0 z-40 bg-rose-700 px-4 py-2 text-sm text-white">
+        <div role="alert" className="sticky top-0 z-40 bg-danger px-4 py-2 text-sm text-on-danger">
           {status.error}
           <button onClick={() => downloadJSON(fileNames.backup(), exportBackup(state))} className="ml-2 font-semibold underline">Esporta backup</button>
         </div>
       )}
       {showTimer && <TimerBar timers={timers} restSeconds={state.settings.restSeconds} />}
 
-      <main className="mx-auto max-w-2xl px-4 pb-28 pt-4">
+      <main className="mx-auto max-w-2xl px-4 pb-28 pt-4 sm:px-6 lg:max-w-3xl lg:px-8 lg:pb-12">
         <SaveBadge status={status} />
         {status.migrated && !hideMigrated && (
-          <div className="mb-4 rounded-2xl border border-sky-800/60 bg-sky-950/40 p-3 text-sm text-sky-100">
+          <div className="mb-4 rounded-2xl border border-swim/40 bg-swim-soft p-3 text-sm text-fg">
             Dati aggiornati alla nuova versione: sedute, scheda e storico sono stati conservati (la scheda è ora la “Scheda A” del programma principale). Una copia dei dati precedenti è salvata in Altro → Opzioni.
             <button onClick={() => setHideMigrated(true)} className="ml-2 underline">OK</button>
           </div>
@@ -149,7 +156,7 @@ export default function App() {
                 <Empty
                   action={
                     <div className="flex flex-wrap justify-center gap-2">
-                      <button onClick={() => go('today')} className="btn bg-emerald-500 text-slate-950">Vai a Oggi</button>
+                      <button onClick={() => go('today')} className="btn-primary">Vai a Oggi</button>
                       <button onClick={() => startSession({ kind: 'swim' })} className="btn-ghost">Nuova nuotata</button>
                       <button onClick={() => setSub((s) => ({ ...s, training: 'programs' }))} className="btn-ghost">Schede</button>
                     </div>
@@ -168,6 +175,8 @@ export default function App() {
         {tab === 'progress' && <ProgressView state={state} settings={state.settings} />}
         {tab === 'more' && (
           <MoreView
+            theme={theme}
+            setTheme={setTheme}
             state={state}
             update={update}
             sub={sub.more}
@@ -203,19 +212,31 @@ export default function App() {
         <WorkoutMode session={active} onChange={updateSession} timers={timers} onClose={() => setWorkout(false)} hintFor={hintFor} />
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-800 bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur" aria-label="Navigazione principale">
-        <div className="mx-auto grid max-w-2xl grid-cols-5">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => go(t.id)}
-              aria-current={tab === t.id ? 'page' : undefined}
-              className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium ${tab === t.id ? 'text-emerald-400' : 'text-slate-400'}`}
-            >
-              <span className="text-xl leading-none" aria-hidden="true">{t.icon}</span>
-              {t.label}
-            </button>
-          ))}
+      {/* Mobile: barra in basso con etichette sempre visibili. Desktop (≥1024 px): navigazione laterale */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:inset-y-0 lg:left-0 lg:right-auto lg:w-60 lg:border-t-0 lg:border-r lg:pb-0"
+        aria-label="Navigazione principale"
+      >
+        <div className="hidden px-5 pb-4 pt-6 text-lg font-bold tracking-tight text-fg lg:block">Palestra</div>
+        <div className="mx-auto grid max-w-2xl grid-cols-5 lg:mx-0 lg:flex lg:flex-col lg:gap-1 lg:px-3">
+          {TABS.map((t) => {
+            const on = tab === t.id
+            return (
+              <button
+                key={t.id}
+                onClick={() => go(t.id)}
+                aria-current={on ? 'page' : undefined}
+                className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors duration-150 lg:min-h-11 lg:flex-row lg:justify-start lg:gap-3 lg:rounded-xl lg:px-3 lg:text-sm ${
+                  on ? 'text-primary lg:bg-primary-soft lg:text-fg' : 'text-muted lg:hover:bg-surface-muted'
+                }`}
+              >
+                <span className={`flex h-7 w-12 items-center justify-center rounded-full transition-colors duration-150 lg:h-auto lg:w-auto ${on ? 'bg-primary-soft lg:bg-transparent' : ''}`}>
+                  <Icon name={t.id} className={`h-5 w-5 ${on ? 'lg:text-primary' : ''}`} />
+                </span>
+                {t.label}
+              </button>
+            )
+          })}
         </div>
       </nav>
     </div>
@@ -225,10 +246,10 @@ export default function App() {
 // Stato del salvataggio sempre visibile: salvato / in corso / non salvato
 function SaveBadge({ status }) {
   const map = {
-    saved: ['text-emerald-400', '● Salvato sul dispositivo'],
-    saving: ['text-slate-400', '○ Salvataggio…'],
-    error: ['text-rose-400', '▲ Non salvato'],
-    idle: ['text-slate-500', ''],
+    saved: ['text-muted', '● Salvato sul dispositivo'],
+    saving: ['text-muted', '○ Salvataggio…'],
+    error: ['font-semibold text-danger', '▲ Non salvato'],
+    idle: ['text-muted', ''],
   }
   const [cls, label] = map[status.save] ?? map.idle
   return (

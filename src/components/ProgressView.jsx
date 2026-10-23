@@ -13,9 +13,9 @@ import { WEEKDAYS_SHORT } from '../lib/dates'
 function Delta({ cur, prev, digits = 0, unit = '' }) {
   if (cur == null || prev == null) return null
   const d = cur - prev
-  if (!d) return <span className="text-[11px] text-slate-500">= periodo prec.</span>
+  if (!d) return <span className="text-[11px] text-muted">= periodo prec.</span>
   return (
-    <span className="text-[11px] text-slate-400">
+    <span className="text-[11px] text-muted">
       {d > 0 ? '+' : ''}
       {fmtNum(d, digits)}
       {unit} vs periodo prec.
@@ -37,11 +37,11 @@ export default function ProgressView({ state, settings }) {
       <Segmented options={PERIODS} value={kind} onChange={setKind} />
       {kind === 'custom' && (
         <div className="grid grid-cols-2 gap-2">
-          <input type="date" value={custom.from} onChange={(e) => setCustom({ ...custom, from: e.target.value })} aria-label="Dal" className="rounded-xl bg-slate-800 px-2 py-1.5 text-sm text-slate-100 [color-scheme:dark]" />
-          <input type="date" value={custom.to} onChange={(e) => setCustom({ ...custom, to: e.target.value })} aria-label="Al" className="rounded-xl bg-slate-800 px-2 py-1.5 text-sm text-slate-100 [color-scheme:dark]" />
+          <input type="date" value={custom.from} onChange={(e) => setCustom({ ...custom, from: e.target.value })} aria-label="Dal" className="rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
+          <input type="date" value={custom.to} onChange={(e) => setCustom({ ...custom, to: e.target.value })} aria-label="Al" className="rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
         </div>
       )}
-      <div className="flex items-center justify-between px-1 text-xs text-slate-400">
+      <div className="flex items-center justify-between px-1 text-xs text-muted">
         <span>
           {period.from} → {period.to}
         </span>
@@ -116,10 +116,10 @@ function StrengthWidget({ a, p, state }) {
         </div>
         {s.newRecords.length > 0 && (
           <div>
-            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Nuovi record (stesso esercizio)</div>
+            <div className="mb-1 text-xs font-semibold text-muted">Nuovi record (stesso esercizio)</div>
             <div className="flex flex-wrap gap-1">
               {s.newRecords.map((r) => (
-                <Chip key={r.key} className="bg-emerald-500/20 text-emerald-200">
+                <Chip key={r.key} className="bg-primary-soft text-primary">
                   {r.name}: {fmtNum(r.weight, 1)} kg × {r.reps} ({r.date}) — prima {fmtNum(r.prevBest.weight, 1)} kg
                 </Chip>
               ))}
@@ -128,7 +128,7 @@ function StrengthWidget({ a, p, state }) {
         )}
         {keys.length > 0 && (
           <div className="space-y-2">
-            <select value={key} onChange={(e) => setKey(e.target.value)} aria-label="Esercizio" className="w-full rounded-xl bg-slate-800 px-3 py-2 text-sm text-slate-100">
+            <select value={key} onChange={(e) => setKey(e.target.value)} aria-label="Esercizio" className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-fg">
               {keys.map(([k, name]) => (
                 <option key={k} value={k}>{name}</option>
               ))}
@@ -138,7 +138,7 @@ function StrengthWidget({ a, p, state }) {
               unit="kg"
               series={[{ name: 'Carico massimo', points: hist.filter((h) => h.maxWeight != null).map((h) => ({ date: h.date, value: h.maxWeight })) }]}
             />
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-muted">
               Confronto solo tra sedute dello stesso esercizio e attrezzo. Ultime: {hist.slice(-3).map((h) => `${h.date} ${h.reps.join('/')} rip.${h.avgRir != null ? ` RIR ${fmtNum(h.avgRir, 1)}` : ''}`).join(' · ') || '—'}
             </p>
           </div>
@@ -230,11 +230,11 @@ function DietWidget({ a }) {
     <Section title="Alimentazione">
       <Card className="space-y-3 text-sm">
         {d.activePlan ? (
-          <div className="text-slate-200">
-            Piano attivo: <b className="text-white">{d.activePlan.name}</b> · rev. {d.activePlan.revision} · {d.activePlan.status === 'validated' ? 'validato' : 'bozza'}
+          <div className="text-fg">
+            Piano attivo: <b className="text-fg">{d.activePlan.name}</b> · rev. {d.activePlan.revision} · {d.activePlan.status === 'validated' ? 'validato' : 'bozza'}
           </div>
         ) : (
-          <p className="text-slate-400">Nessun piano attivo: obiettivi e programmato non disponibili.</p>
+          <p className="text-muted">Nessun piano attivo: obiettivi e programmato non disponibili.</p>
         )}
         <DayTable
           rows={[
@@ -246,11 +246,11 @@ function DietWidget({ a }) {
         {consumedPts.length > 0 && (
           <LineChart label="kcal consumate e obiettivo" unit="kcal" digits={0} series={[{ name: 'Consumate (giorni completi)', points: consumedPts }, ...(targetPts.length ? [{ name: 'Obiettivo', dashed: true, points: targetPts }] : [])]} />
         )}
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-muted">
           Medie calcolate solo sui giorni con dati completi; i giorni parziali non vengono stimati.
           {d.dataQuality.nutritionCompleteness?.total ? ` Pasti del piano con valori completi: ${d.dataQuality.nutritionCompleteness.complete}/${d.dataQuality.nutritionCompleteness.total}.` : ''}
         </p>
-        <p className="text-slate-300">
+        <p className="text-fg-soft">
           Aderenza:{' '}
           {d.adherence ? `${d.adherence.followed} seguiti · ${d.adherence.modified} modificati · ${d.adherence.skipped} saltati${d.adherence.extra ? ` · ${d.adherence.extra} fuori piano` : ''}` : 'non registrata'}
         </p>
@@ -270,12 +270,12 @@ function EnergyWidget({ a }) {
               <Metric label="Attive" value={fmtRange(e.activeKcal, 0)} unit="kcal" estimate={e.sources.includes('estimate')} />
               <Metric label="Totali" value={fmtRange(e.totalKcal, 0)} unit="kcal" estimate={e.sources.includes('estimate')} />
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted">
               {e.sessionsWithValue} sedute con valore, {e.sessionsWithout} senza (non conteggiate). Metodo: {e.methods.join('; ') || '—'}
             </p>
           </>
         ) : (
-          <p className="text-slate-400">ND — nessuna seduta con stima o dato da dispositivo nel periodo.</p>
+          <p className="text-muted">ND — nessuna seduta con stima o dato da dispositivo nel periodo.</p>
         )}
       </Card>
     </Section>
@@ -295,10 +295,10 @@ function ReportExport({ state, period, settings }) {
   return (
     <Section title="Esporta report">
       <Card className="space-y-3">
-        <p className="text-xs text-slate-400">Un report è un riepilogo da condividere: non è un backup e non si può reimportare.</p>
+        <p className="text-xs text-muted">Un report è un riepilogo da condividere: non è un backup e non si può reimportare.</p>
         <div className="flex flex-wrap gap-1">
           {Object.entries(REPORT_SECTIONS).map(([k, label]) => (
-            <button key={k} onClick={() => toggle(k)} aria-pressed={sections.includes(k)} className={`rounded-lg px-2 py-1 text-xs font-medium ${sections.includes(k) ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
+            <button key={k} onClick={() => toggle(k)} aria-pressed={sections.includes(k)} className={`rounded-lg px-2 py-1 text-xs font-medium ${sections.includes(k) ? 'bg-primary text-on-primary' : 'bg-surface-muted text-muted'}`}>
               {label}
             </button>
           ))}
@@ -308,8 +308,8 @@ function ReportExport({ state, period, settings }) {
         {sections.includes('diet') && <Toggle checked={includePlanGuide} onChange={setIncludePlanGuide} label="Includi la guida del piano alimentare" />}
         <Segmented value={dialect} onChange={setDialect} options={Object.entries(CSV_DIALECTS).map(([id, d]) => ({ id, label: `CSV ${d.label}` }))} />
         <details className="text-xs">
-          <summary className="cursor-pointer text-slate-300">Anteprima ({csv.split('\n').length - 1} righe CSV)</summary>
-          <pre className="mt-2 max-h-64 overflow-auto rounded-xl bg-slate-950 p-2 text-[11px] text-slate-300">{JSON.stringify(report, null, 2).slice(0, 4000)}</pre>
+          <summary className="cursor-pointer text-fg-soft">Anteprima ({csv.split('\n').length - 1} righe CSV)</summary>
+          <pre className="mt-2 max-h-64 overflow-auto rounded-xl bg-bg p-2 text-[11px] text-fg-soft">{JSON.stringify(report, null, 2).slice(0, 4000)}</pre>
         </details>
         <div className="flex flex-wrap gap-2">
           <button
@@ -326,12 +326,12 @@ function ReportExport({ state, period, settings }) {
                 setPdfBusy(false)
               }
             }}
-            className="btn w-full bg-sky-500 text-slate-950 disabled:opacity-40"
+            className="btn-primary w-full"
           >
             {pdfBusy ? 'Generazione PDF…' : 'Scarica PDF'}
           </button>
-          <button disabled={!sections.length} onClick={() => downloadJSON(fileNames.report(period, 'json'), report)} className="btn flex-1 bg-emerald-500 text-slate-950 disabled:opacity-40">Scarica JSON</button>
-          <button disabled={!sections.length} onClick={() => downloadCSV(fileNames.report(period, 'csv'), csv)} className="btn-ghost flex-1 disabled:opacity-40">Scarica CSV</button>
+          <button disabled={!sections.length} onClick={() => downloadJSON(fileNames.report(period, 'json'), report)} className="btn-ghost flex-1">Scarica JSON</button>
+          <button disabled={!sections.length} onClick={() => downloadCSV(fileNames.report(period, 'csv'), csv)} className="btn-ghost flex-1">Scarica CSV</button>
         </div>
       </Card>
     </Section>

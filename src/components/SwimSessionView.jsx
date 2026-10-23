@@ -32,17 +32,17 @@ export default function SwimSessionView({ session: s, state, onChange, timers, o
     <div className="space-y-5">
       <header className="space-y-2">
         <div className="flex items-center gap-2">
-          <input value={s.title} onChange={(e) => set({ title: e.target.value })} aria-label="Titolo" placeholder="Nuoto" className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-white outline-none" />
-          <input type="date" value={s.date} aria-label="Data" onChange={(e) => e.target.value && set({ date: e.target.value })} className="rounded-lg bg-slate-800 px-2 py-1 text-sm text-slate-200 [color-scheme:dark]" />
+          <input value={s.title} onChange={(e) => set({ title: e.target.value })} aria-label="Titolo" placeholder="Nuoto" className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-fg outline-none" />
+          <input type="date" value={s.date} aria-label="Data" onChange={(e) => e.target.value && set({ date: e.target.value })} className="rounded-lg border border-line-strong bg-surface px-2 py-1 text-sm text-fg" />
         </div>
-        <p className="text-sm capitalize text-slate-400">{fmtDate(s.date)} · {s.isFree ? 'sessione libera' : 'da programma'}</p>
+        <p className="text-sm capitalize text-muted">{fmtDate(s.date)} · {s.isFree ? 'sessione libera' : 'da programma'}</p>
         <div className="w-40">
           <StatusSelect value={s.status} onChange={(status) => set({ status })} />
         </div>
       </header>
 
       {s.status !== 'completed' && !s.startedAt && (
-        <button onClick={() => set({ startedAt: toLocalISO(), status: 'in_progress' })} className="flex w-full items-center justify-center gap-3 rounded-2xl bg-sky-500 py-4 text-lg font-extrabold text-slate-950">
+        <button onClick={() => set({ startedAt: toLocalISO(), status: 'in_progress' })} className="flex w-full items-center justify-center gap-3 rounded-2xl bg-swim py-4 text-lg font-extrabold text-on-swim">
           ▶ Inizia nuotata (segna l’orario)
         </button>
       )}
@@ -69,8 +69,8 @@ export default function SwimSessionView({ session: s, state, onChange, timers, o
             hint={d.pace?.estimated ? 'su distanza stimata' : d.pace ? 'su distanza misurata' : 'serve distanza e durata'}
           />
         </div>
-        {d.isPartial && <p className="text-xs text-amber-300">Percorso abbreviato rispetto al previsto.</p>}
-        {d.plannedMismatch && <p className="text-xs text-amber-300">La distanza prevista indicata non coincide con la somma dei blocchi ({d.plannedFromBlocks} m).</p>}
+        {d.isPartial && <p className="text-xs text-warning">Percorso abbreviato rispetto al previsto.</p>}
+        {d.plannedMismatch && <p className="text-xs text-warning">La distanza prevista indicata non coincide con la somma dei blocchi ({d.plannedFromBlocks} m).</p>}
       </Card>
 
       <Section title="Piscina e piano">
@@ -133,7 +133,7 @@ export default function SwimSessionView({ session: s, state, onChange, timers, o
               </Field>
             </div>
           )}
-          {s.distanceSource === 'unknown' && <p className="text-xs text-slate-400">Nessuna distanza registrata: i totali non la conteranno.</p>}
+          {s.distanceSource === 'unknown' && <p className="text-xs text-muted">Nessuna distanza registrata: i totali non la conteranno.</p>}
           <Toggle checked={s.isPartial} onChange={(isPartial) => set({ isPartial })} label="Percorso abbreviato rispetto al previsto" />
         </Card>
       </Section>
@@ -159,9 +159,9 @@ export default function SwimSessionView({ session: s, state, onChange, timers, o
       <EnergyCard session={s} onChange={onChange} measurements={state.measurements} />
 
       <div className="flex flex-wrap gap-2">
-        {s.status !== 'completed' && <button onClick={finish} className="btn flex-1 bg-emerald-500 text-slate-950">Termina nuotata</button>}
+        {s.status !== 'completed' && <button onClick={finish} className="btn flex-1 bg-primary text-on-primary">Termina nuotata</button>}
         <button onClick={onExport} className="btn-ghost">Esporta JSON</button>
-        <button onClick={() => confirm('Eliminare definitivamente questa nuotata?') && onDelete()} className="rounded-xl px-3 py-2 text-sm text-rose-400">Elimina</button>
+        <button onClick={() => confirm('Eliminare definitivamente questa nuotata?') && onDelete()} className="rounded-xl px-3 py-2 text-sm text-danger">Elimina</button>
       </div>
     </div>
   )

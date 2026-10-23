@@ -73,6 +73,7 @@ Un service worker conserva l’app sul dispositivo: dopo la prima apertura onlin
 | E2E-14 | Funzionamento offline | `e2e/offline.e2e.js` (server spento davvero) | automatico (Chromium) |
 | NUT-T01..T20 | Alimentazione v4: obiettivi, alternative, consumato, report | `tests/nutrition.test.js`, `e2e/diet.e2e.js`, `e2e/upgrade.e2e.js` | automatico; NUT-T18 **da verificare su iPhone** |
 | BUG-NUOTO-01 | `(100x3)x4` = 12 × 100 m; 500 + (200)x2 + (100x3)x4 = 2.100 m; export/reimport; rigenerazione dei blocchi salvati male | `tests/swim.test.js`, `e2e/swim.e2e.js` | automatico |
+| UI-01 | Tema, focus nei pannelli, movimento ridotto, reflow 320 px, contrasti dei token | `e2e/ui.e2e.js`, `tests/tokens.test.js` | automatico; VoiceOver e testo ingrandito **da verificare su iPhone** |
 | E2E-15 | PDF | `e2e/report.e2e.js`, `tests/pdf.test.js` | automatico; download su iPhone **da verificare** |
 
 I test automatici girano con il motore Chromium e il profilo di iPhone 13 (dimensioni, touch). Safari/WebKit non è disponibile nell’ambiente di sviluppo: le voci seguenti vanno verificate a mano.
@@ -94,6 +95,7 @@ Da eseguire su Safari iOS e sull’app aggiunta alla schermata Home (*Condividi 
 - [ ] Download di backup JSON, report CSV (apertura in Numbers/Excel: colonne separate, accenti corretti) e PDF.
 - [ ] Modalità aereo dopo una prima apertura online: l’app si apre, i dati sono visibili, una nuova misura viene salvata e resta dopo la riapertura.
 - [ ] Alimentazione (NUT-T18): tabella Obiettivo/Programmato/Consumato leggibile senza scorrere in orizzontale; anteprima e scelta di un’alternativa; “Registra quantità” e “Fuori piano” con tastiera decimale; in modifica la barra “Salva revisione” resta visibile sopra la navigazione.
+- [ ] Aspetto: tema Automatico segue il cambio chiaro/scuro di iOS; con *Riduci movimento* attivo i pannelli compaiono senza scorrimento; con VoiceOver le voci della barra in basso e i pulsanti principali sono annunciati; con testo ingrandito nessun pulsante è tagliato.
 - [ ] Schermo che resta acceso durante la modalità allenamento e si spegne normalmente dopo l’uscita.
 
 Annotare data, modello di iPhone, versione di iOS ed eventuali anomalie (con schermata) in una issue del repository.
