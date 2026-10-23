@@ -191,13 +191,16 @@
   }
 
   .anim-fade-up {
-    animation: fade-up var(--motion-base) var(--ease-out-soft) both;
+    animation: fade-up var(--motion-base) var(--ease-out-soft) backwards; /* backwards: a fine animazione nessun contesto di sovrapposizione residuo */
   }
   .anim-sheet {
     animation: sheet-in var(--motion-slow) var(--ease-out-soft) both;
   }
   .anim-backdrop {
     animation: fade-in var(--motion-base) ease-out both;
+  }
+  .anim-fade-fast {
+    animation: fade-in 160ms ease-out backwards;
   }
   .anim-check {
     animation: check-in 180ms ease-out both;

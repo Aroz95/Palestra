@@ -3,11 +3,14 @@ import { test, expect } from '@playwright/test'
 import { openApp, nav, main, goImport, importFile, savedState, waitSaved, EX } from './helpers'
 
 test('NUT v4: obiettivo ≠ programmato ≠ consumato, alternativa per data, guida', async ({ page }) => {
-  await openApp(page) // sabato 31/10: giorno di riposo
+  await openApp(page) // sabato 31/10: il piano inizia lunedì 2/11 (giorno di riposo senza attività)
   await goImport(page)
   await importFile(page, EX('piano-alimentare-v4.json'))
   await nav(page, /Alimentazione/)
   await main(page).getByRole('button', { name: 'Imposta attivo' }).click()
+  // oggi è fuori dal periodo del piano: viene mostrato il primo giorno utile, dichiarandolo
+  await expect(main(page).getByRole('heading', { name: 'lunedì 2 novembre' })).toBeVisible()
+  await expect(main(page)).toContainText('Oggi è fuori dal periodo del piano')
 
   // riepilogo del giorno: obiettivo dal piano (riposo) e programmato separati
   const summary = main(page).locator('table').first()
@@ -27,7 +30,7 @@ test('NUT v4: obiettivo ≠ programmato ≠ consumato, alternativa per data, gui
   await waitSaved(page)
   let st = await savedState(page)
   expect(st.dietSelections).toHaveLength(1)
-  expect(st.dietSelections[0]).toMatchObject({ date: '2026-10-31', alternativeId: '6-colazione-skyr' })
+  expect(st.dietSelections[0]).toMatchObject({ date: '2026-11-02', alternativeId: '1r-colazione-skyr' })
   // il piano non cambia
   expect(st.dietPlans[0].revision).toBe(1)
 
@@ -57,7 +60,7 @@ test('NUT v4: obiettivo ≠ programmato ≠ consumato, alternativa per data, gui
   st = await savedState(page)
   expect(st.dietLog.filter((l) => l.status === 'extra')).toHaveLength(1)
 
-  // guida del piano in scheda separata
-  await page.getByRole('tab', { name: 'Guida', exact: true }).click()
+  // guida del piano tra le informazioni secondarie, comprimibile
+  await main(page).getByText('Guida del piano').click()
   await expect(main(page)).toContainText('Idratazione')
 })

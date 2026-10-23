@@ -75,9 +75,17 @@ export default function App() {
   }
 
   if (status.loading || !state) {
+    // Skeleton con la stessa struttura della pagina (intestazione, selettore, card): nessun salto di layout
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-bg text-muted" role="status">
-        Caricamento dei dati…
+      <div className="min-h-dvh bg-bg lg:pl-60" role="status" aria-label="Caricamento dei dati">
+        <div className="mx-auto max-w-2xl animate-pulse space-y-4 px-4 pt-10 sm:px-6 lg:max-w-3xl lg:px-8 motion-reduce:animate-none">
+          <div className="h-8 w-48 rounded-lg bg-surface-strong" />
+          <div className="h-14 rounded-xl bg-surface-muted" />
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-28 rounded-2xl border border-line bg-surface" />
+          ))}
+        </div>
+        <span className="sr-only">Caricamento dei dati…</span>
       </div>
     )
   }

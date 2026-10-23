@@ -31,6 +31,19 @@ export function pickDay(plan, date, { isTraining = false, dayType = null } = {})
   return { day: c.find((d) => d.dayType === type) ?? c[0], types, type }
 }
 
+// Periodo di validità del piano: data fuori intervallo e giorno da mostrare all'apertura
+export function rangeStatus(plan, date) {
+  if (plan?.validFrom && date < plan.validFrom) return 'before'
+  if (plan?.validTo && date > plan.validTo) return 'after'
+  return null
+}
+
+// Oggi se compreso nel piano, altrimenti il primo (o l'ultimo) giorno utile; la schermata dichiara quale giorno mostra
+export function initialDate(plan, today) {
+  const st = rangeStatus(plan, today)
+  return st === 'before' ? plan.validFrom : st === 'after' ? plan.validTo : today
+}
+
 export function sortedMeals(day) {
   return day ? [...day.meals].sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99')) : []
 }

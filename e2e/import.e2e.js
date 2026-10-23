@@ -49,13 +49,18 @@ test('E2E-06 dieta: mercoledì con pasti ordinati, alternative e valori ignoti N
   await goImport(page)
   await importFile(page, FIX('dieta-mercoledi.json'))
   await nav(page, /Alimentazione/)
-  await page.getByRole('button', { name: 'Mer', exact: true }).click()
+  await main(page).getByRole('button', { name: /^mercoledì/ }).click()
   const meals = main(page).locator('div.rounded-2xl').filter({ hasText: /Colazione|Cena/ })
   await expect(meals.nth(0)).toContainText('Colazione') // 07:30 prima delle 20:00
   await expect(meals.nth(0)).toContainText('oppure: Gallette 30 g')
   await expect(meals.nth(0)).toContainText('P 12 g · C ND · G ND')
   await expect(meals.nth(1)).toContainText('Valori nutrizionali non disponibili')
-  await expect(main(page)).toContainText('Bozza — non validato da un professionista')
+  // stato del piano compatto accanto al nome; dettagli in "Gestisci piano" senza perdere il giorno consultato
+  await expect(main(page).getByTestId('plan-status')).toHaveText('Bozza')
+  await main(page).getByRole('button', { name: 'Gestisci piano' }).click()
+  await expect(page.getByRole('dialog', { name: 'Gestisci piano' })).toContainText('Bozza — non validato da un professionista')
+  await page.keyboard.press('Escape')
+  await expect(main(page).getByRole('heading', { name: 'mercoledì 28 ottobre' })).toBeVisible()
   // alternativa del pasto: anteprima con i propri alimenti, senza copiare i valori del principale
   await main(page).getByRole('group', { name: 'Opzioni Colazione' }).getByRole('button', { name: 'Dolce' }).click()
   await expect(meals.nth(0)).toContainText('Yogurt · 125 g')

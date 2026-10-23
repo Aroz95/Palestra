@@ -80,3 +80,20 @@ describe('validazione e revisioni', () => {
     expect(state.dietPlans.map((d) => [d.id, d.active])).toEqual([['diet-plan-001', true], ['altro', false]])
   })
 })
+
+describe('CR-UX-ALIM-001: giorno mostrato all’apertura', async () => {
+  const { initialDate, rangeStatus } = await import('../src/lib/diet')
+  const plan = { validFrom: '2026-11-02', validTo: '2026-11-30' }
+  it('oggi se compreso nel piano, altrimenti il primo o l’ultimo giorno utile', () => {
+    expect(initialDate(plan, '2026-11-10')).toBe('2026-11-10')
+    expect(initialDate(plan, '2026-10-31')).toBe('2026-11-02')
+    expect(initialDate(plan, '2026-12-05')).toBe('2026-11-30')
+    expect(initialDate({ validFrom: null, validTo: null }, '2026-10-31')).toBe('2026-10-31')
+    expect(initialDate(null, '2026-10-31')).toBe('2026-10-31')
+  })
+  it('stato rispetto al periodo', () => {
+    expect(rangeStatus(plan, '2026-10-31')).toBe('before')
+    expect(rangeStatus(plan, '2026-12-01')).toBe('after')
+    expect(rangeStatus(plan, '2026-11-30')).toBe(null)
+  })
+})

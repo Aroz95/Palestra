@@ -94,3 +94,25 @@ Già conformi prima del restyle (verificato, non modificato nella logica): disti
 3. **P2 — Dialog di conferma** in-app (oggi `window.confirm`) con descrizione dell’impatto e pulsante “Elimina sessione”.
 4. **P3 — Layout desktop a più colonne** per Progressi (da 1200 px) e rifiniture dopo prova sul campo.
 5. **Modello dati** (da concordare): vasche effettive per blocco di nuoto.
+
+## 8. CR-UX-ALIM-001 — Alimentazione: piano del giorno subito visibile
+
+Schermate a 390 × 844 e 1280 × 800 (area visibile senza scorrere): [prima](ui-audit/cr-alim-001/before/) · [dopo](ui-audit/cr-alim-001/after/).
+
+**Audit.** Unico componente: `src/components/DietView.jsx` (nessun router; giorno consultato nello stato `date` del componente, unica sorgente di verità). Prima, a 390 px, sopra i pasti c’erano: selettore del piano + “Importa”, schede Giorno/Guida, card dello stato con chip “Bozza — non validato” in colore di avviso, autore, obiettivo, note, avvertenza e sette pulsanti di gestione, selettore delle date specifiche, giorni della settimana, riepilogo nutrizionale. Il primo pasto non era visibile senza scorrere. Inoltre, con “oggi” fuori dal periodo del piano (caso reale dell’esempio: piano dal 2/11, oggi 31/10) veniva mostrato il giorno della settimana senza dichiararlo.
+
+**Nuova gerarchia.**
+1. Intestazione: “Alimentazione”, nome del piano · stato testuale (“Bozza” / “Validato” / “Archiviato”, “non attivo” se non è il piano attivo), pulsante secondario “Gestisci piano”. Con più piani il nome è un selettore compatto; cambiare piano non avviene mai in automatico.
+2. Settimana compatta: frecce, sette giorni con giorno e numero; selezionato con sfondo, bordo e grassetto e `aria-current="date"`; oggi con bordo e punto; nome accessibile completo (“sabato 31 ottobre, oggi”).
+3. Titolo del giorno (“lunedì 2 novembre”), “Oggi” / “Torna a oggi”, date specifiche, eventuale avviso di periodo, variante allenamento/riposo, poi i pasti.
+4. Informazioni secondarie: riepilogo nutrizionale, suggerimenti pre/post allenamento, fuori piano, guida del piano (comprimibile).
+
+“Gestisci piano” (pannello) contiene stato completo, piano attivo, revisione, periodo, autore, obiettivo, note, avvertenza, azioni (Imposta attivo, Modifica, Duplica, Esporta, Importa, Nuovo, Archivia, Elimina) e revisioni precedenti. Aprirlo, chiuderlo o annullare una modifica non cambia il giorno consultato.
+
+**Stati.** Oggi fuori periodo → primo (o ultimo) giorno utile con la frase “Oggi è fuori dal periodo del piano: mostro il primo giorno utile”; giorno fuori periodo scelto a mano → avviso con “Vai al primo/ultimo giorno”. Giorno senza pasti → “Nessun pasto previsto per questo giorno.” con “Modifica il piano”. Caricamento → skeleton con la struttura della pagina. Errori: i dati sono locali e caricati una volta; un errore di salvataggio è mostrato dall’avviso globale “Non salvato” con esportazione del backup (nessun dato presentato come salvato se non lo è).
+
+**Motion.** Cambio giorno: dissolvenza 160 ms del contenuto; giorno attivo: transizione di colore 150 ms; pannello di gestione: animazione del pannello comune. Tutto annullato con `prefers-reduced-motion`. Le animazioni d’ingresso usano `animation-fill-mode: backwards`, così a fine animazione non resta un contesto di sovrapposizione (prima un pannello aperto da una card finiva sotto la barra di navigazione).
+
+**Scostamenti dalla CR.** “Pubblicato” non esiste nel modello dati: lo stato equivalente è “Validato” (da un professionista indicato per nome), invariato. Nessuna modifica a schema, calcoli o flusso bozza/validazione.
+
+**Test.** `e2e/diet-layout.e2e.js` copre i criteri 1–7 (primo pasto sopra la barra di navigazione a 390 × 844, bozza solo come etichetta, cambio giorno con `aria-current`, giorno conservato dopo “Gestisci piano” e “Modifica → Annulla”, nessuno scorrimento orizzontale a 320/390/768/1280 px, giorno vuoto, più piani senza cambio automatico, tastiera e annuncio per screen reader). Il criterio 8 (regressione) è coperto da `e2e/diet.e2e.js` e `e2e/import.e2e.js` (E2E-06), aggiornati ai nuovi controlli, e da tutta la suite. Logica del giorno iniziale: `tests/diet.test.js`. Verifica manuale su iPhone: voce in `docs/COLLAUDO.md`.
