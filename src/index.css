@@ -37,6 +37,13 @@
   --motion-fast: 140ms;
   --motion-base: 200ms;
   --motion-slow: 260ms;
+  /* motion semantico (CR-UX-ALIM-002) */
+  --motion-day: 200ms; /* cambio giorno */
+  --motion-indicator: 200ms; /* evidenziatore del giorno */
+  --motion-disclosure: 220ms; /* apertura/chiusura dettagli */
+  --motion-feedback: 220ms; /* conferma registrazione */
+  --motion-swap: 170ms; /* cambio opzione/alternativa */
+  --motion-exit: 220ms; /* chiusura pannelli */
   --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
   color-scheme: light;
 }
@@ -51,7 +58,6 @@
     --text-soft: #d7e3e5;
     --text-muted: #b8c8cc;
     --border: #354a51;
-  --border-strong: #6b848b;
     --border-strong: #6b848b;
     --primary: #67d9c2;
     --on-primary: #102823;
@@ -205,6 +211,52 @@
   .anim-check {
     animation: check-in 180ms ease-out both;
   }
+  .anim-sheet-out {
+    animation: sheet-out var(--motion-exit) ease-in both;
+  }
+  .anim-backdrop-out {
+    animation: fade-out var(--motion-exit) ease-in both;
+  }
+  /* cambio giorno: dissolvenza + 12 px nella direzione di navigazione */
+  .anim-day-next {
+    animation: day-next var(--motion-day) var(--ease-out-soft) backwards;
+  }
+  .anim-day-prev {
+    animation: day-prev var(--motion-day) var(--ease-out-soft) backwards;
+  }
+  .anim-swap {
+    animation: fade-in var(--motion-swap) ease-out backwards;
+  }
+  .anim-pop {
+    animation: pop var(--motion-feedback) var(--ease-out-soft) backwards;
+  }
+  /* pannello espandibile: altezza animata con grid-template-rows (niente misure in JS) */
+  .disclosure-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      grid-template-rows var(--motion-disclosure) var(--ease-out-soft),
+      opacity var(--motion-disclosure) ease-out,
+      visibility 0s linear var(--motion-disclosure);
+  }
+  .disclosure-panel[data-open='true'] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .disclosure-panel > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .disclosure-chevron {
+    transition: transform var(--motion-disclosure) var(--ease-out-soft);
+  }
+  [aria-expanded='true'] > .disclosure-chevron {
+    transform: rotate(180deg);
+  }
 }
 
 @keyframes fade-in {
@@ -230,6 +282,35 @@
       transform: scale(0.98);
       opacity: 0;
     }
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes sheet-out {
+  to {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+@keyframes day-next {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+@keyframes day-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
   }
 }
 @keyframes check-in {

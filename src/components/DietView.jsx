@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, Chip, Empty, Field, Section, Segmented, Select, Sheet, TextArea, TextInput } from './ui'
+import { Card, Disclosure, Empty, Field, Section, Segmented, Select, Sheet, TextArea, TextInput } from './ui'
 import { newDietPlan, uid, clone } from '../schema/factories'
 import { addDays, fmtDate, todayISO, toLocalISO, weekdayOf, WEEKDAYS_SHORT } from '../lib/dates'
 import { pickDay, sortedMeals, nextMeal, isValidated, isTrainingDay, resolveTarget, hasTargets, dayPlanned, dayConsumed, deltaToTarget, selectionsFor, planCompleteness, initialDate, rangeStatus } from '../lib/diet'
@@ -12,6 +12,7 @@ import { TargetsEditor, GuidelinesEditor, DayTargetEditor, MealEditor } from './
 import { optionNutrition } from '../lib/diet'
 import { exportDietPlan, fileNames } from '../lib/report'
 import { downloadJSON } from '../lib/download'
+import { fmtNum } from '../lib/stats'
 
 const nowHHMM = () => new Date().toTimeString().slice(0, 5)
 
@@ -33,6 +34,7 @@ export default function DietView({ state, update, onImport }) {
   const [guideOpen, setGuideOpen] = useState(false)
   const [preview, setPreview] = useState({}) // anteprima delle alternative: { [data]: { [mealId]: alternativeId|null } }
   const [extraOpen, setExtraOpen] = useState(false)
+  const [dir, setDir] = useState('next') // direzione dell'ultimo cambio giorno, per la transizione
 
   const createPlan = () => {
     const p = newDietPlan({ days: [1, 2, 3, 4, 5, 6, 7].map((weekday) => ({ id: uid('day'), weekday, date: null, dayType: 'any', label: '', meals: [] })) })
@@ -89,6 +91,9 @@ export default function DietView({ state, update, onImport }) {
   const targetSources = target ? [...new Set(['kcal', 'proteinG', 'carbsG', 'fatG'].map((k) => target[k].source).filter(Boolean))] : []
   const completeness = shown ? planCompleteness(shown) : null
   const prePost = (m) => (training && shown?.guidelines?.preWorkout?.mealCategories?.includes(m.category) ? 'pre' : training && shown?.guidelines?.postWorkout?.mealCategories?.includes(m.category) ? 'post' : null)
+  const loggedCount = meals.filter((m) => logs.some((l) => l.mealId === m.id && l.status !== 'extra')).length
+  const plannedKcal = planned?.kcal.status === 'complete' ? planned.kcal.value : null
+  const targetKcal = target?.kcal.value ?? null
   const status = !plan ? '' : plan.archived ? 'Archiviato' : isValidated(plan) ? 'Validato' : 'Bozza'
 
   const setPlan = (p) => update((s) => A.upsertIn(s, 'dietPlans', p))
@@ -102,6 +107,7 @@ export default function DietView({ state, update, onImport }) {
   }
   const editDay = (patch) => setEditing({ ...editing, days: editing.days.map((d) => (d.id === day.id ? { ...d, ...patch } : d)) })
   const goDate = (d) => {
+    if (d !== date) setDir(d > date ? 'next' : 'prev')
     setDate(d)
     setDayType(null)
   }
@@ -178,71 +184,70 @@ export default function DietView({ state, update, onImport }) {
         </div>
       )}
 
-      {/* 2. Navigazione del giorno: settimana compatta, oggi evidenziato anche senza colore */}
-      <nav aria-label="Giorno del piano" className="space-y-2">
-        <div className="flex items-stretch gap-1">
-          <button onClick={() => goDate(addDays(date, -7))} className="btn-ghost w-10 shrink-0 px-0" aria-label="Settimana precedente">
-            ‹
-          </button>
-          <div className="grid min-w-0 flex-1 grid-cols-7 gap-1">
-            {[1, 2, 3, 4, 5, 6, 7].map((n) => {
-              const d = addDays(weekStart, n - 1)
-              const sel = d === date
-              const isT = d === today
-              return (
-                <button
-                  key={n}
-                  onClick={() => goDate(d)}
-                  aria-current={sel ? 'date' : undefined}
-                  aria-label={`${fmtLong(d)}${isT ? ', oggi' : ''}`}
-                  className={`flex min-h-14 flex-col items-center justify-center rounded-xl border text-xs transition-colors duration-150 ${
-                    sel ? 'border-primary bg-primary font-bold text-on-primary' : isT ? 'border-line-strong bg-surface font-semibold text-fg' : 'border-transparent bg-surface-muted text-fg-soft'
-                  }`}
-                >
-                  <span>{WEEKDAYS_SHORT[n]}</span>
-                  <span className="text-base leading-tight tabular-nums">{Number(d.slice(8))}</span>
-                  {isT && <span className={`h-1 w-1 rounded-full ${sel ? 'bg-on-primary' : 'bg-primary'}`} aria-hidden="true" />}
-                </button>
-              )
-            })}
-          </div>
-          <button onClick={() => goDate(addDays(date, 7))} className="btn-ghost w-10 shrink-0 px-0" aria-label="Settimana successiva">
-            ›
-          </button>
+      {/* 2. Navigazione del giorno: settimana compatta con indicatore scorrevole; oggi riconoscibile anche senza colore */}
+      <nav aria-label="Giorno del piano">
+        <div className="relative grid grid-cols-7 rounded-2xl bg-surface-muted p-1">
+          <span
+            aria-hidden="true"
+            className="absolute inset-y-1 left-1 rounded-xl bg-primary shadow-sm transition-transform duration-[var(--motion-indicator)] ease-[var(--ease-out-soft)]"
+            style={{ width: 'calc((100% - 0.5rem) / 7)', transform: `translateX(${(wd - 1) * 100}%)` }}
+          />
+          {[1, 2, 3, 4, 5, 6, 7].map((n) => {
+            const d = addDays(weekStart, n - 1)
+            const sel = d === date
+            const isT = d === today
+            const special = datedDays.some((x) => x.date === d)
+            return (
+              <button
+                key={n}
+                onClick={() => goDate(d)}
+                aria-current={sel ? 'date' : undefined}
+                aria-label={`${fmtLong(d)}${isT ? ', oggi' : ''}${special ? ', giorno con piano specifico' : ''}`}
+                className={`relative flex min-h-12 flex-col items-center justify-center rounded-xl leading-none transition-colors duration-[var(--motion-indicator)] ${sel ? 'font-bold text-on-primary' : 'text-fg-soft'}`}
+              >
+                <span className="text-xs">{WEEKDAYS_SHORT[n]}</span>
+                <span className={`mt-1 text-base tabular-nums ${isT && !sel ? 'font-bold text-fg underline decoration-2 underline-offset-4' : ''}`}>{Number(d.slice(8))}</span>
+                {special && <span className={`absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full ${sel ? 'bg-on-primary' : 'bg-primary'}`} aria-hidden="true" />}
+              </button>
+            )
+          })}
         </div>
       </nav>
 
       {/* 3. Contenuto del giorno: titolo e pasti subito sotto */}
       <section aria-labelledby="diet-day-title" className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="diet-day-title" className="text-xl font-semibold capitalize leading-tight text-fg">
+        <div className="flex items-center justify-between gap-2">
+          <h2 id="diet-day-title" className="min-w-0 text-xl font-semibold capitalize leading-tight text-fg">
             {fmtLong(date)}
           </h2>
-          <div className="flex items-center gap-2">
-            {isToday ? (
-              <span className="rounded-full border border-line-strong px-2 py-0.5 text-xs font-semibold text-fg">Oggi</span>
-            ) : (
-              <button onClick={() => goDate(today)} className="text-sm font-medium text-primary underline underline-offset-4">
-                Torna a oggi
-              </button>
-            )}
-            {datedDays.length > 0 && (
-              <select
-                value={datedDays.some((d) => d.date === date) ? date : ''}
-                onChange={(e) => e.target.value && goDate(e.target.value)}
-                aria-label="Giorni con data specifica"
-                className="max-w-[9rem] rounded-lg border border-line-strong bg-surface px-2 py-1 text-xs text-fg"
-              >
-                <option value="">Date ({datedDays.length})</option>
-                {datedDays.map((d) => (
-                  <option key={d.date} value={d.date}>
-                    {fmtDate(d.date)}
-                    {d.label ? ` · ${d.label}` : ''}
-                  </option>
-                ))}
-              </select>
-            )}
+          <div className="flex shrink-0 gap-1">
+            <button onClick={() => goDate(addDays(date, -7))} className="btn-ghost h-11 w-11 px-0" aria-label="Settimana precedente">
+              ‹
+            </button>
+            <button onClick={() => goDate(addDays(date, 7))} className="btn-ghost h-11 w-11 px-0" aria-label="Settimana successiva">
+              ›
+            </button>
           </div>
+        </div>
+
+        {/* Mini-riepilogo (solo valori disponibili e completi, niente stime) e ritorno a oggi */}
+        <div className="-mt-1 flex min-h-11 flex-wrap items-center justify-between gap-x-3 text-sm text-fg-soft">
+          <p data-testid="day-summary">
+            {isToday && <span className="mr-1.5 rounded-full border border-line-strong px-2 py-0.5 text-xs font-semibold text-fg">Oggi</span>}
+            {day && meals.length > 0 && !editing && (
+              <>
+                {meals.length} {meals.length === 1 ? 'pasto' : 'pasti'}
+                {plannedKcal != null && <> · <b className="font-semibold text-fg">{fmtNum(plannedKcal, 0)} kcal</b> programmate</>}
+                {targetKcal != null && <> · obiettivo {fmtNum(targetKcal, 0)} kcal</>}
+                {loggedCount > 0 && <> · {loggedCount} di {meals.length} registrati</>}
+              </>
+            )}
+          </p>
+          {!isToday && (
+            <button onClick={() => goDate(today)} className="min-h-11 font-medium text-primary underline underline-offset-4">
+              Torna a oggi
+            </button>
+          )}
         </div>
 
         {outOfRange && (
@@ -277,7 +282,7 @@ export default function DietView({ state, update, onImport }) {
           {`${fmtLong(date)}: ${day ? `${meals.length} ${meals.length === 1 ? 'pasto' : 'pasti'}` : 'nessun pasto previsto'}`}
         </p>
 
-        <div key={`${date}|${effType}`} className="anim-fade-fast space-y-2">
+        <div key={`${date}|${effType}`} className={`${dir === 'prev' ? 'anim-day-prev' : 'anim-day-next'} space-y-3`}>
           {!day && (
             <Empty
               action={
@@ -332,8 +337,18 @@ export default function DietView({ state, update, onImport }) {
 
       {/* 4. Informazioni secondarie */}
       {day && target && !editing && (
-        <Section title="Riepilogo del giorno" right={previewing && <Chip className="bg-warning-soft text-warning">anteprima alternative</Chip>}>
-          <Card className="space-y-2">
+        <Disclosure
+          className="rounded-2xl border border-line bg-surface px-4"
+          buttonClassName="py-2"
+          summary={
+            <span className="flex flex-wrap items-baseline gap-x-2">
+              <span className="text-lg font-semibold text-fg">Riepilogo nutrizionale</span>
+              <span className="text-sm text-muted">obiettivo · programmato{consumed ? ' · consumato' : ''}</span>
+              {previewing && <span className="text-sm font-medium text-fg-soft">con anteprima alternative</span>}
+            </span>
+          }
+        >
+          <div className="space-y-2 pb-4">
             <p className="text-sm text-fg-soft">{training ? 'Giorno di allenamento' : 'Giorno di riposo'}</p>
             <DayTable
               rows={[
@@ -347,15 +362,15 @@ export default function DietView({ state, update, onImport }) {
             <p className="text-xs text-muted">
               ND = non disponibile. Gli scostamenti compaiono solo con totali completi. {completeness?.total ? `Pasti del piano con valori completi: ${completeness.complete}/${completeness.total}.` : ''}
             </p>
-          </Card>
-        </Section>
+          </div>
+        </Disclosure>
       )}
       {!editing && <WorkoutTips plan={shown} training={training} onOpenGuide={() => setGuideOpen(true)} />}
 
       {day && !editing && plan && (
-        <Section title="Fuori piano" right={<button onClick={() => setExtraOpen(true)} className="text-sm text-primary">+ Aggiungi</button>}>
+        <Section title="Fuori piano" right={<button onClick={() => setExtraOpen(true)} className="min-h-11 px-1 text-sm font-medium text-primary">+ Aggiungi</button>}>
           {extras.length === 0 ? (
-            <p className="px-1 text-xs text-muted">Nessuna aggiunta registrata per questo giorno.</p>
+            <p className="px-1 text-sm text-muted">Nessuna aggiunta registrata per questo giorno.</p>
           ) : (
             <div className="space-y-2">
               {extras.map((l) => (
@@ -366,7 +381,7 @@ export default function DietView({ state, update, onImport }) {
                       <NutritionLine n={optionNutrition(l.consumption ?? { items: [] })} />
                     </div>
                   </div>
-                  <button onClick={() => update((s) => A.removeLog(s, l.id))} className="text-xs text-danger underline">Elimina</button>
+                  <button onClick={() => update((s) => A.removeLog(s, l.id))} className="min-h-11 px-1 text-sm text-danger underline">Elimina</button>
                 </Card>
               ))}
             </div>
@@ -375,23 +390,27 @@ export default function DietView({ state, update, onImport }) {
       )}
 
       {plan && !editing && (
-        <details
+        <Disclosure
           open={guideOpen}
-          onToggle={(e) => setGuideOpen(e.currentTarget.open)}
-          className="rounded-2xl border border-line bg-surface"
+          onToggle={setGuideOpen}
+          className="rounded-2xl border border-line bg-surface px-4"
+          buttonClassName="py-2"
+          summary={
+            <span className="flex items-baseline gap-2">
+              <span className="text-lg font-semibold text-fg">Guida del piano</span>
+              {!hasGuide(plan.guidelines) && <span className="text-sm text-muted">vuota</span>}
+            </span>
+          }
         >
-          <summary className="flex min-h-12 cursor-pointer items-center justify-between px-4 text-lg font-semibold text-fg">
-            Guida del piano
-            {!hasGuide(plan.guidelines) && <span className="text-sm font-normal text-muted">vuota</span>}
-          </summary>
-          <div className="border-t border-line p-4">
+          <div className="pb-4">
             <GuideView plan={plan} />
           </div>
-        </details>
+        </Disclosure>
       )}
 
-      {extraOpen && (
+      {plan && (
         <ConsumptionSheet
+          open={extraOpen}
           extra
           title="Consumo fuori piano"
           option={{ id: null, items: [{ name: '', quantity: null, unit: 'g', notes: '', nutrition: null, alternatives: [] }], nutrition: null }}
@@ -408,6 +427,11 @@ export default function DietView({ state, update, onImport }) {
           <ManagePlan
             plan={plan}
             plans={plans}
+            datedDays={datedDays}
+            onGoDate={(d) => {
+              goDate(d)
+              setManageOpen(false)
+            }}
             onSwitch={switchPlan}
             onActivate={() => update((s) => A.setActiveDiet(s, plan.id))}
             onEdit={() => {
@@ -441,7 +465,7 @@ export default function DietView({ state, update, onImport }) {
 }
 
 // Pannello "Gestisci piano": stato, dati del piano, revisioni e azioni (prima erano una card sopra i pasti)
-function ManagePlan({ plan, plans, onSwitch, onActivate, onEdit, onDuplicate, onArchive, onExport, onNew, onImport, onDelete, onRestore }) {
+function ManagePlan({ plan, plans, datedDays, onGoDate, onSwitch, onActivate, onEdit, onDuplicate, onArchive, onExport, onNew, onImport, onDelete, onRestore }) {
   return (
     <div className="space-y-4 text-sm">
       {plans.length > 1 && (
@@ -472,6 +496,25 @@ function ManagePlan({ plan, plans, onSwitch, onActivate, onEdit, onDuplicate, on
       {plan.goal && <p className="text-fg-soft">{plan.goal}</p>}
       {plan.notes && <p className="text-xs text-muted">{plan.notes}</p>}
       <p className="text-xs text-muted">Strumento di consultazione: l’app non crea prescrizioni né calcola nutrienti non indicati nel piano.</p>
+
+      {datedDays.length > 0 && (
+        <div>
+          <h3 className="mb-1 font-semibold text-fg">Giorni con piano specifico</h3>
+          <ul className="divide-y divide-line">
+            {datedDays.map((d) => (
+              <li key={d.date}>
+                <button onClick={() => onGoDate(d.date)} className="flex min-h-11 w-full items-center justify-between gap-2 text-left text-fg">
+                  <span className="capitalize">
+                    {fmtLong(d.date)}
+                    {d.label ? <span className="text-muted"> · {d.label}</span> : null}
+                  </span>
+                  <span className="text-primary" aria-hidden="true">›</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2">
         {!plan.active && !plan.archived && (

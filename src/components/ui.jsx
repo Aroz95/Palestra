@@ -171,11 +171,29 @@ export function Toggle({ checked, onChange, label }) {
   )
 }
 
-// Pannello a comparsa dal basso (finestra di dialogo): focus all'interno, Tab ciclico, Esc chiude, focus ripristinato
+const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+const EXIT_MS = 220
+
+// Pannello a comparsa dal basso (finestra di dialogo): focus all'interno, Tab ciclico, Esc chiude, focus ripristinato.
+// Alla chiusura resta montato per l'animazione di uscita mostrando l'ultimo contenuto (subito se il movimento è ridotto).
 export function Sheet({ open, onClose, title, children }) {
   const ref = useRef(null)
   const closeRef = useRef(onClose)
   closeRef.current = onClose
+  const [closing, setClosing] = useState(false)
+  const last = useRef({ title, children })
+  if (open) last.current = { title, children }
+  const wasOpen = useRef(open)
+  useEffect(() => {
+    if (wasOpen.current && !open && !reducedMotion()) {
+      setClosing(true)
+      const t = setTimeout(() => setClosing(false), EXIT_MS)
+      wasOpen.current = open
+      return () => clearTimeout(t)
+    }
+    wasOpen.current = open
+    setClosing(false)
+  }, [open])
   useEffect(() => {
     if (!open) return
     const previous = document.activeElement
@@ -203,25 +221,58 @@ export function Sheet({ open, onClose, title, children }) {
       if (previous && document.contains(previous)) previous.focus({ preventScroll: true })
     }
   }, [open])
-  if (!open) return null
+  if (!open && !closing) return null
+  const shown = open ? { title, children } : last.current
   return (
-    <div className="anim-backdrop fixed inset-0 z-[60] flex items-end justify-center bg-[var(--backdrop)] sm:items-center sm:p-4" onClick={onClose}>
+    <div
+      className={`fixed inset-0 z-[60] flex items-end justify-center bg-[var(--backdrop)] sm:items-center sm:p-4 ${open ? 'anim-backdrop' : 'anim-backdrop-out pointer-events-none'}`}
+      onClick={open ? onClose : undefined}
+    >
       <div
         ref={ref}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
-        className="anim-sheet max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-t-[20px] border border-line bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] outline-none sm:rounded-[20px]"
+        aria-label={shown.title}
+        aria-hidden={open ? undefined : true}
+        className={`max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-t-[20px] border border-line bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] outline-none sm:rounded-[20px] ${open ? 'anim-sheet' : 'anim-sheet-out'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-fg">{title}</h2>
-          <button onClick={onClose} className="btn-ghost h-11 w-11 px-0 text-sm" aria-label="Chiudi">
+          <h2 className="text-lg font-semibold text-fg">{shown.title}</h2>
+          <button onClick={onClose} className="btn-ghost h-11 w-11 px-0 text-sm" aria-label="Chiudi" tabIndex={open ? undefined : -1}>
             ✕
           </button>
         </div>
-        {children}
+        {shown.children}
+      </div>
+    </div>
+  )
+}
+
+// Contenuto espandibile accessibile (pulsante con aria-expanded/aria-controls); altezza animata in CSS.
+// Chiuso: non raggiungibile da tastiera né letto dagli screen reader (inert).
+let disclosureSeq = 0
+export function Disclosure({ summary, children, open: controlled, onToggle, defaultOpen = false, className = '', buttonClassName = '', panelClassName = '' }) {
+  const [inner, setInner] = useState(defaultOpen)
+  const [id] = useState(() => `disclosure-${++disclosureSeq}`)
+  const open = controlled ?? inner
+  const toggle = () => {
+    if (onToggle) onToggle(!open)
+    if (controlled == null) setInner(!open)
+  }
+  return (
+    <div className={className}>
+      <button type="button" aria-expanded={open} aria-controls={id} onClick={toggle} className={`flex min-h-11 w-full items-center justify-between gap-2 text-left ${buttonClassName}`}>
+        <span className="min-w-0 flex-1">{summary}</span>
+        <svg viewBox="0 0 20 20" className="disclosure-chevron h-5 w-5 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+          <path d="m5 8 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <div id={id} className="disclosure-panel" data-open={open} inert={open ? undefined : ''}>
+        <div>
+          <div className={panelClassName}>{children}</div>
+        </div>
       </div>
     </div>
   )

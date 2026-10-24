@@ -63,20 +63,24 @@ const DIET_WIDTHS = [
   { name: '1280', viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false },
 ]
 for (const w of DIET_WIDTHS) {
-  test.describe(`alimentazione ${w.name}`, () => {
-    test.skip(!OUT, 'solo con SHOTS=<cartella>')
-    test.use({ viewport: w.viewport, isMobile: w.isMobile, hasTouch: w.hasTouch, colorScheme: 'light', deviceScaleFactor: 1 })
-    test(`alimentazione ${w.name}`, async ({ page }) => {
-      await openApp(page)
-      await goImport(page)
-      await importFile(page, EX('piano-alimentare-v4.json'))
-      await nav(page, /Alimentazione/)
-      const activate = main(page).getByRole('button', { name: 'Imposta attivo' })
-      if (await activate.count()) await activate.click()
-      await waitSaved(page)
-      await page.evaluate(() => window.scrollTo(0, 0))
-      await page.waitForTimeout(350)
-      await page.screenshot({ path: path.join(ROOT, OUT, `alimentazione-${w.name}.jpg`), type: 'jpeg', quality: 75 })
+  for (const theme of THEMES) {
+    test.describe(`alimentazione ${w.name} ${theme}`, () => {
+      test.skip(!OUT, 'solo con SHOTS=<cartella>')
+      test.use({ viewport: w.viewport, isMobile: w.isMobile, hasTouch: w.hasTouch, colorScheme: theme, deviceScaleFactor: 1 })
+      test(`alimentazione ${w.name} ${theme}`, async ({ page }) => {
+        await openApp(page)
+        await goImport(page)
+        await importFile(page, EX('piano-alimentare-v4.json'))
+        await nav(page, /Alimentazione/)
+        const activate = main(page).getByRole('button', { name: 'Imposta attivo' })
+        if (await activate.count()) await activate.click()
+        await waitSaved(page)
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await page.waitForTimeout(400)
+        const file = (k) => path.join(ROOT, OUT, `alimentazione-${w.name}-${theme}${k}.jpg`)
+        await page.screenshot({ path: file(''), type: 'jpeg', quality: 75 })
+        await page.screenshot({ path: file('-intera'), type: 'jpeg', quality: 70, fullPage: true })
+      })
     })
-  })
+  }
 }

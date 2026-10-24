@@ -30,7 +30,7 @@ export function NutritionLine({ n, showSource = true, items }) {
     <span>
       <span className="text-fg">{MAIN_KEYS.map((k) => (k === 'kcal' ? `${fmtN(n.kcal.value, 'kcal')} kcal` : `${META[k].short} ${fmtN(n[k].value, k)}`)).join(' · ')}</span>
       {n.fiberG?.value != null && <span className="text-muted"> · fibre {fmtN(n.fiberG.value, 'fiberG')}</span>}
-      {showSource && <span className="ml-1 text-[11px] text-muted">({sources.map((s) => STATUS_LABEL[s]).join(' / ')})</span>}
+      {showSource && <span className="ml-1 text-xs text-muted">({sources.map((s) => STATUS_LABEL[s]).join(' / ')})</span>}
     </span>
   )
 }
@@ -61,7 +61,7 @@ export function DayTable({ rows }) {
             <tr key={r.label} className={`border-t border-line ${r.muted ? 'text-muted' : ''}`}>
               <th scope="row" className="py-1.5 pr-2 text-left font-medium text-fg-soft">
                 {r.label}
-                {r.hint && <div className="text-[10px] font-normal text-muted">{r.hint}</div>}
+                {r.hint && <div className="text-xs font-normal text-muted">{r.hint}</div>}
               </th>
               {MAIN_KEYS.map((k) => {
                 const c = r.cells[k]
@@ -71,7 +71,7 @@ export function DayTable({ rows }) {
                 return (
                   <td key={k} className={`py-1.5 tabular-nums ${st.cls}`}>
                     {c?.value == null ? 'ND' : fmtN(c.value, k)}
-                    {c?.status === 'partial' && <div className="text-[10px] text-warning">parziale {c.known}/{c.total}</div>}
+                    {c?.status === 'partial' && <div className="text-xs text-warning">parziale {c.known}/{c.total}</div>}
                   </td>
                 )
               })}

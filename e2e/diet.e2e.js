@@ -22,7 +22,7 @@ test('NUT v4: obiettivo ≠ programmato ≠ consumato, alternativa per data, gui
   // anteprima dell'alternativa: nulla viene salvato finché non si sceglie
   const opts = main(page).getByRole('group', { name: 'Opzioni Colazione' })
   await opts.getByRole('button', { name: 'Skyr e avena' }).click()
-  await expect(main(page)).toContainText('Anteprima: i totali del giorno mostrano questa opzione')
+  await expect(main(page)).toContainText('Anteprima · non ancora salvata')
   await waitSaved(page)
   expect((await savedState(page)).dietSelections).toHaveLength(0)
   await main(page).getByRole('button', { name: 'Scegli per questa data' }).click()
@@ -35,8 +35,8 @@ test('NUT v4: obiettivo ≠ programmato ≠ consumato, alternativa per data, gui
   expect(st.dietPlans[0].revision).toBe(1)
 
   // consumato: registrazione precompilata con l'opzione scelta
-  const card = main(page).locator('div.rounded-2xl').filter({ has: page.getByRole('group', { name: 'Opzioni Colazione' }) })
-  await card.getByRole('button', { name: 'Registra quantità' }).click()
+  const card = main(page).getByRole('article', { name: 'Colazione' })
+  await card.getByRole('button', { name: 'Registra dettagli' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Salva', exact: true }).click()
   await expect(summary).toContainText('Consumato')
   await waitSaved(page)
