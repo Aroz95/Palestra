@@ -35,6 +35,10 @@ Strategia MVP: l’importazione si può annullare **solo finché non ci sono alt
 - Aggiornare un programma da file: ogni scheda con contenuto diverso diventa la revisione successiva (la precedente resta nello storico); le schede non più presenti nel file vengono **archiviate**, non cancellate.
 - Aggiornare un piano alimentare da file crea una nuova revisione e non cambia quale piano è attivo; il diario dei pasti resta associato alla revisione in cui è stato registrato.
 
+### Durata della seduta
+- Inizio all’avvio del cronometro o della prima attività; un riscaldamento concluso (a tempo o segnato fatto) anticipa l’inizio dei suoi minuti. Fine al termine (anche scegliendo “Completata” dallo stato), con il cronometro fermato.
+- Durata salvata = tempo del cronometro della seduta (pause escluse), più l’eventuale tratto prima del suo avvio; senza cronometro fine − inizio. Riscaldamento e defaticamento mai sommati due volte. Le pause sono mostrate come differenza.
+
 ### Metriche e report (P1-04)
 - Distanze di nuoto: prevista, misurata e stimata (intervallo) sempre separate; il passo su distanza stimata è un intervallo etichettato.
 - `null`/ND distinto da 0 (es. minuti senza durata registrata).
@@ -76,6 +80,7 @@ Un service worker conserva l’app sul dispositivo: dopo la prima apertura onlin
 | UI-01 | Tema, focus nei pannelli, movimento ridotto, reflow 320 px, contrasti dei token | `e2e/ui.e2e.js`, `tests/tokens.test.js` | automatico; VoiceOver e testo ingrandito **da verificare su iPhone** |
 | CR-UX-ALIM-001 | Alimentazione: giorno e primo pasto visibili subito, bozza compatta, giorno conservato, responsive, tastiera | `e2e/diet-layout.e2e.js`, `tests/diet.test.js` | automatico; VoiceOver **da verificare su iPhone** |
 | CR-UX-ALIM-002 | Alimentazione: livelli di informazione, segna consumato, alternative, motion, aree tattili | `e2e/diet-layout.e2e.js`; video in `docs/ui-audit/cr-alim-002/` | automatico; prova tattile e approvazione visiva **manuali** |
+| BUG-DURATA-01 | Durata = riscaldamento + esercizi + recuperi + defaticamento, pause escluse, coerente con il cronometro | `tests/duration.test.js`, `tests/stats.test.js`, `e2e/workout.e2e.js` | automatico |
 | E2E-15 | PDF | `e2e/report.e2e.js`, `tests/pdf.test.js` | automatico; download su iPhone **da verificare** |
 
 I test automatici girano con il motore Chromium e il profilo di iPhone 13 (dimensioni, touch). Safari/WebKit non è disponibile nell’ambiente di sviluppo: le voci seguenti vanno verificate a mano.

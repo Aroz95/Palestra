@@ -1,6 +1,6 @@
 // Operazioni pure sullo stato: (state, ...args) → nuovo stato.
 import { createStrengthSession, createSwimSession, reviseTemplate, uid, clone, newTemplate } from '../schema/factories'
-import { todayISO, toLocalISO } from './dates'
+import { minutesBetween, todayISO, toLocalISO } from './dates'
 
 const replaceById = (list, item) => list.map((x) => (x.id === item.id ? item : x))
 
@@ -44,13 +44,49 @@ export function setOccurrenceStatus(state, occ, status, movedTo = null) {
   return { ...state, calendar: { overrides, extra } }
 }
 
-// Alla prima attività registrata fissa l'orario di inizio. Non per le sedute migrate dalla versione
-// precedente: il loro inizio reale non è noto e non va inventato (si può inserire a mano).
-export function autoStart(session) {
+// Inizio della seduta. Si fissa una sola volta, alla prima attività: avvio del cronometro della seduta oppure
+// prima serie/attività completata. elapsedMs anticipa l'inizio della durata di un'attività appena conclusa
+// (es. riscaldamento di 10 minuti segnato a fine tempo): il riscaldamento fa parte della seduta.
+// Non per le sedute migrate dalla versione precedente: il loro inizio reale non è noto e non va inventato.
+export function autoStart(session, { at = Date.now(), elapsedMs = 0 } = {}) {
   if (session.startedAt) return session
   const status = session.status === 'planned' ? 'in_progress' : session.status
   if (session.origin === 'legacy-v2') return { ...session, status }
-  return { ...session, startedAt: toLocalISO(), status }
+  return { ...session, startedAt: toLocalISO(new Date(at - Math.max(0, elapsedMs))), status }
+}
+
+// Dopo una modifica della seduta: se è stata completata la prima attività fissa l'inizio, includendo la durata
+// delle attività cardio (riscaldamento/defaticamento) appena segnate come fatte.
+export function withAutoStart(prev, next, at = Date.now()) {
+  if (next.startedAt) return next
+  const wasDone = (list, id) => (list ?? []).some((c) => c.id === id && c.done)
+  const cardio = [...(next.warmup ?? []), ...(next.cooldown ?? [])].filter((c) => c.done && !wasDone([...(prev?.warmup ?? []), ...(prev?.cooldown ?? [])], c.id))
+  const doneSets = (s) => (s?.exercises ?? []).reduce((n, e) => n + e.sets.filter((x) => x.done).length, 0)
+  if (!cardio.length && doneSets(next) <= doneSets(prev)) return next
+  const elapsedMs = cardio.reduce((a, c) => a + (Number(c.minutes) || 0) * 60000, 0)
+  return autoStart(next, { at, elapsedMs })
+}
+
+// Durata attiva della seduta in ms: tempo del cronometro (pause escluse) più l'eventuale tratto tra l'inizio della
+// seduta e il primo avvio del cronometro (es. riscaldamento segnato "fatto senza timer"). Mai contato due volte.
+export function activeMs(session, stopwatch) {
+  if (!stopwatch || !stopwatch.activeMs) return 0
+  const start = session.startedAt ? Date.parse(session.startedAt) : null
+  const lead = start != null && stopwatch.firstStartAt ? Math.max(0, stopwatch.firstStartAt - start) : 0
+  return stopwatch.activeMs + lead
+}
+
+// Chiusura della seduta: fine = adesso (se non indicata). Durata, salvo correzione manuale:
+// 1) cronometro di questa seduta (activeMs), 2) altrimenti fine − inizio.
+export function finishPatch(session, { at = Date.now(), stopwatch = null } = {}) {
+  const endedAt = session.endedAt ?? (session.startedAt ? toLocalISO(new Date(at)) : null)
+  const patch = { status: 'completed', endedAt }
+  if (session.durationSource === 'manual') return patch
+  const ms = activeMs(session, stopwatch)
+  if (ms >= 60000) return { ...patch, durationMin: Math.round(ms / 60000), durationSource: 'stopwatch' }
+  const computed = minutesBetween(session.startedAt, endedAt)
+  if (computed != null && computed > 0) return { ...patch, durationMin: computed, durationSource: 'computed' }
+  return patch
 }
 
 // ---- Programmi e schede ----

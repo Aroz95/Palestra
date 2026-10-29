@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import Stepper from './Stepper'
-import { fmtClock, fmtNum, strengthStats as sessionStats, hasPendingSets, minutesBetweenSafe } from '../lib/stats'
+import { fmtClock, fmtNum, strengthStats as sessionStats, hasPendingSets } from '../lib/stats'
 import { DEFAULT_REST } from '../schema/constants'
 import { toLocalISO } from '../lib/dates'
 import { targetText } from './ExerciseCard'
-import { autoStart } from '../lib/actions'
+import { finishPatch, withAutoStart } from '../lib/actions'
 
 // Sequenza dei passi: riscaldamento → esercizi → defaticamento
 export function buildSteps(session) {
@@ -19,11 +19,9 @@ const isDone = (step) => (step.kind === 'cardio' ? step.item.done : step.item.se
 
 export { hasPendingSets }
 
-// La prima attività registrata fissa l'orario di inizio della seduta
-const withStart = autoStart
-
 export default function WorkoutMode({ session, onChange: save, timers, onClose, hintFor }) {
-  const onChange = (s) => save(s.exercises.some((e) => e.sets.some((x) => x.done)) || [...s.warmup, ...s.cooldown].some((c) => c.done) ? withStart(s) : s)
+  // La prima attività completata fissa l'inizio della seduta (riscaldamento compreso), se non già fissato dal cronometro
+  const onChange = (s) => save(withAutoStart(session, s))
   const steps = buildSteps(session)
   const [currentId, setCurrentId] = useState(() => steps.find((s) => !isDone(s))?.id ?? null)
   const idx = steps.findIndex((s) => s.id === currentId)
@@ -128,6 +126,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
               timers.running ? 'bg-surface-muted text-primary' : 'bg-surface-muted text-muted'
             }`}
             title={timers.running ? 'Metti in pausa il tempo totale' : 'Riprendi il tempo totale'}
+            aria-label={`Tempo totale ${fmtClock(timers.elapsed)}: ${timers.running ? 'metti in pausa' : 'in pausa, riprendi'}`}
           >
             {timers.running ? '' : '⏸ '}
             {fmtClock(timers.elapsed)}
@@ -435,15 +434,12 @@ function StepPicker({ steps, currentId, onPick }) {
 }
 
 function Finished({ stats, timers, session, onChange, onClose }) {
-  const endedAt = session.endedAt ?? toLocalISO()
-  const fromTimes = minutesBetweenSafe(session.startedAt, endedAt)
-  const minutes = fromTimes ?? Math.round(timers.elapsed / 60000)
+  // stessa regola della scheda seduta: cronometro della seduta (pause escluse), altrimenti fine − inizio
+  const minutes = finishPatch(session, { stopwatch: timers.stopwatchFor(session.id) }).durationMin ?? 0
   const save = () => {
     timers.pauseStopwatch()
     timers.stopRest()
-    const patch = { status: 'completed', endedAt: session.startedAt ? endedAt : session.endedAt }
-    if (session.durationSource !== 'manual' && minutes > 0) Object.assign(patch, { durationMin: minutes, durationSource: fromTimes != null ? 'computed' : 'stopwatch' })
-    onChange({ ...session, ...patch })
+    onChange({ ...session, ...finishPatch(session, { stopwatch: timers.stopwatchFor(session.id) }) })
     onClose()
   }
   return (
@@ -451,7 +447,8 @@ function Finished({ stats, timers, session, onChange, onClose }) {
       <div className="text-6xl">🎉</div>
       <h1 className="mt-3 text-3xl font-bold text-fg">Allenamento completato!</h1>
       <dl className="mt-6 grid w-full grid-cols-2 gap-2">
-        <Tile label="Tempo totale" value={fmtClock(timers.elapsed)} />
+        <Tile label="Durata salvata" value={minutes > 0 ? `${minutes} min` : 'ND'} />
+        <Tile label="Cronometro" value={fmtClock(timers.elapsed)} />
         <Tile label="Serie" value={stats.doneSets} />
         <Tile label="Ripetizioni" value={fmtNum(stats.reps, 0)} />
         <Tile label="Volume" value={`${fmtNum(stats.volume, 0)} kg`} />

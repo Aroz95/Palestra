@@ -5,6 +5,7 @@ import { sessionDuration, DURATION_SOURCES, fmtRange } from '../lib/stats'
 import { addDays, combineDateTime, timeOf } from '../lib/dates'
 import { estimateEnergy, bodyWeightAt } from '../lib/energy'
 import { SESSION_STATUS } from '../schema/constants'
+import { activeMs } from '../lib/actions'
 
 export function StatusSelect({ value, onChange }) {
   return (
@@ -27,13 +28,14 @@ export function TimesCard({ session, onChange, timers }) {
     if (next.startedAt && next.endedAt && Date.parse(next.endedAt) < Date.parse(next.startedAt)) {
       next.endedAt = combineDateTime(addDays(session.date, 1), timeOf(next.endedAt))
     }
-    if (!manual) {
+    // con durata da cronometro o manuale la durata resta quella; gli orari aggiornano solo il confronto
+    if (!manual && session.durationSource !== 'stopwatch') {
       const c = sessionDuration({ ...next, durationSource: null })
       if (c.source === 'computed') Object.assign(next, { durationMin: c.min, durationSource: 'computed' })
     }
     onChange(next)
   }
-  const swMin = timers ? Math.round(timers.elapsed / 60000) : 0
+  const swMin = timers ? Math.round(activeMs(session, timers.stopwatchFor(session.id)) / 60000) : 0
 
   return (
     <Section title="Orari e durata">
@@ -49,8 +51,15 @@ export function TimesCard({ session, onChange, timers }) {
         <div className="text-sm text-fg-soft">
           Durata: <b className="text-fg">{d.min != null ? `${d.min} min` : 'non registrata'}</b>
           {d.source && <span className="text-muted"> · {DURATION_SOURCES[d.source]}</span>}
+          {d.pausedMin != null && <span className="text-muted"> · pause escluse: {d.pausedMin} min</span>}
         </div>
-        {d.mismatch && (
+        <p className="text-xs text-muted">Comprende riscaldamento, esercizi, recuperi e defaticamento (i minuti di cardio non vengono sommati una seconda volta).</p>
+        {d.mismatch && d.source === 'stopwatch' && (
+          <p className="rounded-xl bg-warning-soft p-2 text-xs text-warning">
+            Il cronometro ({d.min} min) supera l’intervallo tra inizio e fine ({d.computed} min): l’orario di inizio è probabilmente successivo all’inizio reale. Puoi correggerlo qui sopra.
+          </p>
+        )}
+        {d.mismatch && d.source === 'manual' && (
           <p className="rounded-xl bg-warning-soft p-2 text-xs text-warning">
             La durata inserita ({d.min} min) è diversa da quella degli orari ({d.computed} min). Entrambi i valori restano salvati.
           </p>
@@ -70,7 +79,7 @@ export function TimesCard({ session, onChange, timers }) {
             </Field>
           </div>
         )}
-        {swMin > 0 && !manual && d.source !== 'computed' && (
+        {swMin > 0 && !manual && d.source !== 'stopwatch' && (
           <button onClick={() => onChange({ ...session, durationMin: swMin, durationSource: 'stopwatch' })} className="btn-ghost text-sm">
             Usa cronometro ({swMin} min)
           </button>

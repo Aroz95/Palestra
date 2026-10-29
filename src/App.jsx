@@ -70,7 +70,8 @@ export default function App() {
       const mark = (list) => list.map((c) => (c.id === target.itemId ? { ...c, done: true } : c))
       updated = { ...session, warmup: mark(session.warmup), cooldown: mark(session.cooldown) }
     }
-    updated = A.autoStart(updated)
+    // inizio della seduta (se non ancora fissato) anticipato della durata dell'attività a tempo appena conclusa
+    updated = A.withAutoStart(session, updated)
     setState((s) => A.upsertSession(s, updated))
   }
 
@@ -111,6 +112,15 @@ export default function App() {
   const updateSession = (session) => setState((s) => A.upsertSession(s, session))
   const deleteSession = (id) => setState((s) => A.deleteSession(s, id))
   const hintFor = (ex) => progressionHint(lastPerformance(state.sessions, ex.exerciseId, { excludeSessionId: active?.id, beforeDate: active?.date }), ex.step)
+ // Avvio del cronometro = inizio della seduta aperta (se non già fissato); il cronometro resta associato a quella seduta
+  const sessionTimers = {
+    ...timers,
+    startStopwatch: () => {
+      const open = stateRef.current?.sessions.find((s) => s.id === stateRef.current.activeSessionId && ['planned', 'in_progress'].includes(s.status))
+      timers.startStopwatch(open?.id ?? null)
+      if (open && !open.startedAt) setState((s) => A.upsertSession(s, A.autoStart(open)))
+    },
+  }
   const showTimer = tab === 'training' || timers.running || timers.rest.active || timers.elapsed > 0
 
   return (
@@ -121,7 +131,7 @@ export default function App() {
           <button onClick={() => downloadJSON(fileNames.backup(), exportBackup(state))} className="ml-2 font-semibold underline">Esporta backup</button>
         </div>
       )}
-      {showTimer && <TimerBar timers={timers} restSeconds={state.settings.restSeconds} />}
+      {showTimer && <TimerBar timers={sessionTimers} restSeconds={state.settings.restSeconds} />}
 
       <main className="mx-auto max-w-2xl px-4 pb-28 pt-4 sm:px-6 lg:max-w-3xl lg:px-8 lg:pb-12">
         <SaveBadge status={status} />
@@ -144,7 +154,7 @@ export default function App() {
                     session={active}
                     state={state}
                     onChange={updateSession}
-                    timers={timers}
+                    timers={sessionTimers}
                     onDelete={() => deleteSession(active.id)}
                     onExport={() => downloadJSON(fileNames.session(active), exportSession(active))}
                   />
@@ -153,7 +163,7 @@ export default function App() {
                     session={active}
                     state={state}
                     onChange={updateSession}
-                    timers={timers}
+                    timers={sessionTimers}
                     settings={state.settings}
                     onStartWorkout={() => setWorkout(true)}
                     onDelete={() => deleteSession(active.id)}
@@ -217,7 +227,7 @@ export default function App() {
       </main>
 
       {workout && active?.kind === 'strength' && (
-        <WorkoutMode session={active} onChange={updateSession} timers={timers} onClose={() => setWorkout(false)} hintFor={hintFor} />
+        <WorkoutMode session={active} onChange={updateSession} timers={sessionTimers} onClose={() => setWorkout(false)} hintFor={hintFor} />
       )}
 
       {/* Mobile: barra in basso con etichette sempre visibili. Desktop (≥1024 px): navigazione laterale */}

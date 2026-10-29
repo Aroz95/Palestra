@@ -4,9 +4,9 @@ import CardioList from './CardioList'
 import { TimesCard, FeedbackCard, EnergyCard, StatusSelect } from './SessionShared'
 import { Card, Section, Sheet, Metric } from './ui'
 import { fmtNum, strengthStats, progressionHint, sessionDuration } from '../lib/stats'
-import { fmtDate, toLocalISO, minutesBetween } from '../lib/dates'
+import { fmtDate } from '../lib/dates'
 import { lastPerformance, newSessionExercise, sessionExerciseFromTemplate } from '../schema/factories'
-import { autoStart } from '../lib/actions'
+import { finishPatch, withAutoStart } from '../lib/actions'
 import { DEFAULT_REST } from '../schema/constants'
 
 export default function SessionView({ session, state, onChange, timers, settings, onStartWorkout, onDelete, onExport }) {
@@ -14,11 +14,9 @@ export default function SessionView({ session, state, onChange, timers, settings
   const stats = strengthStats(session)
   const template = state.workoutTemplates.find((t) => t.id === session.templateId)
 
-  const set = (patch) => onChange({ ...session, ...patch })
-
-  // La prima serie registrata fissa l'inizio della seduta (se non già indicato)
-  const withStart = (s) => (s.exercises.some((e) => e.sets.some((x) => x.done)) ? autoStart(s) : s)
-  const updateExercise = (id, ex) => onChange(withStart({ ...session, exercises: session.exercises.map((e) => (e.id === id ? ex : e)) }))
+  // La prima attività completata (serie, riscaldamento, defaticamento) fissa l'inizio della seduta, se non già indicato
+  const set = (patch) => onChange(withAutoStart(session, { ...session, ...patch }))
+  const updateExercise = (id, ex) => set({ exercises: session.exercises.map((e) => (e.id === id ? ex : e)) })
   const removeExercise = (id) => set({ exercises: session.exercises.filter((e) => e.id !== id) })
 
   const onSetDone = (ex) => {
@@ -49,17 +47,12 @@ export default function SessionView({ session, state, onChange, timers, settings
     setAdding(false)
   }
 
+  // Fine seduta (anche scegliendo "Completata" dallo stato): cronometro fermato, durata dal cronometro della seduta
   const finish = () => {
-    const endedAt = session.endedAt ?? (session.startedAt ? toLocalISO() : null)
-    const patch = { status: 'completed', endedAt }
-    if (session.durationSource !== 'manual') {
-      const computed = minutesBetween(session.startedAt, endedAt)
-      if (computed != null && computed > 0) Object.assign(patch, { durationMin: computed, durationSource: 'computed' })
-      else if (timers.elapsed > 0) Object.assign(patch, { durationMin: Math.round(timers.elapsed / 60000), durationSource: 'stopwatch' })
-    }
+    const patch = finishPatch(session, { stopwatch: timers.stopwatchFor(session.id) })
     timers.pauseStopwatch()
     timers.stopRest()
-    set(patch)
+    onChange({ ...session, ...patch })
   }
 
   const pct = stats.totalSets ? Math.round((stats.doneSets / stats.totalSets) * 100) : 0
@@ -87,7 +80,7 @@ export default function SessionView({ session, state, onChange, timers, settings
         <p className="text-sm capitalize text-muted">{fmtDate(session.date)}</p>
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
           <span className="w-40">
-            <StatusSelect value={session.status} onChange={(status) => set({ status })} />
+            <StatusSelect value={session.status} onChange={(status) => (status === 'completed' && session.status !== 'completed' ? finish() : onChange({ ...session, status }))} />
           </span>
           {template ? (
             <span>

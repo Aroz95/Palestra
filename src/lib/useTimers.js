@@ -7,7 +7,7 @@ const IDLE = { endsAt: null, duration: 0, label: '', kind: 'rest', target: null 
 // Entrambi sono basati su timestamp, quindi sopravvivono a ricarica pagina e schermo spento.
 // Il conto alla rovescia si ferma da solo a zero e chiama onCountdownEnd(countdown).
 export function useTimers({ sound = true, onCountdownEnd } = {}) {
-  const [sw, setSw] = useLocalStorage('palestra:stopwatch', { startedAt: null, accumulated: 0, laps: [] })
+  const [sw, setSw] = useLocalStorage('palestra:stopwatch', { startedAt: null, accumulated: 0, laps: [], sessionId: null, firstStartAt: null })
   const [rest, setRest] = useLocalStorage('palestra:rest', IDLE)
   const [now, setNow] = useState(Date.now())
   const [finished, setFinished] = useState(null) // ultimo conto alla rovescia terminato, per un avviso breve
@@ -43,8 +43,16 @@ export function useTimers({ sound = true, onCountdownEnd } = {}) {
     return () => clearTimeout(id)
   }, [finished])
 
+  // sessionId: seduta misurata dal cronometro (la durata salvata usa il cronometro solo per quella seduta)
   const startStopwatch = useCallback(
-    () => setSw((s) => (s.startedAt != null ? s : { ...s, startedAt: Date.now() })),
+    (sessionId = null) =>
+      setSw((s) => {
+        if (typeof sessionId !== 'string') sessionId = null // usato anche come onClick: ignora l'evento
+        if (s.startedAt != null) return s
+        const fresh = !s.accumulated
+        const t = Date.now()
+        return { ...s, startedAt: t, sessionId: fresh ? sessionId : (s.sessionId ?? sessionId), firstStartAt: fresh ? t : (s.firstStartAt ?? t) }
+      }),
     [setSw],
   )
   const pauseStopwatch = useCallback(
@@ -54,7 +62,7 @@ export function useTimers({ sound = true, onCountdownEnd } = {}) {
       ),
     [setSw],
   )
-  const resetStopwatch = useCallback(() => setSw({ startedAt: null, accumulated: 0, laps: [] }), [setSw])
+  const resetStopwatch = useCallback(() => setSw({ startedAt: null, accumulated: 0, laps: [], sessionId: null, firstStartAt: null }), [setSw])
   const lap = useCallback(
     () =>
       setSw((s) => {
@@ -88,6 +96,9 @@ export function useTimers({ sound = true, onCountdownEnd } = {}) {
   return {
     elapsed,
     running: sw.startedAt != null,
+    sessionId: sw.sessionId ?? null,
+    // misura del cronometro attribuibile a una seduta (null se misura altro): tempo attivo e primo avvio
+    stopwatchFor: (id) => (sw.sessionId === id ? { activeMs: sw.accumulated + (sw.startedAt != null ? Date.now() - sw.startedAt : 0), firstStartAt: sw.firstStartAt ?? null } : null),
     laps: sw.laps,
     startStopwatch,
     pauseStopwatch,

@@ -98,6 +98,8 @@ Le ricorrenze generano attività **previste**, mai sedute svolte.
 
 Campi della seduta: `id`, `kind: "strength"`, `date`, `title`, `status` (`planned` | `in_progress` | `completed` | `skipped` | `postponed`), `templateId`, `templateRevision`, `startedAt`, `endedAt`, `durationMin`, `durationSource` (`computed` | `manual` | `stopwatch` | `legacy`), `durationReason`, `note`, `feedback`, `energy`, `warmup`, `cooldown`, `exercises`.
 
+Durata: `startedAt` è l’inizio dell’intera seduta (avvio del cronometro o del riscaldamento; un riscaldamento segnato fatto senza timer anticipa l’inizio dei suoi minuti), `endedAt` la fine (dopo il defaticamento). `durationMin` comprende riscaldamento, esercizi, recuperi e defaticamento, che non vengono mai sommati una seconda volta. `durationSource`: `stopwatch` = tempo del cronometro della seduta, pause escluse (in questo caso fine − inizio può essere maggiore: la differenza sono le pause); `computed` = fine − inizio; `manual` = correzione a mano (prevale); `legacy` = versione precedente.
+
 Ogni esercizio della seduta ha `exerciseId` (id dell’esercizio in scheda), `name`, `type`, `equipment`, `perHand`, `rest`, `target` (obiettivo della scheda al momento della seduta) e `sets`:
 
 ```json

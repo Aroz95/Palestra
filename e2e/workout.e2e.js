@@ -51,15 +51,16 @@ test('E2E-03 Full Body A: tutte le serie registrate, RIR, durata corretta dopo r
   expect(s.exercises.every((e) => e.sets.every((x) => x.done))).toBe(true)
   expect(s.exercises[0].sets.map((x) => x.rir)).toEqual([2, 3])
   expect(s.exercises[2].sets.map((x) => x.durationSec)).toEqual([30, 30])
-  expect(s.durationSource).toBe('computed')
-  expect(s.durationMin).toBe(9) // 547 s di attività simulata
-  expect(Date.parse(s.endedAt) - Date.parse(s.startedAt)).toBeGreaterThan(540_000)
+  // riscaldamento da 10 min segnato "fatto senza timer": incluso nella seduta (inizio anticipato), una sola volta
+  expect(s.durationSource).toBe('stopwatch')
+  expect(s.durationMin).toBe(19) // 10 min di riscaldamento + 547 s di attività simulata
+  expect(Math.round((Date.parse(s.endedAt) - Date.parse(s.startedAt)) / 60000)).toBe(19)
 
   await page.reload()
   await nav(page, /Allenamenti/)
   await tab(page, 'Seduta')
-  await expect(main(page)).toContainText('Durata: 9 min')
-  await expect(main(page)).toContainText('da orari inizio/fine')
+  await expect(main(page)).toContainText('Durata: 19 min')
+  await expect(main(page)).toContainText('da cronometro della seduta')
 })
 
 test('E2E-04 modifica della scheda A già usata: nuova revisione, prima seduta invariata', async ({ page }) => {
@@ -112,4 +113,62 @@ test('E2E-13 (emulato) app in background e poi chiusa durante il recupero: nessu
   await wm(p2).getByRole('button', { name: /Serie fatta/ }).click()
   await waitSaved(p2)
   expect((await savedState(p2)).sessions[0].exercises[0].sets.map((x) => x.done)).toEqual([true, true])
+})
+
+test('durata: riscaldamento a tempo, pausa e defaticamento → durata = cronometro, inizio all’avvio del riscaldamento', async ({ page }) => {
+  await startA(page)
+  const t0 = await page.evaluate(() => Date.now())
+  await wm(page).getByRole('button', { name: /Avvia 10 min/i }).click() // riscaldamento con il timer
+  await page.clock.runFor(601_000)
+  await expect(wm(page).getByRole('heading', { name: 'Leg Press' })).toBeVisible()
+  let s = (await savedState(page)).sessions[0]
+  expect(Math.abs(Date.parse(s.startedAt) - t0)).toBeLessThan(2000) // inizio = avvio del riscaldamento, non la sua fine
+  // pausa di 5 minuti del cronometro della seduta
+  await wm(page).getByRole('button', { name: /Tempo totale .*metti in pausa/ }).click()
+  await page.clock.runFor(300_000)
+  await wm(page).getByRole('button', { name: /Tempo totale .*riprendi/ }).click()
+  // esercizi
+  for (let i = 0; i < 4; i++) {
+    await serieFatta(page)
+    await page.clock.runFor(121_000)
+  }
+  await wm(page).getByRole('button', { name: /Avvia 30s/ }).click()
+  await page.clock.runFor(31_000)
+  await page.clock.runFor(61_000)
+  await wm(page).getByRole('button', { name: /Avvia 30s/ }).click()
+  await page.clock.runFor(31_000)
+  // defaticamento a tempo (5 min)
+  await wm(page).getByRole('button', { name: /Avvia 5 min/i }).click()
+  await page.clock.runFor(301_000)
+  await expect(wm(page).getByText('Allenamento completato!')).toBeVisible()
+  await wm(page).getByRole('button', { name: /e chiudi/ }).click()
+  await waitSaved(page)
+  s = (await savedState(page)).sessions[0]
+  const wall = (Date.parse(s.endedAt) - Date.parse(s.startedAt)) / 60000
+  expect(s.durationSource).toBe('stopwatch')
+  expect(s.durationMin).toBe(Math.round(wall - 5)) // tutto il tempo effettivo, pausa esclusa
+  // cronometro fermo dopo il completamento
+  const sw = await page.evaluate(() => JSON.parse(localStorage.getItem('palestra:stopwatch')))
+  expect(sw.startedAt).toBeNull()
+  expect(Math.round(sw.accumulated / 60000)).toBe(s.durationMin)
+  await nav(page, /Allenamenti/)
+  await tab(page, 'Seduta')
+  await expect(main(page)).toContainText(`Durata: ${s.durationMin} min`)
+  await expect(main(page)).toContainText('pause escluse: 5 min')
+})
+
+test('durata: "Completata" dallo stato chiude la seduta come "Termina" (cronometro fermato, fine registrata)', async ({ page }) => {
+  await startA(page)
+  await wm(page).getByRole('button', { name: /Segna fatto senza timer/ }).click()
+  await serieFatta(page)
+  await page.clock.runFor(120_000)
+  await wm(page).getByRole('button', { name: /Esci/ }).click()
+  await main(page).getByLabel('Stato seduta').selectOption('completed')
+  await waitSaved(page)
+  const s = (await savedState(page)).sessions[0]
+  expect(s.status).toBe('completed')
+  expect(s.endedAt).toBeTruthy()
+  expect(s.durationMin).toBe(12) // 10 min di riscaldamento + 2 min
+  const sw = await page.evaluate(() => JSON.parse(localStorage.getItem('palestra:stopwatch')))
+  expect(sw.startedAt).toBeNull()
 })

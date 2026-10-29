@@ -37,11 +37,6 @@ export function strengthStats(session) {
   return r
 }
 
-export function minutesBetweenSafe(a, b) {
-  const m = minutesBetween(a, b)
-  return m != null && m > 0 && m < 24 * 60 ? m : null
-}
-
 // Compatibilità con i componenti esistenti
 export const sessionStats = strengthStats
 
@@ -50,22 +45,29 @@ export function hasPendingSets(session) {
 }
 
 // ---- Durata ----
-// Preferisce fine − inizio se coerenti; una durata manuale prevale ma l'eventuale differenza viene segnalata.
+// Durata effettiva della seduta (riscaldamento, esercizi, recuperi e defaticamento: tutto è compreso tra inizio e fine,
+// mai sommato una seconda volta). Precedenza: correzione manuale > cronometro della seduta (pause escluse) > fine − inizio.
+// pausedMin: tempo tra inizio e fine non conteggiato dal cronometro (pause). mismatch: valori incoerenti da segnalare.
 export function sessionDuration(s) {
   const computed = minutesBetween(s.startedAt, s.endedAt)
   const validComputed = computed != null && computed > 0 && computed < 24 * 60 ? computed : null
   if (s.durationSource === 'manual' && s.durationMin != null) {
-    return { min: s.durationMin, source: 'manual', computed: validComputed, mismatch: validComputed != null && Math.abs(validComputed - s.durationMin) > 5 }
+    return { min: s.durationMin, source: 'manual', computed: validComputed, pausedMin: null, mismatch: validComputed != null && Math.abs(validComputed - s.durationMin) > 5 }
   }
-  if (validComputed != null) return { min: validComputed, source: 'computed', computed: validComputed, mismatch: false }
-  if (s.durationMin != null) return { min: s.durationMin, source: s.durationSource ?? 'legacy', computed: null, mismatch: false }
-  return { min: null, source: null, computed: null, mismatch: false }
+  if (s.durationSource === 'stopwatch' && s.durationMin != null) {
+    const paused = validComputed != null ? validComputed - s.durationMin : null
+    // cronometro più lungo degli orari: l'inizio registrato è successivo all'inizio reale
+    return { min: s.durationMin, source: 'stopwatch', computed: validComputed, pausedMin: paused != null && paused >= 1 ? paused : null, mismatch: paused != null && paused < -2 }
+  }
+  if (validComputed != null) return { min: validComputed, source: 'computed', computed: validComputed, pausedMin: null, mismatch: false }
+  if (s.durationMin != null) return { min: s.durationMin, source: s.durationSource ?? 'legacy', computed: null, pausedMin: null, mismatch: false }
+  return { min: null, source: null, computed: null, pausedMin: null, mismatch: false }
 }
 
 export const DURATION_SOURCES = {
   computed: 'da orari inizio/fine',
   manual: 'inserita a mano',
-  stopwatch: 'da cronometro',
+  stopwatch: 'da cronometro della seduta',
   legacy: 'versione precedente',
 }
 

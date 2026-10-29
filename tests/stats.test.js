@@ -48,8 +48,12 @@ describe('target vs eseguito (US-03)', () => {
 
 describe('durata (US-11)', () => {
   it('inizio 18:20 e fine 19:55 → 95 minuti', () => {
-    const s = { startedAt: combineDateTime('2026-10-22', '18:20'), endedAt: combineDateTime('2026-10-22', '19:55'), durationMin: 62, durationSource: 'stopwatch' }
+    const s = { startedAt: combineDateTime('2026-10-22', '18:20'), endedAt: combineDateTime('2026-10-22', '19:55'), durationMin: 95, durationSource: 'computed' }
     expect(sessionDuration(s)).toMatchObject({ min: 95, source: 'computed' })
+  })
+  it('durata dal cronometro della seduta: prevale sugli orari, la differenza sono le pause', () => {
+    const s = { startedAt: combineDateTime('2026-10-22', '18:20'), endedAt: combineDateTime('2026-10-22', '19:55'), durationMin: 62, durationSource: 'stopwatch' }
+    expect(sessionDuration(s)).toMatchObject({ min: 62, source: 'stopwatch', computed: 95, pausedMin: 33, mismatch: false })
   })
   it('una durata manuale diversa dagli orari viene segnalata, non cancellata', () => {
     const s = { startedAt: combineDateTime('2026-10-22', '18:20'), endedAt: combineDateTime('2026-10-22', '19:55'), durationMin: 62, durationSource: 'manual' }
