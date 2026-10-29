@@ -16,7 +16,8 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # versione fissa: ubuntu-latest è passato a 26.04, non ancora supportato da Playwright 1.56 (browser per i test E2E)
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,7 +32,7 @@ jobs:
           path: dist
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,7 +55,7 @@ jobs:
 
   deploy:
     needs: [build, e2e]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
