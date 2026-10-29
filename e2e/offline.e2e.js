@@ -49,6 +49,8 @@ test('E2E-14 senza rete: l’app si apre, i dati sono accessibili e le modifiche
   await page.getByRole('button', { name: '+ Registra misura' }).click()
   await page.getByLabel('Peso (kg)').fill('74,6')
   await page.getByRole('button', { name: 'Salva' }).click()
+  // l'indicatore "Salvato" è già visibile dal salvataggio precedente: si attende la scrittura effettiva in IndexedDB
+  await expect.poll(async () => (await savedState(page)).measurements.map((m) => m.weightKg)).toContain(74.6)
   await waitSaved(page)
   await page.reload()
   expect((await savedState(page)).measurements.map((m) => m.weightKg)).toContain(74.6)
