@@ -151,14 +151,24 @@ function baseSession(kind, partial) {
 }
 
 // Ultima esecuzione completata di un esercizio (stessa identità = stessa macchina/movimento)
-export function lastPerformance(sessions, exerciseId, { excludeSessionId, beforeDate } = {}) {
-  if (!exerciseId) return null
+// Identità "di fatto" di un esercizio: stesso nome (senza maiuscole/spazi extra), attrezzo e carico per mano.
+// Serve quando l'id non coincide: programma reimportato o rigenerato, scheda copiata, stesso attrezzo in A e in B.
+export const exerciseKey = (ex) => `${String(ex.name ?? '').trim().toLowerCase().replace(/\s+/g, ' ')}|${ex.equipment ?? ''}|${ex.perHand ? 'mano' : ''}`
+
+// Ultima esecuzione (con almeno una serie fatta) dello stesso esercizio. ref: id dell'esercizio della scheda,
+// oppure l'esercizio stesso ({ id | exerciseId, name, equipment, perHand }) per riconoscerlo anche dal nome.
+// Si considera la seduta più recente in cui compare, per id o per identità di fatto.
+export function lastPerformance(sessions, ref, { excludeSessionId, beforeDate } = {}) {
+  if (!ref) return null
+  const id = typeof ref === 'string' ? ref : (ref.exerciseId ?? ref.id ?? null)
+  const key = typeof ref === 'string' || !ref.name ? null : exerciseKey(ref)
   const sorted = sessions
     .filter((s) => s.kind === 'strength' && s.id !== excludeSessionId && (!beforeDate || s.date <= beforeDate))
     .sort((a, b) => (b.date + (b.startedAt ?? '')).localeCompare(a.date + (a.startedAt ?? '')))
+  const done = (e) => e.sets.some((st) => st.done)
   for (const s of sorted) {
-    const ex = s.exercises.find((e) => e.exerciseId === exerciseId)
-    if (ex && ex.sets.some((st) => st.done)) return { date: s.date, sessionId: s.id, exercise: ex }
+    const ex = s.exercises.find((e) => id && e.exerciseId === id && done(e)) ?? (key ? s.exercises.find((e) => exerciseKey(e) === key && done(e)) : null)
+    if (ex) return { date: s.date, sessionId: s.id, exercise: ex }
   }
   return null
 }
@@ -221,7 +231,7 @@ export function createStrengthSession(template, sessions, { date = todayISO(), o
     programId: programId ?? template?.programId ?? null,
     occurrenceKey,
     warmup: tpl.warmup.map((c) => ({ ...clone(c), id: uid('cardio'), done: false })),
-    exercises: tpl.exercises.map((tex) => sessionExerciseFromTemplate(tex, lastPerformance(sessions, tex.id, { beforeDate: date }))),
+    exercises: tpl.exercises.map((tex) => sessionExerciseFromTemplate(tex, lastPerformance(sessions, tex, { beforeDate: date }))),
     cooldown: tpl.cooldown.map((c) => ({ ...clone(c), id: uid('cardio'), done: false })),
   })
 }

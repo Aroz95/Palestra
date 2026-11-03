@@ -42,7 +42,7 @@ export default function SessionView({ session, state, onChange, timers, settings
     }
   }
   const addExercise = (tex) => {
-    const ex = tex ? sessionExerciseFromTemplate(tex, lastPerformance(state.sessions, tex.id, { excludeSessionId: session.id, beforeDate: session.date })) : newSessionExercise()
+    const ex = tex ? sessionExerciseFromTemplate(tex, lastPerformance(state.sessions, tex, { excludeSessionId: session.id, beforeDate: session.date })) : newSessionExercise()
     set({ exercises: [...session.exercises, ex] })
     setAdding(false)
   }
@@ -134,7 +134,7 @@ export default function SessionView({ session, state, onChange, timers, settings
               onRemove={() => removeExercise(ex.id)}
               onSetDone={onSetDone}
               onStartTimer={startTimed}
-              hint={progressionHint(lastPerformance(state.sessions, ex.exerciseId, { excludeSessionId: session.id, beforeDate: session.date }), ex.step)}
+              hint={progressionHint(lastPerformance(state.sessions, ex, { excludeSessionId: session.id, beforeDate: session.date }), ex.step)}
             />
           ))}
         </div>

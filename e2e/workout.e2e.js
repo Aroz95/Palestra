@@ -172,3 +172,26 @@ test('durata: "Completata" dallo stato chiude la seduta come "Termina" (cronomet
   const sw = await page.evaluate(() => JSON.parse(localStorage.getItem('palestra:stopwatch')))
   expect(sw.startedAt).toBeNull()
 })
+
+test('pesi: la seduta successiva parte dai carichi effettivi della precedente, non dai valori della scheda', async ({ page }) => {
+  await openApp(page)
+  await goImport(page)
+  await importFile(page, EX('programma-ab.json'))
+  await nav(page, /Oggi/)
+  await page.getByRole('button', { name: /A · Full Body A/ }).click()
+  const card = main(page).locator('div.rounded-2xl').filter({ hasText: 'Leg Press' }).first()
+  const inc = card.getByRole('button', { name: 'Aumenta' })
+  for (let i = 0; i < 4; i++) await inc.nth(0).click() // serie 1: 60 → 70
+  for (let i = 0; i < 4; i++) await inc.nth(2).click() // serie 2: 60 → 70
+  await card.getByRole('button', { name: 'Tutte fatte' }).click()
+  await main(page).getByRole('button', { name: /Termina seduta/ }).click()
+  await waitSaved(page)
+  await page.clock.runFor(2 * 86_400_000) // due giorni dopo
+  await nav(page, /Oggi/)
+  await page.getByRole('button', { name: /A · Full Body A/ }).click()
+  await waitSaved(page)
+  const st = await savedState(page)
+  const next = st.sessions.find((s) => s.id === st.activeSessionId)
+  expect(next.exercises[0].sets.map((s) => [s.weight, s.done])).toEqual([[70, false], [70, false]])
+  expect(next.exercises[0].target.weightKg).toBe(60)
+})

@@ -111,7 +111,7 @@ export default function App() {
   const active = state.sessions.find((s) => s.id === state.activeSessionId) ?? null
   const updateSession = (session) => setState((s) => A.upsertSession(s, session))
   const deleteSession = (id) => setState((s) => A.deleteSession(s, id))
-  const hintFor = (ex) => progressionHint(lastPerformance(state.sessions, ex.exerciseId, { excludeSessionId: active?.id, beforeDate: active?.date }), ex.step)
+  const hintFor = (ex) => progressionHint(lastPerformance(state.sessions, ex, { excludeSessionId: active?.id, beforeDate: active?.date }), ex.step)
  // Avvio del cronometro = inizio della seduta aperta (se non già fissato); il cronometro resta associato a quella seduta
   const sessionTimers = {
     ...timers,
