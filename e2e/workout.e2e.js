@@ -13,6 +13,13 @@ async function startA(page) {
 // Elementi della modalità allenamento (finestra modale a schermo intero)
 const wm = (page) => page.getByRole('dialog', { name: 'Modalità allenamento' })
 const serieFatta = (page) => wm(page).getByRole('button', { name: /Serie fatta/ }).click()
+// Fine allenamento dalla schermata finale della modalità allenamento: seduta salvata → conferma → riepilogo
+async function finishWorkout(page) {
+  await wm(page).getByRole('button', { name: /^Termina allenamento \(/ }).click()
+  await page.getByRole('dialog', { name: 'Allenamento salvato' }).getByRole('button', { name: 'Conferma e concludi' }).click()
+  await expect(main(page).getByTestId('session-summary')).toBeVisible()
+  await waitSaved(page)
+}
 
 test('E2E-03 Full Body A: tutte le serie registrate, RIR, durata corretta dopo refresh', async ({ page }) => {
   await startA(page)
@@ -43,8 +50,7 @@ test('E2E-03 Full Body A: tutte le serie registrate, RIR, durata corretta dopo r
   await page.clock.runFor(31_000)
   await wm(page).getByRole('button', { name: /Segna fatto senza timer/ }).click() // defaticamento
   await expect(wm(page).getByText('Allenamento completato!')).toBeVisible()
-  await wm(page).getByRole('button', { name: /e chiudi/ }).click()
-  await waitSaved(page)
+  await finishWorkout(page)
 
   const s = (await savedState(page)).sessions[0]
   expect(s.status).toBe('completed')
@@ -57,8 +63,10 @@ test('E2E-03 Full Body A: tutte le serie registrate, RIR, durata corretta dopo r
   expect(Math.round((Date.parse(s.endedAt) - Date.parse(s.startedAt)) / 60000)).toBe(19)
 
   await page.reload()
+  // conclusa: non resta aperta, si consulta dallo storico
   await nav(page, /Allenamenti/)
-  await tab(page, 'Seduta')
+  await tab(page, 'Storico')
+  await page.getByRole('button', { name: 'Apri' }).first().click()
   await expect(main(page)).toContainText('Durata: 19 min')
   await expect(main(page)).toContainText('da cronometro della seduta')
 })
@@ -141,8 +149,7 @@ test('durata: riscaldamento a tempo, pausa e defaticamento → durata = cronomet
   await wm(page).getByRole('button', { name: /Avvia 5 min/i }).click()
   await page.clock.runFor(301_000)
   await expect(wm(page).getByText('Allenamento completato!')).toBeVisible()
-  await wm(page).getByRole('button', { name: /e chiudi/ }).click()
-  await waitSaved(page)
+  await finishWorkout(page)
   s = (await savedState(page)).sessions[0]
   const wall = (Date.parse(s.endedAt) - Date.parse(s.startedAt)) / 60000
   expect(s.durationSource).toBe('stopwatch')
@@ -152,7 +159,8 @@ test('durata: riscaldamento a tempo, pausa e defaticamento → durata = cronomet
   expect(sw.startedAt).toBeNull()
   expect(Math.round(sw.accumulated / 60000)).toBe(s.durationMin)
   await nav(page, /Allenamenti/)
-  await tab(page, 'Seduta')
+  await tab(page, 'Storico')
+  await page.getByRole('button', { name: 'Apri' }).first().click()
   await expect(main(page)).toContainText(`Durata: ${s.durationMin} min`)
   await expect(main(page)).toContainText('pause escluse: 5 min')
 })
@@ -164,6 +172,8 @@ test('durata: "Completata" dallo stato chiude la seduta come "Termina" (cronomet
   await page.clock.runFor(120_000)
   await wm(page).getByRole('button', { name: /Esci/ }).click()
   await main(page).getByLabel('Stato seduta').selectOption('completed')
+  await page.getByRole('dialog', { name: 'Allenamento non completo' }).getByRole('button', { name: 'Concludi comunque' }).click()
+  await page.getByRole('dialog', { name: 'Allenamento salvato' }).getByRole('button', { name: 'Conferma e concludi' }).click()
   await waitSaved(page)
   const s = (await savedState(page)).sessions[0]
   expect(s.status).toBe('completed')
@@ -185,6 +195,8 @@ test('pesi: la seduta successiva parte dai carichi effettivi della precedente, n
   for (let i = 0; i < 4; i++) await inc.nth(2).click() // serie 2: 60 → 70
   await card.getByRole('button', { name: 'Tutte fatte' }).click()
   await main(page).getByRole('button', { name: /Termina seduta/ }).click()
+  await page.getByRole('dialog', { name: 'Allenamento non completo' }).getByRole('button', { name: 'Concludi comunque' }).click()
+  await page.getByRole('dialog', { name: 'Allenamento salvato' }).getByRole('button', { name: 'Conferma e concludi' }).click()
   await waitSaved(page)
   await page.clock.runFor(2 * 86_400_000) // due giorni dopo
   await nav(page, /Oggi/)

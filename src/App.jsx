@@ -22,6 +22,7 @@ import * as A from './lib/actions'
 import { exportBackup, exportSession, fileNames } from './lib/report'
 import { downloadJSON } from './lib/download'
 import { Icon } from './components/icons'
+import { IncompleteSheet, SavedSheet, SessionSummary, pendingCount } from './components/SessionEnd'
 import { useTheme } from './lib/theme'
 
 const TABS = [
@@ -45,6 +46,8 @@ export default function App() {
   const [sub, setSub] = useLocalStorage('palestra:subtabs', { training: 'session', more: 'profile' })
   const [workout, setWorkout] = useLocalStorage('palestra:workout-mode', false)
   const [undo, setUndo] = useState(null)
+  const [ending, setEnding] = useState(null) // fine allenamento: { sessionId, step: 'incomplete' | 'saved', pending, exportState }
+  const [summaryId, setSummaryId] = useState(null) // riepilogo dell'allenamento appena concluso
   const [theme, setTheme] = useTheme()
   const [hideMigrated, setHideMigrated] = useState(false)
   const stateRef = useRef(state)
@@ -95,6 +98,7 @@ export default function App() {
 
   const update = (fn) => setState((s) => fn(s))
   const go = (t, subId) => {
+    setSummaryId(null)
     setTab(t)
     if (subId) setSub((s) => ({ ...s, [t]: subId }))
     window.scrollTo(0, 0)
@@ -138,6 +142,48 @@ export default function App() {
       timers.startRest(...args)
     },
   }
+  // ---- Fine allenamento (SES-01): unico flusso per scheda della seduta e modalità allenamento ----
+  const requestFinish = (session) => {
+    const pending = pendingCount(session)
+    if (pending.total > 0) setEnding({ sessionId: session.id, step: 'incomplete', pending })
+    else completeSession(session.id)
+  }
+  // Salva subito la seduta come completata (nessuna serie mancante segnata come fatta), ferma i timer e la chiude
+  const completeSession = (id) => {
+    const s = stateRef.current?.sessions.find((x) => x.id === id)
+    if (!s) return
+    if (s.status !== 'completed') {
+      const patch = A.finishPatch(s, { stopwatch: timers.stopwatchFor(id) })
+      sessionTimers.stopRest()
+      timers.pauseStopwatch()
+      setState((st) => {
+        const cur = st.sessions.find((x) => x.id === id) ?? s
+        return { ...A.upsertSession(st, { ...cur, ...patch }), activeSessionId: st.activeSessionId === id ? null : st.activeSessionId }
+      })
+    }
+    setWorkout(false)
+    setEnding({ sessionId: id, step: 'saved', exportState: null })
+  }
+  const exportSessionFile = (session) => {
+    try {
+      downloadJSON(fileNames.session(session), exportSession(session))
+      return { ok: true }
+    } catch (e) {
+      return { error: e?.message || 'errore sconosciuto' }
+    }
+  }
+  const confirmEnding = () => {
+    const id = ending?.sessionId
+    setEnding(null)
+    if (id) {
+      setSummaryId(id)
+      setTab('training')
+      window.scrollTo(0, 0)
+    }
+  }
+  const endingSession = ending ? state.sessions.find((s) => s.id === ending.sessionId) : null
+  const summarySession = summaryId ? state.sessions.find((s) => s.id === summaryId) : null
+
   function closeRest() {
     const r = timers.rest
     if (r.active && r.kind !== 'work' && r.target?.type === 'rest') {
@@ -165,9 +211,19 @@ export default function App() {
           </div>
         )}
 
-        {tab === 'today' && <TodayView state={state} update={update} onStart={startSession} onOpenSession={openSession} go={go} />}
+        {summarySession && (
+          <SessionSummary
+            session={summarySession}
+            sessions={state.sessions}
+            onHistory={() => go('training', 'history')}
+            onHome={() => go('today')}
+            onExport={() => exportSessionFile(summarySession)}
+          />
+        )}
 
-        {tab === 'training' && (
+        {!summarySession && tab === 'today' && <TodayView state={state} update={update} onStart={startSession} onOpenSession={openSession} go={go} />}
+
+        {!summarySession && tab === 'training' && (
           <div className="space-y-4">
             <Segmented options={TRAINING_TABS} value={sub.training} onChange={(v) => setSub((s) => ({ ...s, training: v }))} />
             {sub.training === 'session' &&
@@ -189,6 +245,7 @@ export default function App() {
                     timers={sessionTimers}
                     settings={state.settings}
                     onStartWorkout={() => setWorkout(true)}
+                    onFinish={requestFinish}
                     onDelete={() => deleteSession(active.id)}
                     onExport={() => downloadJSON(fileNames.session(active), exportSession(active))}
                   />
@@ -212,9 +269,9 @@ export default function App() {
           </div>
         )}
 
-        {tab === 'diet' && <DietView state={state} update={update} onImport={() => go('more', 'import')} />}
-        {tab === 'progress' && <ProgressView state={state} settings={state.settings} />}
-        {tab === 'more' && (
+        {!summarySession && tab === 'diet' && <DietView state={state} update={update} onImport={() => go('more', 'import')} />}
+        {!summarySession && tab === 'progress' && <ProgressView state={state} settings={state.settings} />}
+        {!summarySession && tab === 'more' && (
           <MoreView
             theme={theme}
             setTheme={setTheme}
@@ -250,8 +307,17 @@ export default function App() {
       </main>
 
       {workout && active?.kind === 'strength' && (
-        <WorkoutMode session={active} onChange={updateSession} timers={sessionTimers} onClose={() => setWorkout(false)} previousFor={previousFor} />
+        <WorkoutMode session={active} onChange={updateSession} timers={sessionTimers} onClose={() => setWorkout(false)} onFinish={requestFinish} previousFor={previousFor} />
       )}
+
+      <IncompleteSheet open={ending?.step === 'incomplete'} pending={ending?.pending} onBack={() => setEnding(null)} onConfirm={() => completeSession(ending.sessionId)} />
+      <SavedSheet
+        open={ending?.step === 'saved' && !!endingSession}
+        session={endingSession}
+        exportState={ending?.exportState}
+        onExport={() => setEnding((e) => ({ ...e, exportState: exportSessionFile(endingSession) }))}
+        onConfirm={confirmEnding}
+      />
 
       {/* Mobile: barra in basso con etichette sempre visibili. Desktop (≥1024 px): navigazione laterale */}
       <nav

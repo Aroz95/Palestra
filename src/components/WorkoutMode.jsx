@@ -20,7 +20,7 @@ const isDone = (step) => (step.kind === 'cardio' ? step.item.done : step.item.se
 
 export { hasPendingSets }
 
-export default function WorkoutMode({ session, onChange: save, timers, onClose, previousFor }) {
+export default function WorkoutMode({ session, onChange: save, timers, onClose, onFinish, previousFor }) {
   // La prima attività completata fissa l'inizio della seduta (riscaldamento compreso), se non già fissato dal cronometro
   const onChange = (s) => save(withAutoStart(session, s))
   const steps = buildSteps(session)
@@ -144,7 +144,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex min-h-full max-w-2xl flex-col px-4 py-4">
           {!step ? (
-            <Finished stats={stats} timers={timers} session={session} onChange={onChange} onClose={onClose} />
+            <Finished stats={stats} timers={timers} session={session} onFinish={onFinish} />
           ) : step.kind === 'exercise' ? (
             <ExerciseStep
               ex={step.item}
@@ -182,6 +182,11 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
             <StepPicker steps={steps} currentId={currentId} onPick={setCurrentId} />
             <button onClick={() => go(1)} disabled={idx === steps.length - 1} className="btn-ghost text-sm disabled:opacity-30">
               Successivo ›
+            </button>
+          </div>
+          <div className="mx-auto mt-1 flex max-w-2xl justify-center">
+            <button onClick={() => onFinish(session)} className="min-h-11 px-3 text-sm font-medium text-fg-soft underline underline-offset-4">
+              Termina allenamento
             </button>
           </div>
         </div>
@@ -434,15 +439,10 @@ function StepPicker({ steps, currentId, onPick }) {
   )
 }
 
-function Finished({ stats, timers, session, onChange, onClose }) {
+function Finished({ stats, timers, session, onFinish }) {
   // stessa regola della scheda seduta: cronometro della seduta (pause escluse), altrimenti fine − inizio
   const minutes = finishPatch(session, { stopwatch: timers.stopwatchFor(session.id) }).durationMin ?? 0
-  const save = () => {
-    timers.pauseStopwatch()
-    timers.stopRest()
-    onChange({ ...session, ...finishPatch(session, { stopwatch: timers.stopwatchFor(session.id) }) })
-    onClose()
-  }
+  const save = () => onFinish(session)
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center">
       <div className="text-6xl">🎉</div>
@@ -457,7 +457,7 @@ function Finished({ stats, timers, session, onChange, onClose }) {
         <Tile label="Distanza" value={`${fmtNum(stats.cardioKm, 2)} km`} />
       </dl>
       <button onClick={save} className="btn mt-6 w-full bg-primary py-4 text-lg text-on-primary">
-        Salva {minutes > 0 ? `durata (${minutes} min) ` : ''}e chiudi
+        Termina allenamento{minutes > 0 ? ` (${minutes} min)` : ''}
       </button>
     </div>
   )

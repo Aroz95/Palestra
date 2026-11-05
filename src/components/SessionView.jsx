@@ -6,10 +6,10 @@ import { Card, Section, Sheet, Metric } from './ui'
 import { fmtNum, strengthStats, sessionDuration } from '../lib/stats'
 import { fmtDate } from '../lib/dates'
 import { lastPerformance, newSessionExercise, sessionExerciseFromTemplate } from '../schema/factories'
-import { finishPatch, withAutoStart } from '../lib/actions'
+import { withAutoStart } from '../lib/actions'
 import { DEFAULT_REST } from '../schema/constants'
 
-export default function SessionView({ session, state, onChange, timers, settings, onStartWorkout, onDelete, onExport }) {
+export default function SessionView({ session, state, onChange, timers, settings, onStartWorkout, onFinish, onDelete, onExport }) {
   const [adding, setAdding] = useState(false)
   const stats = strengthStats(session)
   const template = state.workoutTemplates.find((t) => t.id === session.templateId)
@@ -47,13 +47,8 @@ export default function SessionView({ session, state, onChange, timers, settings
     setAdding(false)
   }
 
-  // Fine seduta (anche scegliendo "Completata" dallo stato): cronometro fermato, durata dal cronometro della seduta
-  const finish = () => {
-    const patch = finishPatch(session, { stopwatch: timers.stopwatchFor(session.id) })
-    timers.pauseStopwatch()
-    timers.stopRest()
-    onChange({ ...session, ...patch })
-  }
+  // Fine seduta (anche scegliendo "Completata" dallo stato): flusso unico di App (avviso, salvataggio, esportazione, riepilogo)
+  const finish = () => onFinish(session)
 
   const pct = stats.totalSets ? Math.round((stats.doneSets / stats.totalSets) * 100) : 0
   const hasSteps = session.exercises.length + session.warmup.length + session.cooldown.length > 0
