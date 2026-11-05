@@ -6,6 +6,7 @@ import { toLocalISO } from '../lib/dates'
 import { targetText } from './ExerciseCard'
 import { finishPatch, withAutoStart } from '../lib/actions'
 import PreviousPerformance from './PreviousPerformance'
+import ExerciseThumb from './ExerciseThumb'
 
 // Sequenza dei passi: riscaldamento → esercizi → defaticamento
 export function buildSteps(session) {
@@ -216,6 +217,7 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
     <div className="flex flex-1 flex-col">
       <div className="text-center">
         {resting && cur && <div className="text-xs font-semibold text-fg-soft">Prossima serie</div>}
+        <ExerciseThumb ex={ex} size={56} className="mb-1" />
         <h1 className="text-2xl font-bold text-fg">{ex.name}</h1>
         <p className="text-sm text-muted">{ex.group}</p>
         {target && (

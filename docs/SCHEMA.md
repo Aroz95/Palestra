@@ -110,6 +110,8 @@ Ogni esercizio della seduta ha `exerciseId` (id dell’esercizio in scheda), `na
 - Per gli esercizi a tempo si usa `durationSec` al posto di `reps`/`weight`.
 - `pain`: `{ "location": "spalla destra", "intensity": 3 }` oppure `null`.
 - Volume = somma di `reps × weight × (perHand ? 2 : 1)` sulle sole serie con `done: true` e carico noto.
+- Recupero (facoltativi, presenti solo se registrati): sull’esercizio `restChosen: true` indica che `rest` è stato scelto con ±15 s durante la seduta e viene riproposto la volta successiva per lo stesso esercizio; sulla serie `restSelectedSec` (recupero impostato dopo quella serie) e `restActualSec` (recupero effettivo: fine del timer, stop o serie successiva). Il recupero effettivo non cambia la preferenza. I file senza questi campi restano validi.
+- Riconoscimento dello stesso esercizio tra sedute (per riproporre carichi, ripetizioni, recupero e note): `exerciseId`, oppure la voce del catalogo interno (nome o alias esatti, es. “Technogym Pulldown Machine” = Lat machine), oppure nome + attrezzo + carico per mano. I nomi registrati non vengono mai modificati.
 
 `feedback`: `{ fatigue (1–10), energy (1–5), technique (1–5), pain (testo), notes, nextDayRecovery (1–5) }`, tutti facoltativi.
 

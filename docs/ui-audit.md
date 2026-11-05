@@ -134,3 +134,26 @@ Consegne in [`ui-audit/cr-alim-002/`](ui-audit/cr-alim-002/): screenshot prima/d
 Altro: `--border-strong` duplicato nel blocco scuro rimosso; un selettore con opzioni lunghe causava scorrimento orizzontale a 320 px (corretto e coperto dal test di reflow). Dominio invariato: schema, import, calcoli, ND/0, registrazioni, revisioni, validazione, persistenza e offline non sono stati toccati.
 
 **Componenti**: `Disclosure` (nuovo, `ui.jsx`: pulsante con `aria-expanded`/`aria-controls`, pannello `inert` da chiuso), `Sheet` con uscita animata, `ConsumptionSheet` sempre montato con `open` (modulo montato solo da aperto). **Test** aggiunti in `e2e/diet-layout.e2e.js`: dettagli da tastiera e animati, “Segna consumato” persistente dopo ricaricamento e annullabile, anteprima distinta dal salvataggio, transizione direzionale senza salto di scroll, uscita animata dei pannelli e chiusura immediata con movimento ridotto, aree tattili ≥ 44 px. Restano da fare a cura del prodotto: prova tattile su iPhone (voce in `docs/COLLAUDO.md`) e approvazione dell’esperienza visiva.
+
+
+## 10. Backlog del 05/11/2026 — seduta, recupero, fine allenamento, catalogo
+
+Schermate a 390 × 844, chiaro e scuro: [`ui-audit/backlog-2026-11/`](ui-audit/backlog-2026-11/) (rigenerabili con `SHOTS=docs/ui-audit/backlog-2026-11 npx playwright test e2e/screenshots.e2e.js -g backlog`).
+
+| Ticket | Implementazione | File principali |
+|---|---|---|
+| EXE-01 | Serie proposte con peso, ripetizioni e durata realmente eseguiti l’ultima volta (solo campi noti; ripetizioni mancanti dalla scheda). Riquadro “Ultima volta” (serie, recupero scelto, consiglio di progressione, note dell’esercizio e delle serie in sola lettura) nella seduta e in modalità allenamento; “Nessuna esecuzione precedente” se non c’è storico. La seduta precedente non viene mai modificata. Già presente dal 03/11: riporto del peso e riconoscimento tra schede/import. | `schema/factories.js`, `components/PreviousPerformance.jsx` |
+| TIM-01 | ±15 s su un recupero dopo una serie: preferenza dell’esercizio (`rest`, `restChosen`), riproposta alla seduta successiva. Recupero effettivo misurato sulla serie (`restSelectedSec`, `restActualSec`), senza cambiare la preferenza. I timer di lavoro (esercizi a tempo, cardio) non toccano il recupero. | `lib/actions.js` (`chooseRest`, `recordRest`), `App.jsx` |
+| SES-01 | Flusso unico da scheda, modalità allenamento e stato “Completata”: avviso se mancano serie/cardio (tornare o concludere; nulla segnato come fatto) → seduta salvata subito, timer fermati → “Esporta allenamento” facoltativo e ripetibile (errore mostrato) / “Conferma e concludi” → riepilogo → Storico/Home. Chiudere la finestra = confermare: la seduta non si perde né si duplica. | `components/SessionEnd.jsx`, `App.jsx` |
+| EXE-02 | La card si chiude all’ultima serie (sintesi visibile) e il prossimo esercizio viene portato in vista se fuori schermo; annullando una serie si riapre; l’apertura manuale resta. | `components/ExerciseCard.jsx`, `SessionView.jsx` |
+| MOB-01 | `touch-action: pan-x pan-y` e blocco degli eventi `gesture*` di Safari (nessun `preventDefault` sui `touchmove`): niente pinch né doppio tocco per lo zoom, scorrimento verticale invariato, nessun overflow orizzontale. Opzione “Blocca lo zoom con due dita” in Altro → Opzioni per chi usa lo zoom; lo Zoom di accessibilità di iOS resta disponibile. | `lib/zoomLock.js`, `index.css` |
+| CAT-02 | Catalogo di 45 esercizi con id stabile, nome, alias italiano/inglese (inclusi i nomi delle schede reali), gruppo, attrezzo e schema di movimento. Riconoscimento solo per nome/alias esatti e stesso carico per mano. Nessun nome registrato viene cambiato. | `schema/catalog.js` |
+| CAT-01 | Selettore con ricerca (nome, alias, gruppo, attrezzo), ordine A–Z italiano, filtri gruppo/attrezzo/schede, un risultato per esercizio canonico (nome della scheda indicato se diverso), “Già nella seduta”, esercizio personalizzato separato. | `components/ExercisePicker.jsx` |
+
+**Convenzione dei nomi (CAT-02).** Nome italiano d’uso comune in sala; dove in palestra si usa il termine inglese si tiene quello (Leg press, Lat machine, Chest press). Gli alias raccolgono le altre denominazioni diffuse e i nomi già presenti nelle schede. Non è un elenco “ufficiale” universale.
+
+**Miniature.** Pittogrammi schematici per schema di movimento (25 schemi), disegnati per l’app in SVG: nessuna licenza di terzi, nessun download, funzionano offline e nei due temi, dimensione fissa, testo alternativo descrittivo; per esercizi senza corrispondenza un’icona generica. Non sono fotografie dell’esercizio: se servono immagini illustrative vere, vanno scelte con una licenza adeguata e collegate per `id` del catalogo.
+
+**Corretto durante il lavoro.** Nella scheda della seduta la prima serie spuntata avviava il cronometro, che salvava una copia non aggiornata della seduta e perdeva la spunta (introdotto con la correzione della durata del 29/10; coperto ora da test).
+
+**Da verificare su iPhone** (checklist in `docs/COLLAUDO.md`): pinch reale su Safari e PWA, selettore con tastiera aperta, condivisione/download del JSON a fine allenamento, VoiceOver sui nuovi pannelli.

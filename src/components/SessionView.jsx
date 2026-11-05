@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import ExerciseCard from './ExerciseCard'
 import CardioList from './CardioList'
 import { TimesCard, FeedbackCard, EnergyCard, StatusSelect } from './SessionShared'
@@ -8,6 +8,7 @@ import { fmtDate } from '../lib/dates'
 import { lastPerformance, newSessionExercise, sessionExerciseFromTemplate } from '../schema/factories'
 import { withAutoStart } from '../lib/actions'
 import { DEFAULT_REST } from '../schema/constants'
+import ExercisePicker, { buildCandidates } from './ExercisePicker'
 
 export default function SessionView({ session, state, onChange, timers, settings, onStartWorkout, onFinish, onDelete, onExport }) {
   const [adding, setAdding] = useState(false)
@@ -30,21 +31,17 @@ export default function SessionView({ session, state, onChange, timers, settings
       target: { type: 'set', sessionId: session.id, exId: ex.id, setIdx: i },
     })
 
-  // Esercizi aggiungibili: quelli delle schede (identità stabile) non già presenti, oppure liberi
-  const inSession = new Set(session.exercises.map((e) => e.exerciseId))
-  const candidates = []
-  const seen = new Set()
-  for (const t of [template, ...state.workoutTemplates.filter((x) => x.id !== template?.id && !x.archived)].filter(Boolean)) {
-    for (const tex of t.exercises) {
-      if (inSession.has(tex.id) || seen.has(tex.id)) continue
-      seen.add(tex.id)
-      candidates.push({ tex, from: `${t.label ? `${t.label} · ` : ''}${t.name}` })
-    }
-  }
-  const addExercise = (tex) => {
-    const ex = tex ? sessionExerciseFromTemplate(tex, lastPerformance(state.sessions, tex, { excludeSessionId: session.id, beforeDate: session.date })) : newSessionExercise()
+  // Esercizi aggiungibili (CAT-01): schede + catalogo, un risultato per esercizio canonico; quelli già presenti segnalati
+  const candidates = useMemo(
+    () => (adding ? buildCandidates({ templates: state.workoutTemplates.filter((t) => !t.archived || t.id === template?.id), currentTemplateId: template?.id, sessionExercises: session.exercises }) : []),
+    [adding, state.workoutTemplates, template?.id, session.exercises],
+  )
+  const addExercise = (tex, customName) => {
+    const ex = tex ? sessionExerciseFromTemplate(tex, lastPerformance(state.sessions, tex, { excludeSessionId: session.id, beforeDate: session.date })) : newSessionExercise(customName ? { name: customName } : {})
     set({ exercises: [...session.exercises, ex] })
     setAdding(false)
+    // riscontro immediato: il nuovo esercizio viene portato in vista
+    requestAnimationFrame(() => document.getElementById(`exercise-${ex.id}`)?.scrollIntoView({ block: 'center', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }))
   }
 
   // Esercizio completato: porta in vista il successivo da fare (solo se fuori schermo; nessuno spostamento del focus)
@@ -169,16 +166,7 @@ export default function SessionView({ session, state, onChange, timers, settings
       </div>
 
       <Sheet open={adding} onClose={() => setAdding(false)} title="Aggiungi esercizio">
-        <div className="space-y-1">
-          {candidates.map(({ tex, from }) => (
-            <button key={tex.id} onClick={() => addExercise(tex)} className="block w-full rounded-lg px-3 py-2 text-left text-fg active:bg-surface-muted">
-              {tex.name} <span className="text-xs text-muted">· {tex.group || '—'} · {from}</span>
-            </button>
-          ))}
-          <button onClick={() => addExercise(null)} className="block w-full rounded-lg px-3 py-2 text-left text-primary active:bg-surface-muted">
-            + Esercizio libero
-          </button>
-        </div>
+        <ExercisePicker candidates={candidates} onPick={(tex) => addExercise(tex)} onCustom={(name) => addExercise(null, name)} />
       </Sheet>
     </div>
   )

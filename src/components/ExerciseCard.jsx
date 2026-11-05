@@ -5,6 +5,7 @@ import { fmtClock } from '../lib/stats'
 import { toLocalISO } from '../lib/dates'
 import { DEFAULT_REST } from '../schema/constants'
 import PreviousPerformance from './PreviousPerformance'
+import ExerciseThumb from './ExerciseThumb'
 
 export function targetText(ex) {
   const t = ex.target ?? ex.sets[0]?.target
@@ -73,6 +74,7 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
         >
           {allDone ? '✓' : index + 1}
         </span>
+        <ExerciseThumb ex={ex} size={36} />
         <div className="min-w-0 flex-1">
           <div className="truncate font-semibold text-fg">{ex.name}</div>
           <div className="truncate text-xs text-muted">

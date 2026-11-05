@@ -1,5 +1,6 @@
 import { DEFAULT_REST, SCHEMA_VERSION } from './constants'
 import { todayISO, toLocalISO } from '../lib/dates'
+import { catalogMatch } from './catalog'
 
 export function uid(prefix = '') {
   const r = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4)
@@ -151,9 +152,13 @@ function baseSession(kind, partial) {
 }
 
 // Ultima esecuzione completata di un esercizio (stessa identità = stessa macchina/movimento)
-// Identità "di fatto" di un esercizio: stesso nome (senza maiuscole/spazi extra), attrezzo e carico per mano.
-// Serve quando l'id non coincide: programma reimportato o rigenerato, scheda copiata, stesso attrezzo in A e in B.
-export const exerciseKey = (ex) => `${String(ex.name ?? '').trim().toLowerCase().replace(/\s+/g, ' ')}|${ex.equipment ?? ''}|${ex.perHand ? 'mano' : ''}`
+// Identità "di fatto" di un esercizio: voce del catalogo (nome o alias, CAT-02), altrimenti stesso nome
+// (senza maiuscole/spazi extra), attrezzo e carico per mano. Serve quando l'id non coincide: programma reimportato
+// o rigenerato, scheda copiata, stesso attrezzo in A e in B, nome storico diverso da quello del catalogo.
+export const exerciseKey = (ex) => {
+  const c = catalogMatch(ex)
+  return c ? `cat:${c.id}|${ex.perHand ? 'mano' : ''}` : `${String(ex.name ?? '').trim().toLowerCase().replace(/\s+/g, ' ')}|${ex.equipment ?? ''}|${ex.perHand ? 'mano' : ''}`
+}
 
 // Ultima esecuzione (con almeno una serie fatta) dello stesso esercizio. ref: id dell'esercizio della scheda,
 // oppure l'esercizio stesso ({ id | exerciseId, name, equipment, perHand }) per riconoscerlo anche dal nome.

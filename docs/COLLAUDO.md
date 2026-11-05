@@ -81,6 +81,10 @@ Un service worker conserva l’app sul dispositivo: dopo la prima apertura onlin
 | CR-UX-ALIM-001 | Alimentazione: giorno e primo pasto visibili subito, bozza compatta, giorno conservato, responsive, tastiera | `e2e/diet-layout.e2e.js`, `tests/diet.test.js` | automatico; VoiceOver **da verificare su iPhone** |
 | CR-UX-ALIM-002 | Alimentazione: livelli di informazione, segna consumato, alternative, motion, aree tattili | `e2e/diet-layout.e2e.js`; video in `docs/ui-audit/cr-alim-002/` | automatico; prova tattile e approvazione visiva **manuali** |
 | BUG-DURATA-01 | Durata = riscaldamento + esercizi + recuperi + defaticamento, pause escluse, coerente con il cronometro | `tests/duration.test.js`, `tests/stats.test.js`, `e2e/workout.e2e.js` | automatico |
+| EXE-01 / TIM-01 | Serie precompilate dall’ultima esecuzione, “Ultima volta” con note, recupero ±15 s riproposto | `tests/carryover.test.js`, `e2e/session-flow.e2e.js` | automatico |
+| SES-01 | Fine allenamento: avviso serie mancanti, salvataggio, export facoltativo, riepilogo, storico | `e2e/session-flow.e2e.js`, `e2e/workout.e2e.js` | automatico |
+| EXE-02 / MOB-01 | Card completate chiuse; pinch-zoom bloccato (disattivabile), nessuno scorrimento orizzontale 320–430 px | `e2e/ergonomics.e2e.js` | automatico; pinch su iPhone **manuale** |
+| CAT-01 / CAT-02 | Catalogo con alias, miniature, selettore con ricerca, A–Z e filtri | `tests/catalog.test.jsx`, `e2e/catalog.e2e.js` | automatico; tastiera aperta su iPhone **manuale** |
 | E2E-15 | PDF | `e2e/report.e2e.js`, `tests/pdf.test.js` | automatico; download su iPhone **da verificare** |
 
 I test automatici girano con il motore Chromium e il profilo di iPhone 13 (dimensioni, touch). Safari/WebKit non è disponibile nell’ambiente di sviluppo: le voci seguenti vanno verificate a mano.
@@ -105,6 +109,10 @@ Da eseguire su Safari iOS e sull’app aggiunta alla schermata Home (*Condividi 
 - [ ] Aspetto: tema Automatico segue il cambio chiaro/scuro di iOS; con *Riduci movimento* attivo i pannelli compaiono senza scorrimento; con VoiceOver le voci della barra in basso e i pulsanti principali sono annunciati; con testo ingrandito nessun pulsante è tagliato.
 - [ ] Alimentazione (CR-UX-ALIM-001): all’apertura si vedono il giorno e il primo pasto senza scorrere; con VoiceOver il giorno selezionato viene annunciato come data corrente e il cambio giorno annuncia il numero di pasti; “Gestisci piano” si apre e si chiude senza perdere il giorno.
 - [ ] Alimentazione (CR-UX-ALIM-002): con il pollice, “Segna consumato”, “Dettagli”, le opzioni e i giorni si toccano senza errori; il cambio giorno scorre nella direzione giusta; i pannelli si chiudono con animazione; con *Riduci movimento* tutto è immediato.
+- [ ] Seduta (backlog 05/11): pinch con due dita nella seduta e in modalità allenamento non ingrandisce né sposta la pagina; con l’opzione disattivata lo zoom torna disponibile; lo Zoom di accessibilità di iOS funziona.
+- [ ] “Aggiungi esercizio” con la tastiera aperta: campo di ricerca e risultati utilizzabili, filtri raggiungibili.
+- [ ] Recupero: −15 s due volte su 2:00 → la seduta successiva propone 1:30 per lo stesso esercizio; Stop anticipato non cambia la preferenza.
+- [ ] Fine allenamento: “Esporta allenamento” apre la condivisione/download di iOS; annullandola la seduta resta salvata; poi riepilogo e storico.
 - [ ] Schermo che resta acceso durante la modalità allenamento e si spegne normalmente dopo l’uscita.
 
 Annotare data, modello di iPhone, versione di iOS ed eventuali anomalie (con schermata) in una issue del repository.

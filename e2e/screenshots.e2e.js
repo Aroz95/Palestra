@@ -84,3 +84,48 @@ for (const w of DIET_WIDTHS) {
     })
   }
 }
+
+// Backlog 05/11/2026 (EXE-01, TIM-01, SES-01, EXE-02, CAT-01/02): schermate a 390 × 844
+for (const theme of THEMES) {
+  test.describe(`backlog ${theme}`, () => {
+    test.skip(!OUT, 'solo con SHOTS=<cartella>')
+    test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, colorScheme: theme, deviceScaleFactor: 1 })
+    test(`backlog ${theme}`, async ({ page }) => {
+      const shot = async (name, full = false) => {
+        await page.waitForTimeout(400)
+        await page.screenshot({ path: path.join(ROOT, OUT, `backlog-${theme}-${name}.jpg`), type: 'jpeg', quality: 72, fullPage: full })
+      }
+      await openApp(page)
+      await goImport(page)
+      await importFile(page, EX('programma-ab.json'))
+      await nav(page, /Oggi/)
+      // prima seduta: due serie di Leg Press, nota, poi fine
+      await page.getByRole('button', { name: /A · Full Body A/ }).click()
+      await main(page).getByLabel('Note Leg Press').fill('sedile 4, schienale 2')
+      await main(page).getByRole('button', { name: 'Serie 1: segna come fatta' }).first().click()
+      await main(page).getByRole('button', { name: 'Serie 2: segna come fatta' }).first().click()
+      await shot('01-card-chiusa')
+      await main(page).getByRole('button', { name: /Termina seduta/ }).click()
+      await shot('02-avviso-incompleto')
+      await page.getByRole('button', { name: 'Concludi comunque' }).click()
+      await shot('03-allenamento-salvato')
+      await page.getByRole('button', { name: 'Conferma e concludi' }).click()
+      await shot('04-riepilogo', true)
+      // seduta successiva: ultima volta, miniature, selettore
+      await page.clock.runFor(2 * 86_400_000)
+      await nav(page, /Oggi/)
+      await page.getByRole('button', { name: /A · Full Body A/ }).click()
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await main(page).locator('[id^="exercise-"]').first().scrollIntoViewIfNeeded()
+      await shot('05-ultima-volta')
+      await main(page).getByRole('button', { name: '+ Aggiungi esercizio' }).click()
+      await shot('06-selettore')
+      await page.getByLabel('Cerca esercizio').fill('lat')
+      await shot('07-ricerca-lat')
+      await page.keyboard.press('Escape')
+      await page.getByRole('button', { name: /Inizia allenamento/ }).click()
+      await page.getByRole('button', { name: /Segna fatto senza timer/ }).click()
+      await shot('08-modalita-allenamento')
+    })
+  })
+}

@@ -15,6 +15,9 @@ Attività previste dal calendario con stato (prevista, in corso, completata, sal
 - **Seduta di sala pesi**: obiettivo ed eseguito separati per ogni serie; RIR, RPE, fastidio e note facoltativi; suggerimenti di progressione non prescrittivi; orari di inizio/fine con durata calcolata, correzione manuale e segnalazione delle incoerenze; sensazioni e recupero; stima facoltativa delle calorie (intervallo, metodo dichiarato, attive vs totali) o valore da orologio.
 - **Modalità allenamento** sequenziale a schermo intero: grande pulsante **⏱ Serie fatta**, recupero (predefinito 1 minuto) che si ferma da solo, RIR rapido durante il recupero, esercizi a tempo che si segnano a fine conto alla rovescia, schermo sempre acceso.
 - **Nuoto**: vasca 25/50 m o personalizzata, blocchi nel formato `(200+100+2×75)×2`, distanza **prevista**, **misurata** e **stimata** (intervallo) sempre separate; passo e vasche marcati come stima quando la distanza non è misurata; tecnica (presa, bracciata, spalle, respirazione).
+- **Continuità tra sedute**: peso, ripetizioni e recupero proposti dall’ultima esecuzione dello stesso esercizio (anche da un’altra scheda o dopo un import), riquadro “Ultima volta” con le note precedenti; il recupero scelto con ±15 s viene ricordato per quell’esercizio.
+- **Aggiungi esercizio** da un catalogo di 45 esercizi con miniature, ricerca (nome, alias italiano/inglese, gruppo), ordine alfabetico e filtri; esercizi personalizzati sempre possibili.
+- **Fine allenamento**: avviso se mancano serie, seduta salvata, esportazione JSON facoltativa e riepilogo (durata, serie, volume, record, note).
 - **Storico** unificato palestra + nuoto con filtri ed esportazione di ogni seduta.
 
 ### Alimentazione
