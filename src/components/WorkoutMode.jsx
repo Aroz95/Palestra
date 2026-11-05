@@ -5,6 +5,7 @@ import { DEFAULT_REST } from '../schema/constants'
 import { toLocalISO } from '../lib/dates'
 import { targetText } from './ExerciseCard'
 import { finishPatch, withAutoStart } from '../lib/actions'
+import PreviousPerformance from './PreviousPerformance'
 
 // Sequenza dei passi: riscaldamento → esercizi → defaticamento
 export function buildSteps(session) {
@@ -19,7 +20,7 @@ const isDone = (step) => (step.kind === 'cardio' ? step.item.done : step.item.se
 
 export { hasPendingSets }
 
-export default function WorkoutMode({ session, onChange: save, timers, onClose, hintFor }) {
+export default function WorkoutMode({ session, onChange: save, timers, onClose, previousFor }) {
   // La prima attività completata fissa l'inizio della seduta (riscaldamento compreso), se non già fissato dal cronometro
   const onChange = (s) => save(withAutoStart(session, s))
   const steps = buildSteps(session)
@@ -73,7 +74,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
     setExercise(updated)
     setLastDone({ exId: ex.id, idx: i })
     const nextSession = { ...session, exercises: session.exercises.map((e) => (e.id === ex.id ? updated : e)) }
-    if (hasPendingSets(nextSession)) timers.startRest(ex.rest ?? DEFAULT_REST, 'Recupero')
+    if (hasPendingSets(nextSession)) timers.startRest(ex.rest ?? DEFAULT_REST, 'Recupero', { target: { type: 'rest', sessionId: session.id, exId: ex.id, setIdx: i } })
     else timers.stopRest()
   }
 
@@ -154,7 +155,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
               onComplete={() => completeSet(step.item)}
               onStartTimed={() => startTimedSet(step.item)}
               onUndo={() => undoLast(step.item)}
-              hint={hintFor?.(step.item)}
+              previous={previousFor?.(step.item)}
               rirPrompt={rirPrompt}
             />
           ) : (
@@ -189,7 +190,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
   )
 }
 
-function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onStartTimed, onUndo, hint, rirPrompt }) {
+function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onStartTimed, onUndo, previous, rirPrompt }) {
   const isTime = ex.type === 'time'
   const i = ex.sets.findIndex((s) => !s.done)
   const cur = i >= 0 ? ex.sets[i] : null
@@ -217,7 +218,7 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
             Obiettivo: <span className="text-fg">{target}</span>
           </p>
         )}
-        {hint && <p className="mt-1 text-xs text-warning">{hint}</p>}
+        <PreviousPerformance prev={previous} ex={ex} className="mx-auto mt-2 max-w-md text-left" />
       </div>
 
       {/* Serie: quelle fatte vengono scalate */}

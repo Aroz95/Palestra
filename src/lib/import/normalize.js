@@ -184,6 +184,9 @@ function normPain(v, raw, p) {
   return { location: v.str(raw.location, `${p}.location`), intensity: v.num(raw.intensity, `${p}.intensity`, { max: 10 }) }
 }
 
+// Solo i campi valorizzati (null/assenti omessi)
+const optional = (o) => Object.fromEntries(Object.entries(o).filter(([, x]) => x != null))
+
 function normSet(v, raw, p, isTime) {
   if (!v.obj(raw, p, { nullable: false })) return null
   const t = v.obj(raw.target, `${p}.target`)
@@ -216,6 +219,10 @@ function normSet(v, raw, p, isTime) {
     pain: normPain(v, raw.pain, `${p}.pain`),
     note: v.str(raw.note, `${p}.note`),
     at: v.datetime(raw.at, `${p}.at`),
+    ...optional({
+      restSelectedSec: v.num(raw.restSelectedSec, `${p}.restSelectedSec`, { int: true, max: 3600 }),
+      restActualSec: v.num(raw.restActualSec, `${p}.restActualSec`, { int: true, max: 7200 }),
+    }),
   }
 }
 
@@ -234,6 +241,8 @@ function normSessionExercise(v, raw, p, fallbackId) {
     perHand,
     step: v.num(raw.step, `${p}.step`, { max: 50, def: 2.5 }),
     rest: v.num(raw.rest, `${p}.rest`, { int: true, max: 1800, def: DEFAULT_REST }),
+    // campi facoltativi (TIM-01): presenti solo se registrati, così i dati precedenti restano identici
+    ...(v.bool(raw.restChosen, `${p}.restChosen`) ? { restChosen: true } : {}),
     variant: v.str(raw.variant, `${p}.variant`),
     instructions: v.str(raw.instructions, `${p}.instructions`),
     notes: v.str(raw.notes, `${p}.notes`),

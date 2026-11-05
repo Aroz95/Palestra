@@ -76,6 +76,20 @@ export const DURATION_SOURCES = {
 // Chiave di confrontabilità: stesso esercizio (stessa macchina/movimento) e stessa modalità di carico
 export const comparableKey = (ex) => `${ex.exerciseId ?? ex.name}|${ex.equipment ?? ''}|${ex.perHand ? 'mano' : ''}`
 
+// Solo il consiglio di progressione (i valori dell'ultima volta sono mostrati a parte, serie per serie)
+export function progressionAdvice(prev, step) {
+  if (!prev || prev.exercise.type === 'time') return null
+  const done = prev.exercise.sets.filter((s) => s.done && s.reps != null)
+  if (!done.length) return null
+  const repMax = done[0].target?.repMax
+  const rirs = done.map((s) => s.rir).filter((x) => x != null)
+  const easy = rirs.length ? Math.min(...rirs) >= 2 : null
+  if (repMax != null && done.every((s) => s.reps >= repMax) && easy !== false) {
+    return `Hai raggiunto il massimo del range: valuta un incremento minimo${step ? ` (+${String(step).replace('.', ',')} kg)` : ''}.`
+  }
+  return null
+}
+
 export function progressionHint(prev, step) {
   if (!prev) return null
   const done = prev.exercise.sets.filter((s) => s.done && s.reps != null)

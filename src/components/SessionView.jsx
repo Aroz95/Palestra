@@ -3,7 +3,7 @@ import ExerciseCard from './ExerciseCard'
 import CardioList from './CardioList'
 import { TimesCard, FeedbackCard, EnergyCard, StatusSelect } from './SessionShared'
 import { Card, Section, Sheet, Metric } from './ui'
-import { fmtNum, strengthStats, progressionHint, sessionDuration } from '../lib/stats'
+import { fmtNum, strengthStats, sessionDuration } from '../lib/stats'
 import { fmtDate } from '../lib/dates'
 import { lastPerformance, newSessionExercise, sessionExerciseFromTemplate } from '../schema/factories'
 import { finishPatch, withAutoStart } from '../lib/actions'
@@ -19,8 +19,8 @@ export default function SessionView({ session, state, onChange, timers, settings
   const updateExercise = (id, ex) => set({ exercises: session.exercises.map((e) => (e.id === id ? ex : e)) })
   const removeExercise = (id) => set({ exercises: session.exercises.filter((e) => e.id !== id) })
 
-  const onSetDone = (ex) => {
-    if (settings.autoRest && ex.type !== 'time') timers.startRest(ex.rest ?? DEFAULT_REST)
+  const onSetDone = (ex, i) => {
+    if (settings.autoRest && ex.type !== 'time') timers.startRest(ex.rest ?? DEFAULT_REST, 'Recupero', { target: { type: 'rest', sessionId: session.id, exId: ex.id, setIdx: i } })
     if (!timers.running && timers.elapsed === 0) timers.startStopwatch()
   }
 
@@ -134,7 +134,7 @@ export default function SessionView({ session, state, onChange, timers, settings
               onRemove={() => removeExercise(ex.id)}
               onSetDone={onSetDone}
               onStartTimer={startTimed}
-              hint={progressionHint(lastPerformance(state.sessions, ex, { excludeSessionId: session.id, beforeDate: session.date }), ex.step)}
+              previous={lastPerformance(state.sessions, ex, { excludeSessionId: session.id, beforeDate: session.date })}
             />
           ))}
         </div>

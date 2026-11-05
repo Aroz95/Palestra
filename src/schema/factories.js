@@ -184,15 +184,17 @@ export function sessionExerciseFromTemplate(tex, last) {
     weightKg: tex.suggestedWeightKg ?? null,
     rir: tex.targetRir ?? null,
   }
+  // Valori proposti serie per serie: quelli realmente eseguiti l'ultima volta (stessa posizione; oltre, l'ultima
+  // serie fatta), altrimenti quelli della scheda. Solo campi noti: una ripetizione mancante nello storico resta
+  // quella della scheda (piano), mai presentata come dato storico. Il numero di serie è quello della scheda.
+  const prevOf = (i, field) => (lastDone[i] ?? lastDone[lastDone.length - 1])?.[field] ?? null
   const sets = Array.from({ length: Math.max(0, tex.sets) }, (_, i) => {
     if (isTime) {
-      return { durationSec: tex.durationSec ?? 30, done: false, target: { durationSec: tex.durationSec ?? null }, rpe: null, pain: null, note: '', at: null }
+      return { durationSec: prevOf(i, 'durationSec') ?? tex.durationSec ?? 30, done: false, target: { durationSec: tex.durationSec ?? null }, rpe: null, pain: null, note: '', at: null }
     }
-    // Carico proposto: quello effettivo dell'ultima volta (stessa serie), altrimenti quello suggerito dalla scheda
-    const prevWeight = (lastDone[i] ?? lastDone[lastDone.length - 1])?.weight
-    const weight = prevWeight ?? tex.suggestedWeightKg ?? (tex.equipment === 'bodyweight' ? 0 : null)
+    const weight = prevOf(i, 'weight') ?? tex.suggestedWeightKg ?? (tex.equipment === 'bodyweight' ? 0 : null)
     return {
-      reps: tex.repMax ?? tex.repMin ?? null,
+      reps: prevOf(i, 'reps') ?? tex.repMax ?? tex.repMin ?? null,
       weight,
       done: false,
       target: { repMin: tex.repMin ?? null, repMax: tex.repMax ?? null, weightKg: tex.suggestedWeightKg ?? null, rir: tex.targetRir ?? null },
@@ -212,7 +214,9 @@ export function sessionExerciseFromTemplate(tex, last) {
     equipment: tex.equipment,
     perHand: !!tex.perHand,
     step: tex.step,
-    rest: tex.restSeconds ?? DEFAULT_REST,
+    // recupero: quello scelto con ±15 s l'ultima volta (per questo esercizio), altrimenti quello della scheda
+    rest: last?.exercise.restChosen && last.exercise.rest != null ? last.exercise.rest : (tex.restSeconds ?? DEFAULT_REST),
+    ...(last?.exercise.restChosen && last.exercise.rest != null ? { restChosen: true } : {}),
     variant: tex.variant ?? '',
     instructions: tex.instructions ?? '',
     notes: '',

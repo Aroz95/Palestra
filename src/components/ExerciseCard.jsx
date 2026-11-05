@@ -4,6 +4,7 @@ import { Rating, Sheet, TextInput, Field } from './ui'
 import { fmtClock } from '../lib/stats'
 import { toLocalISO } from '../lib/dates'
 import { DEFAULT_REST } from '../schema/constants'
+import PreviousPerformance from './PreviousPerformance'
 
 export function targetText(ex) {
   const t = ex.target ?? ex.sets[0]?.target
@@ -27,7 +28,7 @@ export function summaryText(ex) {
   return `${ex.sets.length} × ${reps} · ${kg} kg${ex.perHand ? ' per mano' : ''}`
 }
 
-export default function ExerciseCard({ exercise, index, onChange, onRemove, onSetDone, onStartTimer, hint }) {
+export default function ExerciseCard({ exercise, index, onChange, onRemove, onSetDone, onStartTimer, previous }) {
   const ex = exercise
   const doneCount = ex.sets.filter((s) => s.done).length
   const allDone = ex.sets.length > 0 && doneCount === ex.sets.length
@@ -77,17 +78,20 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
 
       {open && (
         <div className="border-t border-line px-3 pb-3 pt-2">
-          {(target || hint || ex.instructions) && (
-            <div className="mb-2 space-y-1 px-1 text-xs">
-              {target && (
-                <div className="text-fg-soft">
-                  <span className="font-semibold text-swim">Obiettivo</span> {target} · recupero {fmtClock((ex.rest ?? DEFAULT_REST) * 1000)}
-                </div>
-              )}
-              {ex.instructions && <div className="text-muted">{ex.instructions}</div>}
-              {hint && <div className="text-warning">{hint}</div>}
-            </div>
-          )}
+          <div className="mb-2 space-y-2 px-1">
+            {(target || ex.instructions) && (
+              <div className="space-y-1 text-sm">
+                {target && (
+                  <div className="text-fg-soft">
+                    <span className="font-semibold text-fg">Obiettivo</span> {target} · recupero {fmtClock((ex.rest ?? DEFAULT_REST) * 1000)}
+                    {ex.restChosen && <span className="text-muted"> (scelto l’ultima volta)</span>}
+                  </div>
+                )}
+                {ex.instructions && <div className="text-muted">{ex.instructions}</div>}
+              </div>
+            )}
+            <PreviousPerformance prev={previous} ex={ex} />
+          </div>
           {ex.sets.length > 0 && (
             <div className="mb-1 grid grid-cols-[1.75rem_1fr_1fr_3rem] items-center gap-2 px-1 text-xs font-medium text-muted">
               <span>#</span>
@@ -174,7 +178,7 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
           <textarea
             value={ex.notes}
             onChange={(e) => onChange({ ...ex, notes: e.target.value })}
-            placeholder="Note (sensazioni, regolazioni macchina…)"
+            placeholder="Note di oggi (sensazioni, regolazioni macchina…)"
             aria-label={`Note ${ex.name}`}
             rows={1}
             className="mt-2 w-full resize-y rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted outline-none focus:ring-2 focus:ring-primary"

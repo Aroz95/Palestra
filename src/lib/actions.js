@@ -89,6 +89,32 @@ export function finishPatch(session, { at = Date.now(), stopwatch = null } = {})
   return patch
 }
 
+// ---- Recupero tra le serie (TIM-01) ----
+// target: { type: 'rest', sessionId, exId, setIdx } = la serie dopo cui è partito il recupero
+const updateTargetExercise = (state, target, fn) =>
+  !target || target.type !== 'rest'
+    ? state
+    : { ...state, sessions: state.sessions.map((s) => (s.id !== target.sessionId ? s : { ...s, exercises: s.exercises.map((ex) => (ex.id === target.exId ? fn(ex) : ex)) })) }
+
+// Recupero impostato con ±15 s: diventa la preferenza di quell'esercizio (riproposta la volta successiva)
+export function chooseRest(state, target, seconds) {
+  const sec = Math.max(1, Math.round(seconds))
+  return updateTargetExercise(state, target, (ex) => ({
+    ...ex,
+    rest: sec,
+    restChosen: true,
+    sets: ex.sets.map((st, j) => (j === target.setIdx ? { ...st, restSelectedSec: sec } : st)),
+  }))
+}
+
+// Recupero effettivo misurato (fine del timer, stop o serie successiva): misura separata, non cambia la preferenza
+export function recordRest(state, target, { selectedSec, actualSec }) {
+  return updateTargetExercise(state, target, (ex) => ({
+    ...ex,
+    sets: ex.sets.map((st, j) => (j === target.setIdx ? { ...st, restSelectedSec: Math.round(selectedSec), restActualSec: Math.max(0, Math.round(actualSec)) } : st)),
+  }))
+}
+
 // ---- Programmi e schede ----
 
 export function upsertProgram(state, program) {

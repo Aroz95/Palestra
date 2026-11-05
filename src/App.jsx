@@ -14,7 +14,7 @@ import { Empty, Segmented } from './components/ui'
 import { usePersistentState } from './lib/persist'
 import { useLocalStorage } from './lib/storage'
 import { useTimers } from './lib/useTimers'
-import { hasPendingSets, progressionHint } from './lib/stats'
+import { hasPendingSets } from './lib/stats'
 import { toLocalISO } from './lib/dates'
 import { emptyState, lastPerformance } from './schema/factories'
 import { DEFAULT_REST } from './schema/constants'
@@ -52,7 +52,9 @@ export default function App() {
   const timers = useTimers({ sound: state?.settings.sound ?? true, onCountdownEnd: (c) => onCountdownEnd(c) })
 
   // Fine di una serie/cardio a tempo: la segna come fatta e, se restano serie, avvia il recupero
-  function onCountdownEnd({ kind, target }) {
+  function onCountdownEnd({ kind, target, duration }) {
+    // recupero terminato da solo: recupero effettivo = durata impostata
+    if (kind !== 'work' && target?.type === 'rest') return setState((s) => A.recordRest(s, target, { selectedSec: duration, actualSec: duration }))
     if (kind !== 'work' || !target) return
     const session = stateRef.current?.sessions.find((s) => s.id === target.sessionId)
     if (!session) return
@@ -65,7 +67,7 @@ export default function App() {
         ),
       }
       const ex = updated.exercises.find((e) => e.id === target.exId)
-      if (ex && hasPendingSets(updated)) timers.startRest(ex.rest ?? DEFAULT_REST, 'Recupero')
+      if (ex && hasPendingSets(updated)) timers.startRest(ex.rest ?? DEFAULT_REST, 'Recupero', { target: { type: 'rest', sessionId: session.id, exId: ex.id, setIdx: target.setIdx } })
     } else if (target.type === 'cardio') {
       const mark = (list) => list.map((c) => (c.id === target.itemId ? { ...c, done: true } : c))
       updated = { ...session, warmup: mark(session.warmup), cooldown: mark(session.cooldown) }
@@ -111,7 +113,7 @@ export default function App() {
   const active = state.sessions.find((s) => s.id === state.activeSessionId) ?? null
   const updateSession = (session) => setState((s) => A.upsertSession(s, session))
   const deleteSession = (id) => setState((s) => A.deleteSession(s, id))
-  const hintFor = (ex) => progressionHint(lastPerformance(state.sessions, ex, { excludeSessionId: active?.id, beforeDate: active?.date }), ex.step)
+  const previousFor = (ex) => lastPerformance(state.sessions, ex, { excludeSessionId: active?.id, beforeDate: active?.date })
  // Avvio del cronometro = inizio della seduta aperta (se non già fissato); il cronometro resta associato a quella seduta
   const sessionTimers = {
     ...timers,
@@ -120,6 +122,27 @@ export default function App() {
       timers.startStopwatch(open?.id ?? null)
       if (open && !open.startedAt) setState((s) => A.upsertSession(s, A.autoStart(open)))
     },
+    // ±15 s su un recupero dopo una serie: preferenza di quell'esercizio (non dei timer di lavoro né degli altri esercizi)
+    addRest: (delta) => {
+      const r = timers.rest
+      timers.addRest(delta)
+      if (r.active && r.kind !== 'work' && r.target?.type === 'rest') setState((s) => A.chooseRest(s, r.target, Math.max(1, r.duration + delta)))
+    },
+    // recupero interrotto o sostituito: si registra solo il tempo effettivo
+    stopRest: () => {
+      closeRest()
+      timers.stopRest()
+    },
+    startRest: (...args) => {
+      closeRest()
+      timers.startRest(...args)
+    },
+  }
+  function closeRest() {
+    const r = timers.rest
+    if (r.active && r.kind !== 'work' && r.target?.type === 'rest') {
+      setState((s) => A.recordRest(s, r.target, { selectedSec: r.duration, actualSec: r.duration - r.left / 1000 }))
+    }
   }
   const showTimer = tab === 'training' || timers.running || timers.rest.active || timers.elapsed > 0
 
@@ -227,7 +250,7 @@ export default function App() {
       </main>
 
       {workout && active?.kind === 'strength' && (
-        <WorkoutMode session={active} onChange={updateSession} timers={sessionTimers} onClose={() => setWorkout(false)} hintFor={hintFor} />
+        <WorkoutMode session={active} onChange={updateSession} timers={sessionTimers} onClose={() => setWorkout(false)} previousFor={previousFor} />
       )}
 
       {/* Mobile: barra in basso con etichette sempre visibili. Desktop (≥1024 px): navigazione laterale */}
