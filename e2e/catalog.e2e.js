@@ -15,7 +15,8 @@ test('aggiungi esercizio: ricerca, ordine A–Z, filtri, già presenti, personal
   // A–Z e miniature con testo alternativo
   const names = await rows.evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-label').replace(/, già nella seduta$/, '')))
   expect(names).toEqual([...names].sort(new Intl.Collator('it', { sensitivity: 'base' }).compare))
-  await expect(rows.first().getByRole('img')).toHaveAttribute('aria-label', /: /)
+  await expect(rows.first().getByRole('img')).toHaveAttribute('alt', /^Illustrazione: /)
+  await expect.poll(() => rows.first().getByRole('img').evaluate((i) => i.complete && i.naturalWidth > 0)).toBe(true) // immagine caricata
   // già presente nella seduta: segnalato e non aggiungibile due volte
   await expect(sheet.getByRole('button', { name: 'Leg press, già nella seduta' })).toBeDisabled()
   // ricerca

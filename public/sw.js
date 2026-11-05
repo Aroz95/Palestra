@@ -2,7 +2,7 @@
 // - Pagina: prima la rete (per ricevere gli aggiornamenti), poi la copia in cache.
 // - File statici (JS/CSS con hash, icone): prima la cache, poi la rete.
 // I dati dell'utente non passano mai da qui: restano in IndexedDB.
-const CACHE = 'palestra-app-v1'
+const CACHE = 'palestra-app-v2'
 const SHELL = ['./', './index.html', './favicon.svg', './manifest.webmanifest', './icon-180.png', './icon-512.png']
 
 const assetsOf = (html) => [...html.matchAll(/(?:src|href)="\.?\/?(assets\/[^"]+)"/g)].map((m) => `./${m[1]}`)
@@ -12,6 +12,13 @@ async function precache() {
   await cache.addAll(SHELL)
   const html = await (await cache.match('./index.html')).text()
   await cache.addAll(assetsOf(html))
+  // illustrazioni degli esercizi: disponibili anche senza rete (un errore qui non blocca l'installazione)
+  try {
+    const list = await (await fetch('./exercises/manifest.json')).json()
+    await cache.addAll(Object.values(list).map((x) => `./exercises/${x.file}`))
+  } catch {
+    /* si riprova al prossimo aggiornamento */
+  }
 }
 
 // Rimuove dalla cache i file statici delle versioni precedenti
@@ -59,7 +66,7 @@ self.addEventListener('fetch', (e) => {
       (hit) =>
         hit ??
         fetch(req).then((res) => {
-          if (res.ok && new URL(req.url).pathname.includes('/assets/')) {
+          if (res.ok && /\/(assets|exercises)\//.test(new URL(req.url).pathname)) {
             const copy = res.clone()
             caches.open(CACHE).then((c) => c.put(req, copy))
           }

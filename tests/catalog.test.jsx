@@ -5,7 +5,7 @@ import path from 'node:path'
 import { CATALOG, GROUPS, catalogMatch, normText } from '../src/schema/catalog'
 import { exerciseKey, lastPerformance } from '../src/schema/factories'
 import { buildCandidates, filterCandidates } from '../src/components/ExercisePicker'
-import { PATTERNS } from '../src/components/ExerciseThumb'
+import { IMAGE_SOURCES } from '../src/schema/catalog'
 import { migrateToLatest } from '../src/schema/migrate'
 import { EQUIPMENT } from '../src/schema/constants'
 
@@ -21,7 +21,10 @@ describe('catalogo', () => {
       }
       expect(GROUPS).toContain(c.group)
       expect(Object.keys(EQUIPMENT)).toContain(c.equipment)
-      expect(PATTERNS[c.pattern], c.id).toBeTruthy()
+      if (c.image) {
+        expect(c.image).toBe(`exercises/${c.id}.webp`)
+        expect(fs.existsSync(path.resolve(__dirname, '../public', c.image)), c.image).toBe(true)
+      }
     }
   })
   it('nomi delle schede reali riconosciuti; solo corrispondenze esatte, carico per mano rispettato', () => {
@@ -44,6 +47,14 @@ describe('catalogo', () => {
     const sessions = [{ id: 's', kind: 'strength', date: '2026-11-03', exercises: [{ ...hist, sets: [{ weight: 25, reps: 12, done: true }] }] }]
     expect(lastPerformance(sessions, cat)?.exercise.sets[0].weight).toBe(25)
   })
+})
+
+it('illustrazioni: un unico set (Everkinetic) con fonte dichiarata; solo plank, hip thrust e face pull senza immagine', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../public/exercises/manifest.json'), 'utf8'))
+  expect(Object.keys(IMAGE_SOURCES).sort()).toEqual(Object.keys(manifest).sort())
+  expect(Object.values(IMAGE_SOURCES).every((s) => s.startsWith('everkinetic '))).toBe(true)
+  expect(CATALOG.filter((c) => !c.image).map((c) => c.id).sort()).toEqual(['face-pull', 'hip-thrust', 'plank'])
+  expect(fs.readFileSync(path.resolve(__dirname, '../public/exercises/LICENSE.md'), 'utf8')).toContain('CC BY-SA 4.0')
 })
 
 describe('selettore esercizi', () => {

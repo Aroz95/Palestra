@@ -194,6 +194,22 @@ function SettingsView({ state, update, status, onReset, theme, setTheme, pinchLo
         </Card>
       </Section>
 
+      <Section title="Crediti">
+        <Card className="space-y-1 text-sm text-fg-soft">
+          <p>
+            Illustrazioni degli esercizi:{' '}
+            <a href="https://github.com/everkinetic/data" target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">
+              Everkinetic
+            </a>{' '}
+            (Greg Priday), licenza{' '}
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.it" target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">
+              CC BY-SA 4.0
+            </a>
+            , ridimensionate e convertite (un fotogramma per esercizio).
+          </p>
+        </Card>
+      </Section>
+
       <Section title="Dati e privacy">
         <Card className="space-y-3 text-sm">
           <div className="flex flex-wrap gap-1">

@@ -1,0 +1,216 @@
+{
+ "leg-press": {
+  "file": "leg-press.webp",
+  "source": "everkinetic 0127: Leg Press",
+  "sourceFile": "dist/png/0127-tension.png"
+ },
+ "leg-extension": {
+  "file": "leg-extension.webp",
+  "source": "everkinetic 0142: Leg Extensions",
+  "sourceFile": "dist/png/0142-tension.png"
+ },
+ "leg-curl": {
+  "file": "leg-curl.webp",
+  "source": "everkinetic 0117: Lying Leg Curl Machine",
+  "sourceFile": "dist/png/0117-tension.png"
+ },
+ "squat-bilanciere": {
+  "file": "squat-bilanciere.webp",
+  "source": "everkinetic 0122: Barbell Squat",
+  "sourceFile": "dist/png/0122-tension.png"
+ },
+ "goblet-squat": {
+  "file": "goblet-squat.webp",
+  "source": "everkinetic 0130: Squats: Dumbbells",
+  "sourceFile": "dist/png/0130-tension.png"
+ },
+ "affondi": {
+  "file": "affondi.webp",
+  "source": "everkinetic 0115: Lunges: Dumbbell",
+  "sourceFile": "dist/png/0115-tension.png"
+ },
+ "calf-raise": {
+  "file": "calf-raise.webp",
+  "source": "everkinetic 0282: Standing Calf Raises using Machine",
+  "sourceFile": "dist/png/0282-tension.png"
+ },
+ "abductor": {
+  "file": "abductor.webp",
+  "source": "everkinetic 0156: Thigh Abductor",
+  "sourceFile": "dist/png/0156-tension.png"
+ },
+ "adductor": {
+  "file": "adductor.webp",
+  "source": "everkinetic 0157: Thigh Adductor",
+  "sourceFile": "dist/png/0157-tension.png"
+ },
+ "stacco": {
+  "file": "stacco.webp",
+  "source": "everkinetic 0099: Dead Lifts: Barbell",
+  "sourceFile": "dist/png/0099-tension.png"
+ },
+ "stacco-rumeno": {
+  "file": "stacco-rumeno.webp",
+  "source": "everkinetic 0118: Romanian Dead Lift",
+  "sourceFile": "dist/png/0118-tension.png"
+ },
+ "chest-press": {
+  "file": "chest-press.webp",
+  "source": "everkinetic 0066: Bench Press: Machine",
+  "sourceFile": "dist/png/0066-tension.png"
+ },
+ "incline-chest-press": {
+  "file": "incline-chest-press.webp",
+  "source": "everkinetic 0084: Incline Chest Press",
+  "sourceFile": "src/images-ai/0084-S.ai.png"
+ },
+ "panca-piana": {
+  "file": "panca-piana.webp",
+  "source": "everkinetic 0042: Bench Press: Barbell",
+  "sourceFile": "dist/png/0042-tension.png"
+ },
+ "panca-inclinata": {
+  "file": "panca-inclinata.webp",
+  "source": "everkinetic 0043: Bench Press: Barbell (Incline)",
+  "sourceFile": "dist/png/0043-tension.png"
+ },
+ "distensioni-manubri": {
+  "file": "distensioni-manubri.webp",
+  "source": "everkinetic 0055: Bench Press: Dumbbell",
+  "sourceFile": "dist/png/0055-tension.png"
+ },
+ "pec-deck": {
+  "file": "pec-deck.webp",
+  "source": "everkinetic 0047: Butterfly Machine",
+  "sourceFile": "src/images-ai/0047-S.ai.png"
+ },
+ "croci-manubri": {
+  "file": "croci-manubri.webp",
+  "source": "everkinetic 0056: Dumbbell Flys",
+  "sourceFile": "dist/png/0056-tension.png"
+ },
+ "croci-cavi": {
+  "file": "croci-cavi.webp",
+  "source": "everkinetic 0057: Flat Bench Cable Flys",
+  "sourceFile": "dist/png/0057-tension.png",
+  "note": "variante su panca piana"
+ },
+ "piegamenti": {
+  "file": "piegamenti.webp",
+  "source": "everkinetic 0077: Push Up: Body Weight",
+  "sourceFile": "dist/png/0077-tension.png"
+ },
+ "lat-machine": {
+  "file": "lat-machine.webp",
+  "source": "everkinetic 0093: Pull Down: Underhand",
+  "sourceFile": "dist/png/0093-tension.png",
+  "note": "approssimata: stessa macchina, presa inversa"
+ },
+ "trazioni": {
+  "file": "trazioni.webp",
+  "source": "everkinetic 0087: Pull Ups",
+  "sourceFile": "dist/png/0087-tension.png"
+ },
+ "pulley": {
+  "file": "pulley.webp",
+  "source": "everkinetic 0025: Seated Cable Rows",
+  "sourceFile": "dist/png/0025-tension.png"
+ },
+ "row-machine": {
+  "file": "row-machine.webp",
+  "source": "everkinetic 0025: Seated Cable Rows",
+  "sourceFile": "dist/png/0025-tension.png",
+  "note": "approssimata: rematore seduto ai cavi"
+ },
+ "rematore-manubrio": {
+  "file": "rematore-manubrio.webp",
+  "source": "everkinetic 0024: Rear Deltoid Row Dumbbell",
+  "sourceFile": "dist/png/0024-tension.png"
+ },
+ "rematore-bilanciere": {
+  "file": "rematore-bilanciere.webp",
+  "source": "everkinetic 0026: Reverse Grips Bent Over Barbell Rows",
+  "sourceFile": "dist/png/0026-tension.png"
+ },
+ "hyperextension": {
+  "file": "hyperextension.webp",
+  "source": "everkinetic 0103: Hyperextensions",
+  "sourceFile": "dist/png/0103-tension.png"
+ },
+ "shoulder-press": {
+  "file": "shoulder-press.webp",
+  "source": "everkinetic 0003: Seated Shoulder Press Machine",
+  "sourceFile": "src/images-ai/0003-S.ai.png"
+ },
+ "lento-manubri": {
+  "file": "lento-manubri.webp",
+  "source": "everkinetic 0012: Dumbbell Shoulder Press",
+  "sourceFile": "src/images-ai/0012-S.ai.png"
+ },
+ "lento-avanti": {
+  "file": "lento-avanti.webp",
+  "source": "everkinetic 0004: Seated Military Press",
+  "sourceFile": "dist/png/0004-tension.png"
+ },
+ "alzate-laterali": {
+  "file": "alzate-laterali.webp",
+  "source": "everkinetic 0018: Lateral Dumbbell Raises",
+  "sourceFile": "dist/png/0018-tension.png"
+ },
+ "alzate-frontali": {
+  "file": "alzate-frontali.webp",
+  "source": "everkinetic 0033: Front Dumbbell Raise",
+  "sourceFile": "dist/png/0033-tension.png"
+ },
+ "reverse-fly": {
+  "file": "reverse-fly.webp",
+  "source": "everkinetic 0035: Seated Rear Lateral Cable Raise",
+  "sourceFile": "dist/png/0035-tension.png",
+  "note": "approssimata: alzate posteriori ai cavi"
+ },
+ "curl-manubri": {
+  "file": "curl-manubri.webp",
+  "source": "everkinetic 0224: Biceps Curl: Dumbbell",
+  "sourceFile": "dist/png/0224-tension.png"
+ },
+ "curl-bilanciere": {
+  "file": "curl-bilanciere.webp",
+  "source": "everkinetic 0211: Biceps Curl: Barbell",
+  "sourceFile": "dist/png/0211-tension.png"
+ },
+ "hammer-curl": {
+  "file": "hammer-curl.webp",
+  "source": "everkinetic 0227: Biceps Curl: Dumbbell (Hammer)",
+  "sourceFile": "dist/png/0227-tension.png"
+ },
+ "curl-cavo": {
+  "file": "curl-cavo.webp",
+  "source": "everkinetic 0212: Standing Biceps Curl with Cable",
+  "sourceFile": "dist/png/0212-tension.png"
+ },
+ "triceps-pushdown": {
+  "file": "triceps-pushdown.webp",
+  "source": "everkinetic 0205: Triceps Pushdown: Cable",
+  "sourceFile": "dist/png/0205-tension.png"
+ },
+ "french-press": {
+  "file": "french-press.webp",
+  "source": "everkinetic 0183: Lying Triceps Press with Barbell",
+  "sourceFile": "dist/png/0183-tension.png"
+ },
+ "dip": {
+  "file": "dip.webp",
+  "source": "everkinetic 0172: Triceps Dips: Body Weight",
+  "sourceFile": "dist/png/0172-tension.png"
+ },
+ "crunch": {
+  "file": "crunch.webp",
+  "source": "everkinetic 0291: Crunches",
+  "sourceFile": "dist/png/0291-tension.png"
+ },
+ "leg-raise": {
+  "file": "leg-raise.webp",
+  "source": "everkinetic 0021: Flat Bench Leg Raises",
+  "sourceFile": "dist/png/0021-tension.png"
+ }
+}

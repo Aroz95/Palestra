@@ -74,7 +74,7 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
         >
           {allDone ? '✓' : index + 1}
         </span>
-        <ExerciseThumb ex={ex} size={36} />
+        <ExerciseThumb ex={ex} size={40} />
         <div className="min-w-0 flex-1">
           <div className="truncate font-semibold text-fg">{ex.name}</div>
           <div className="truncate text-xs text-muted">

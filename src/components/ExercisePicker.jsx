@@ -136,7 +136,7 @@ export default function ExercisePicker({ candidates, onPick, onCustom }) {
                 className="flex min-h-14 w-full items-center gap-3 py-2 text-left disabled:opacity-60"
                 aria-label={`${x.name}${x.inSession ? ', già nella seduta' : ''}`}
               >
-                <ExerciseThumb ex={x.tex} entry={x.entry} size={44} />
+                <ExerciseThumb ex={x.tex} entry={x.entry} size={56} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium text-fg">{x.name}</span>
                   <span className="block truncate text-sm text-muted">
