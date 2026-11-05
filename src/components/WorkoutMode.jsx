@@ -6,6 +6,7 @@ import { toLocalISO } from '../lib/dates'
 import { targetText } from './ExerciseCard'
 import { finishPatch, withAutoStart } from '../lib/actions'
 import PreviousPerformance from './PreviousPerformance'
+import { Sheet, TextArea } from './ui'
 
 // Sequenza dei passi: riscaldamento → esercizi → defaticamento
 export function buildSteps(session) {
@@ -49,15 +50,6 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
     onChange({ ...session, [key]: session[key].map((c) => (c.id === item.id ? item : c)) })
   }
 
-  // Ultima serie completata: il RIR si può indicare durante il recupero anche se si è già passati all'esercizio successivo
-  const [lastDone, setLastDone] = useState(null)
-  const lastEx = session.exercises.find((e) => e.id === lastDone?.exId)
-  const lastSet = lastEx?.sets[lastDone.idx]?.done ? lastEx.sets[lastDone.idx] : null
-  const rirPrompt =
-    lastSet && lastEx.type !== 'time'
-      ? { value: lastSet.rir, name: lastEx.name, onChange: (rir) => setExercise({ ...lastEx, sets: lastEx.sets.map((s, j) => (j === lastDone.idx ? { ...s, rir } : s)) }) }
-      : null
-
   const working = timers.rest.active && timers.rest.kind === 'work'
   const resting = timers.rest.active && timers.rest.kind !== 'work'
 
@@ -72,7 +64,6 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
     ensureStopwatch()
     const updated = { ...ex, sets: ex.sets.map((s, j) => (j === i ? { ...s, done: true, at: toLocalISO() } : s)) }
     setExercise(updated)
-    setLastDone({ exId: ex.id, idx: i })
     const nextSession = { ...session, exercises: session.exercises.map((e) => (e.id === ex.id ? updated : e)) }
     if (hasPendingSets(nextSession)) timers.startRest(ex.rest ?? DEFAULT_REST, 'Recupero', { target: { type: 'rest', sessionId: session.id, exId: ex.id, setIdx: i } })
     else timers.stopRest()
@@ -156,7 +147,6 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
               onStartTimed={() => startTimedSet(step.item)}
               onUndo={() => undoLast(step.item)}
               previous={previousFor?.(step.item)}
-              rirPrompt={rirPrompt}
             />
           ) : (
             <CardioStep
@@ -195,13 +185,21 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
   )
 }
 
-function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onStartTimed, onUndo, previous, rirPrompt }) {
+function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onStartTimed, onUndo, previous }) {
   const isTime = ex.type === 'time'
   const i = ex.sets.findIndex((s) => !s.done)
   const cur = i >= 0 ? ex.sets[i] : null
   const left = ex.sets.filter((s) => !s.done).length
   const rest = ex.rest ?? DEFAULT_REST
-  const target = targetText(ex)
+  // obiettivo senza RIR: in modalità allenamento il RIR non si mostra né si chiede
+  const target = targetText({ ...ex, target: ex.target && { ...ex.target, rir: null }, sets: ex.sets.map((s) => ({ ...s, target: s.target && { ...s.target, rir: null } })) })
+  const [noteOpen, setNoteOpen] = useState(false)
+  // Nuova serie in coda con i valori dell'ultima (da fare)
+  const addSet = () => {
+    const { restSelectedSec, restActualSec, ...last } = ex.sets[ex.sets.length - 1] ?? {} // eslint-disable-line no-unused-vars
+    const base = ex.sets.length ? last : isTime ? { durationSec: 30, target: null } : { reps: 10, weight: null, target: null }
+    onChange({ ...ex, sets: [...ex.sets, { ...base, done: false, rir: null, rpe: null, pain: null, note: '', at: null }] })
+  }
 
   // Modifica la serie corrente; le serie successive con lo stesso valore vengono aggiornate insieme
   const editCurrent = (field, value) => {
@@ -276,24 +274,6 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
         {resting ? (
           <>
             <Countdown timers={timers} color="sky" title="Recupero" />
-            {rirPrompt && (
-              <div className="mt-4 text-center">
-                <div className="mb-1 text-xs text-muted">RIR della serie appena fatta · {rirPrompt.name} (facoltativo)</div>
-                <div className="flex justify-center gap-1">
-                  {[0, 1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => rirPrompt.onChange(rirPrompt.value === n ? null : n)}
-                      aria-pressed={rirPrompt.value === n}
-                      aria-label={`RIR ${n}`}
-                      className={`h-10 w-10 rounded-lg text-sm font-semibold ${rirPrompt.value === n ? 'bg-swim text-on-swim' : 'bg-surface-muted text-fg-soft'}`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </>
         ) : working ? (
           <Countdown timers={timers} color="amber" title="In corso" />
@@ -308,7 +288,20 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
         ) : null}
       </div>
 
-      <div className="flex justify-center gap-2">
+      {ex.notes && (
+        <p className="mx-auto mb-2 max-w-md text-center text-sm text-fg-soft">
+          Nota di oggi: “{ex.notes}”
+        </p>
+      )}
+      <div className="flex flex-wrap justify-center gap-2">
+        {!working && (
+          <button onClick={addSet} className="btn-ghost text-sm">
+            + Serie
+          </button>
+        )}
+        <button onClick={() => setNoteOpen(true)} className="btn-ghost text-sm">
+          {ex.notes ? 'Modifica nota' : '+ Nota'}
+        </button>
         {cur && isTime && !working && !resting && (
           <button onClick={onComplete} className="btn-ghost text-sm">✓ Segna fatta senza timer</button>
         )}
@@ -316,6 +309,14 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
           <button onClick={onUndo} className="btn-ghost text-sm">↶ Annulla ultima serie</button>
         )}
       </div>
+
+      <Sheet open={noteOpen} onClose={() => setNoteOpen(false)} title={`Nota · ${ex.name}`}>
+        <div className="space-y-3">
+          <TextArea value={ex.notes} onChange={(notes) => onChange({ ...ex, notes })} rows={3} placeholder="Sensazioni, regolazioni della macchina…" aria-label={`Nota ${ex.name}`} />
+          <p className="text-xs text-muted">Si salva mentre scrivi e la ritrovi la prossima volta nel riquadro “Ultima volta”.</p>
+          <button onClick={() => setNoteOpen(false)} className="btn-primary w-full">Fatto</button>
+        </div>
+      </Sheet>
     </div>
   )
 }

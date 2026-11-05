@@ -1,4 +1,4 @@
-// E2E-03 seduta completa con timer e RIR · E2E-04 revisione della scheda · E2E-13 app in background/chiusa (emulazione)
+// E2E-03 seduta completa con timer · E2E-04 revisione della scheda · E2E-13 app in background/chiusa (emulazione)
 import { test, expect } from '@playwright/test'
 import { openApp, nav, tab, main, goImport, importFile, savedState, waitSaved, EX, NOW } from './helpers'
 
@@ -21,21 +21,19 @@ async function finishWorkout(page) {
   await waitSaved(page)
 }
 
-test('E2E-03 Full Body A: tutte le serie registrate, RIR, durata corretta dopo refresh', async ({ page }) => {
+test('E2E-03 Full Body A: tutte le serie registrate, durata corretta dopo refresh', async ({ page }) => {
   await startA(page)
   await wm(page).getByRole('button', { name: /Segna fatto senza timer/ }).click() // riscaldamento
   await expect(wm(page).getByRole('heading', { name: 'Leg Press' })).toBeVisible()
-  await expect(wm(page).getByText('Obiettivo: 2 × 10–12 · 60 kg · RIR 3')).toBeVisible()
+  await expect(wm(page).getByText('Obiettivo: 2 × 10–12 · 60 kg', { exact: true })).toBeVisible() // senza RIR in modalità allenamento
 
   await serieFatta(page)
   await expect(wm(page).getByRole('button', { name: 'Salta recupero' })).toBeVisible()
-  await wm(page).getByRole('button', { name: 'RIR 2' }).click()
+  await expect(wm(page).getByRole('button', { name: /^RIR/ })).toHaveCount(0) // RIR non più richiesto
   await page.clock.runFor(121_000) // recupero da 2 minuti: si ferma da solo
   await expect(wm(page).getByRole('button', { name: 'Salta recupero' })).toHaveCount(0)
   await serieFatta(page)
-  // ultima serie: si passa al prossimo esercizio ma il RIR resta indicabile per la serie appena fatta
   await expect(wm(page).getByRole('heading', { name: 'Incline Chest Press' })).toBeVisible()
-  await wm(page).getByRole('button', { name: 'RIR 3' }).click()
   await page.clock.runFor(121_000)
   for (let i = 0; i < 2; i++) {
     await serieFatta(page)
@@ -55,7 +53,7 @@ test('E2E-03 Full Body A: tutte le serie registrate, RIR, durata corretta dopo r
   const s = (await savedState(page)).sessions[0]
   expect(s.status).toBe('completed')
   expect(s.exercises.every((e) => e.sets.every((x) => x.done))).toBe(true)
-  expect(s.exercises[0].sets.map((x) => x.rir)).toEqual([2, 3])
+  expect(s.exercises[0].sets.map((x) => x.rir)).toEqual([null, null])
   expect(s.exercises[2].sets.map((x) => x.durationSec)).toEqual([30, 30])
   // riscaldamento da 10 min segnato "fatto senza timer": incluso nella seduta (inizio anticipato), una sola volta
   expect(s.durationSource).toBe('stopwatch')
@@ -206,4 +204,25 @@ test('pesi: la seduta successiva parte dai carichi effettivi della precedente, n
   const next = st.sessions.find((s) => s.id === st.activeSessionId)
   expect(next.exercises[0].sets.map((s) => [s.weight, s.done])).toEqual([[70, false], [70, false]])
   expect(next.exercises[0].target.weightKg).toBe(60)
+})
+
+test('modalità allenamento: + Serie e nota sull’esercizio in corso', async ({ page }) => {
+  await startA(page)
+  await wm(page).getByRole('button', { name: /Segna fatto senza timer/ }).click() // riscaldamento
+  await expect(wm(page).getByRole('heading', { name: 'Leg Press' })).toBeVisible()
+  await expect(wm(page).getByText('Serie 1 di 2')).toBeVisible()
+  await wm(page).getByRole('button', { name: '+ Serie' }).click()
+  await expect(wm(page).getByText('Serie 1 di 3')).toBeVisible()
+  // nota
+  await wm(page).getByRole('button', { name: '+ Nota' }).click()
+  const sheet = page.getByRole('dialog', { name: 'Nota · Leg Press' })
+  await sheet.getByLabel('Nota Leg Press').fill('sedile 4')
+  await sheet.getByRole('button', { name: 'Fatto' }).click()
+  await expect(wm(page)).toContainText('Nota di oggi: “sedile 4”')
+  await expect(wm(page).getByRole('button', { name: 'Modifica nota' })).toBeVisible()
+  await waitSaved(page)
+  const ex = (await savedState(page)).sessions[0].exercises[0]
+  expect(ex.notes).toBe('sedile 4')
+  expect(ex.sets).toHaveLength(3)
+  expect(ex.sets[2]).toMatchObject({ done: false, weight: 60, reps: 12 })
 })
