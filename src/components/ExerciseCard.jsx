@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Stepper from './Stepper'
 import { Rating, Sheet, TextInput, Field } from './ui'
 import { fmtClock } from '../lib/stats'
@@ -28,11 +28,21 @@ export function summaryText(ex) {
   return `${ex.sets.length} × ${reps} · ${kg} kg${ex.perHand ? ' per mano' : ''}`
 }
 
-export default function ExerciseCard({ exercise, index, onChange, onRemove, onSetDone, onStartTimer, previous }) {
+export default function ExerciseCard({ exercise, index, onChange, onRemove, onSetDone, onStartTimer, onCompleted, previous }) {
   const ex = exercise
   const doneCount = ex.sets.filter((s) => s.done).length
   const allDone = ex.sets.length > 0 && doneCount === ex.sets.length
   const [open, setOpen] = useState(!allDone)
+  // Si chiude da sola quando l'ultima serie viene completata e si riapre se una serie torna da fare;
+  // un'apertura manuale di una card completata non viene più toccata (solo i passaggi di stato contano)
+  const wasDone = useRef(allDone)
+  useEffect(() => {
+    if (allDone && !wasDone.current) {
+      setOpen(false)
+      onCompleted?.()
+    } else if (!allDone && wasDone.current) setOpen(true)
+    wasDone.current = allDone
+  }, [allDone]) // eslint-disable-line react-hooks/exhaustive-deps
   const [detail, setDetail] = useState(null)
   const isTime = ex.type === 'time'
   const target = targetText(ex)
@@ -54,7 +64,7 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
   const markAll = () => onChange({ ...ex, sets: ex.sets.map((s) => ({ ...s, done: !allDone, at: !allDone ? (s.at ?? toLocalISO()) : null })) })
 
   return (
-    <div className={`rounded-2xl border ${allDone ? 'border-primary/50 bg-primary-soft' : 'border-line bg-surface'}`}>
+    <div id={`exercise-${ex.id}`} className={`scroll-mt-28 rounded-2xl border ${allDone ? 'border-primary/50 bg-primary-soft' : 'border-line bg-surface'}`}>
       <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center gap-3 px-4 py-3 text-left" aria-expanded={open}>
         <span
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${

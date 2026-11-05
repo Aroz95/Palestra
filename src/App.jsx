@@ -24,6 +24,7 @@ import { downloadJSON } from './lib/download'
 import { Icon } from './components/icons'
 import { IncompleteSheet, SavedSheet, SessionSummary, pendingCount } from './components/SessionEnd'
 import { useTheme } from './lib/theme'
+import { usePinchLock } from './lib/zoomLock'
 
 const TABS = [
   { id: 'today', label: 'Oggi' },
@@ -49,6 +50,7 @@ export default function App() {
   const [ending, setEnding] = useState(null) // fine allenamento: { sessionId, step: 'incomplete' | 'saved', pending, exportState }
   const [summaryId, setSummaryId] = useState(null) // riepilogo dell'allenamento appena concluso
   const [theme, setTheme] = useTheme()
+  const [pinchLock, setPinchLock] = usePinchLock()
   const [hideMigrated, setHideMigrated] = useState(false)
   const stateRef = useRef(state)
   stateRef.current = state
@@ -124,7 +126,13 @@ export default function App() {
     startStopwatch: () => {
       const open = stateRef.current?.sessions.find((s) => s.id === stateRef.current.activeSessionId && ['planned', 'in_progress'].includes(s.status))
       timers.startStopwatch(open?.id ?? null)
-      if (open && !open.startedAt) setState((s) => A.upsertSession(s, A.autoStart(open)))
+      // aggiornamento sullo stato più recente: una modifica appena fatta (es. la serie spuntata) non va sovrascritta
+      if (open) {
+        setState((s) => {
+          const cur = s.sessions.find((x) => x.id === open.id)
+          return cur && !cur.startedAt ? A.upsertSession(s, A.autoStart(cur)) : s
+        })
+      }
     },
     // ±15 s su un recupero dopo una serie: preferenza di quell'esercizio (non dei timer di lavoro né degli altri esercizi)
     addRest: (delta) => {
@@ -275,6 +283,8 @@ export default function App() {
           <MoreView
             theme={theme}
             setTheme={setTheme}
+            pinchLock={pinchLock}
+            setPinchLock={setPinchLock}
             state={state}
             update={update}
             sub={sub.more}

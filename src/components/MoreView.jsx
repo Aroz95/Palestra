@@ -19,7 +19,7 @@ export const MORE_TABS = [
   { id: 'settings', label: 'Opzioni' },
 ]
 
-export default function MoreView({ state, update, sub, setSub, status, importProps, onReset, theme, setTheme }) {
+export default function MoreView({ state, update, sub, setSub, status, importProps, onReset, theme, setTheme, pinchLock, setPinchLock }) {
   return (
     <div className="space-y-4">
       <Segmented options={MORE_TABS} value={sub} onChange={setSub} />
@@ -27,7 +27,7 @@ export default function MoreView({ state, update, sub, setSub, status, importPro
       {sub === 'measures' && <MeasurementsView state={state} update={update} />}
       {sub === 'import' && <ImportView state={state} {...importProps} />}
       {sub === 'export' && <ExportView state={state} />}
-      {sub === 'settings' && <SettingsView state={state} update={update} status={status} onReset={onReset} theme={theme} setTheme={setTheme} />}
+      {sub === 'settings' && <SettingsView state={state} update={update} status={status} onReset={onReset} theme={theme} setTheme={setTheme} pinchLock={pinchLock} setPinchLock={setPinchLock} />}
     </div>
   )
 }
@@ -158,7 +158,7 @@ function ExportView({ state }) {
   )
 }
 
-function SettingsView({ state, update, status, onReset, theme, setTheme }) {
+function SettingsView({ state, update, status, onReset, theme, setTheme, pinchLock, setPinchLock }) {
   const s = state.settings
   const set = (patch) => update((st) => ({ ...st, settings: { ...st.settings, ...patch } }))
   const [quota, setQuota] = useState(null)
@@ -180,6 +180,8 @@ function SettingsView({ state, update, status, onReset, theme, setTheme }) {
           <div className="text-[13px] font-medium text-fg-soft" id="theme-label">Tema</div>
           <Segmented options={THEMES} value={theme} onChange={setTheme} aria-labelledby="theme-label" />
           <p className="text-xs text-muted">“Automatico” segue l’impostazione chiaro/scuro del dispositivo. Le animazioni si riducono se il dispositivo lo richiede.</p>
+          <Toggle checked={pinchLock} onChange={setPinchLock} label="Blocca lo zoom con due dita" />
+          <p className="text-xs text-muted">Evita che la pagina si ingrandisca o si sposti durante l’allenamento. Disattivalo se usi lo zoom della pagina per leggere meglio; lo Zoom di accessibilità di iOS e la dimensione del testo di Safari funzionano comunque.</p>
         </Card>
       </Section>
 

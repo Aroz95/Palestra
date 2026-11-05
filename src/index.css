@@ -140,6 +140,18 @@
   html {
     -webkit-tap-highlight-color: transparent;
     background: var(--bg);
+    /* MOB-01: niente pinch/doppio tocco per lo zoom né spostamenti orizzontali; scorrimento verticale con un dito */
+    touch-action: pan-x pan-y;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  html.allow-zoom {
+    touch-action: auto;
+  }
+  body {
+    overflow-x: clip;
   }
   body {
     background: var(--bg);

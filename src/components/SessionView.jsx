@@ -47,6 +47,21 @@ export default function SessionView({ session, state, onChange, timers, settings
     setAdding(false)
   }
 
+  // Esercizio completato: porta in vista il successivo da fare (solo se fuori schermo; nessuno spostamento del focus)
+  const revealNext = (id) => {
+    const i = session.exercises.findIndex((e) => e.id === id)
+    const next = [...session.exercises.slice(i + 1), ...session.exercises.slice(0, i)].find((e) => e.sets.some((s) => !s.done))
+    if (!next) return
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`exercise-${next.id}`)
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      if (r.top >= 0 && r.top + Math.min(r.height, 160) <= window.innerHeight - 80) return
+      const smooth = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      el.scrollIntoView({ block: 'start', behavior: smooth ? 'smooth' : 'auto' })
+    })
+  }
+
   // Fine seduta (anche scegliendo "Completata" dallo stato): flusso unico di App (avviso, salvataggio, esportazione, riepilogo)
   const finish = () => onFinish(session)
 
@@ -129,6 +144,7 @@ export default function SessionView({ session, state, onChange, timers, settings
               onRemove={() => removeExercise(ex.id)}
               onSetDone={onSetDone}
               onStartTimer={startTimed}
+              onCompleted={() => revealNext(ex.id)}
               previous={lastPerformance(state.sessions, ex, { excludeSessionId: session.id, beforeDate: session.date })}
             />
           ))}
