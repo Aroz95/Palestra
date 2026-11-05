@@ -152,7 +152,7 @@ Schermate a 390 × 844, chiaro e scuro: [`ui-audit/backlog-2026-11/`](ui-audit/b
 
 **Convenzione dei nomi (CAT-02).** Nome italiano d’uso comune in sala; dove in palestra si usa il termine inglese si tiene quello (Leg press, Lat machine, Chest press). Gli alias raccolgono le altre denominazioni diffuse e i nomi già presenti nelle schede. Non è un elenco “ufficiale” universale.
 
-**Miniature.** Pittogrammi schematici per schema di movimento (25 schemi), disegnati per l’app in SVG: nessuna licenza di terzi, nessun download, funzionano offline e nei due temi, dimensione fissa, testo alternativo descrittivo; per esercizi senza corrispondenza un’icona generica. Non sono fotografie dell’esercizio: se servono immagini illustrative vere, vanno scelte con una licenza adeguata e collegate per `id` del catalogo.
+**Miniature** (nel selettore e nelle card della seduta; tolte dal dettaglio dell'esercizio in modalità allenamento su richiesta del 05/11). Pittogrammi schematici per schema di movimento (25 schemi), disegnati per l’app in SVG: nessuna licenza di terzi, nessun download, funzionano offline e nei due temi, dimensione fissa, testo alternativo descrittivo; per esercizi senza corrispondenza un’icona generica. Non sono fotografie dell’esercizio: se servono immagini illustrative vere, vanno scelte con una licenza adeguata e collegate per `id` del catalogo.
 
 **Corretto durante il lavoro.** Nella scheda della seduta la prima serie spuntata avviava il cronometro, che salvava una copia non aggiornata della seduta e perdeva la spunta (introdotto con la correzione della durata del 29/10; coperto ora da test).
 
