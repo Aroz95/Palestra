@@ -5,6 +5,7 @@ import { addDays, fmtDate, todayISO, weekdayOf, WEEKDAYS_SHORT } from '../lib/da
 import { ACTIVITY_KINDS, SESSION_STATUS } from '../schema/constants'
 import { blocksTotal } from '../lib/swim'
 import * as A from '../lib/actions'
+import { isRescheduled } from '../lib/sessionDates'
 
 export function occurrenceTitle(state, o) {
   if (o.kind === 'strength') return o.templateId ? templateName(state, o.templateId) : 'Sala pesi'
@@ -18,6 +19,8 @@ export function OccurrenceItem({ state, occ, update, onOpenSession, onStart }) {
   const st = OCC_STATUS[occ.status] ?? OCC_STATUS.planned
   const template = state.workoutTemplates.find((t) => t.id === occ.templateId)
   const startable = occ.kind === 'strength' || occ.kind === 'swim'
+  // seduta collegata: può essere stata svolta in un giorno diverso da quello programmato
+  const done = occ.sessionId ? state.sessions.find((s) => s.id === occ.sessionId) : null
 
 
   return (
@@ -29,6 +32,11 @@ export function OccurrenceItem({ state, occ, update, onOpenSession, onStart }) {
           {template?.estimatedMinutes && <div className="text-xs text-muted">~{template.estimatedMinutes} min</div>}
           {occ.movedFrom && <div className="text-xs text-swim">Rinviata dal {occ.movedFrom}</div>}
           {occ.status === 'postponed' && occ.movedTo && <div className="text-xs text-swim">Spostata al {occ.movedTo}</div>}
+          {done && done.date !== occ.date && (
+            <div className="text-xs font-medium text-fg-soft">
+              Svolta {done.date < occ.date ? 'in anticipo' : 'in ritardo'}: {fmtDate(done.date, { weekday: 'short', day: 'numeric', month: 'short' })}
+            </div>
+          )}
         </div>
         <Chip className={st.cls}>{st.label}</Chip>
       </div>
@@ -80,7 +88,10 @@ export function SessionChip({ session, onOpen }) {
   return (
     <button onClick={() => onOpen(session.id)} className="flex w-full items-center justify-between rounded-xl bg-surface-muted/60 p-3 text-left">
       <span>
-        <span className="block text-xs font-medium text-muted">{session.kind === 'swim' ? 'Nuoto' : 'Sala pesi'} · attività libera</span>
+        <span className="block text-xs font-medium text-muted">
+          {session.kind === 'swim' ? 'Nuoto' : 'Sala pesi'} ·{' '}
+          {isRescheduled(session) ? `programmata per ${fmtDate(session.plannedDate, { weekday: 'short', day: 'numeric', month: 'short' })}` : 'attività libera'}
+        </span>
         <span className="font-semibold text-fg">{session.title || (session.kind === 'swim' ? 'Nuoto' : 'Seduta')}</span>
       </span>
       <Chip>{SESSION_STATUS[session.status]}</Chip>

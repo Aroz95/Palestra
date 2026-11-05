@@ -5,6 +5,7 @@ import { swimDistances, fmtPace, blocksTotal } from '../lib/swim'
 import { fmtNum, fmtRange } from '../lib/stats'
 import { fmtDate, toLocalISO, minutesBetween } from '../lib/dates'
 import { DISTANCE_SOURCES, SWIM_STYLES } from '../schema/constants'
+import { isRescheduled } from '../lib/sessionDates'
 
 const TECHNIQUE = [
   ['catch', 'Presa sull’acqua'],
@@ -35,7 +36,9 @@ export default function SwimSessionView({ session: s, state, onChange, timers, o
           <input value={s.title} onChange={(e) => set({ title: e.target.value })} aria-label="Titolo" placeholder="Nuoto" className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-fg outline-none" />
           <input type="date" value={s.date} aria-label="Data" onChange={(e) => e.target.value && set({ date: e.target.value })} className="rounded-lg border border-line-strong bg-surface px-2 py-1 text-sm text-fg" />
         </div>
-        <p className="text-sm capitalize text-muted">{fmtDate(s.date)} · {s.isFree ? 'sessione libera' : 'da programma'}</p>
+        <p className="text-sm capitalize text-muted">{fmtDate(s.date)} · {s.isFree ? 'sessione libera' : 'da programma'}
+          {isRescheduled(s) && <span className="normal-case"> · programmata per {fmtDate(s.plannedDate, { weekday: 'short', day: 'numeric', month: 'short' })}</span>}
+        </p>
         <div className="w-40">
           <StatusSelect value={s.status} onChange={(status) => set({ status })} />
         </div>

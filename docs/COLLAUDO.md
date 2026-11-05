@@ -85,6 +85,7 @@ Un service worker conserva l’app sul dispositivo: dopo la prima apertura onlin
 | SES-01 | Fine allenamento: avviso serie mancanti, salvataggio, export facoltativo, riepilogo, storico | `e2e/session-flow.e2e.js`, `e2e/workout.e2e.js` | automatico |
 | EXE-02 / MOB-01 | Card completate chiuse; pinch-zoom bloccato (disattivabile), nessuno scorrimento orizzontale 320–430 px | `e2e/ergonomics.e2e.js` | automatico; pinch su iPhone **manuale** |
 | CAT-01 / CAT-02 | Catalogo con alias, miniature, selettore con ricerca, A–Z e filtri | `tests/catalog.test.jsx`, `e2e/catalog.e2e.js` | automatico; tastiera aperta su iPhone **manuale** |
+| BUG-DATA-01 | Seduta anticipata/posticipata: data effettiva distinta da quella programmata; correzione dei dati già salvati; fusi orari; export/import senza duplicati | `tests/session-dates.test.js`, `e2e/session-dates.e2e.js` | automatico |
 | E2E-15 | PDF | `e2e/report.e2e.js`, `tests/pdf.test.js` | automatico; download su iPhone **da verificare** |
 
 I test automatici girano con il motore Chromium e il profilo di iPhone 13 (dimensioni, touch). Safari/WebKit non è disponibile nell’ambiente di sviluppo: le voci seguenti vanno verificate a mano.

@@ -9,6 +9,7 @@ import { lastPerformance, newSessionExercise, sessionExerciseFromTemplate } from
 import { withAutoStart } from '../lib/actions'
 import { DEFAULT_REST } from '../schema/constants'
 import ExercisePicker, { buildCandidates } from './ExercisePicker'
+import { isRescheduled } from '../lib/sessionDates'
 
 export default function SessionView({ session, state, onChange, timers, settings, onStartWorkout, onFinish, onDelete, onExport }) {
   const [adding, setAdding] = useState(false)
@@ -84,7 +85,10 @@ export default function SessionView({ session, state, onChange, timers, settings
             className="rounded-lg border border-line-strong bg-surface px-2 py-1 text-sm text-fg"
           />
         </div>
-        <p className="text-sm capitalize text-muted">{fmtDate(session.date)}</p>
+        <p className="text-sm capitalize text-muted" data-testid="session-date">
+          {fmtDate(session.date)}
+          {isRescheduled(session) && <span className="normal-case"> · programmata per {fmtDate(session.plannedDate, { weekday: 'short', day: 'numeric', month: 'short' })}</span>}
+        </p>
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
           <span className="w-40">
             <StatusSelect value={session.status} onChange={(status) => (status === 'completed' && session.status !== 'completed' ? finish() : onChange({ ...session, status }))} />

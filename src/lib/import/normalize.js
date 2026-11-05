@@ -4,6 +4,7 @@ import { DEFAULT_REST, EQUIPMENT, DISTANCE_SOURCES, MEAL_CATEGORIES, SESSION_STA
 import { uid } from '../../schema/factories'
 import { parseBlock, blocksTotal, blockIssues } from '../swim'
 import { combineDateTime, isValidDate } from '../dates'
+import { repairSessionDate } from '../sessionDates'
 
 const slug = (s) =>
   String(s ?? '')
@@ -267,6 +268,7 @@ function sessionCommon(v, raw, p) {
     status: v.oneOf(raw.status, `${p}.status`, Object.keys(SESSION_STATUS), 'completed'),
     programId: v.id(raw.programId, `${p}.programId`),
     occurrenceKey: v.id(raw.occurrenceKey, `${p}.occurrenceKey`),
+    ...optional({ plannedDate: v.date(raw.plannedDate, `${p}.plannedDate`) }),
     startedAt: v.datetime(raw.startedAt, `${p}.startedAt`),
     endedAt: v.datetime(raw.endedAt, `${p}.endedAt`),
     durationMin: v.num(raw.durationMin, `${p}.durationMin`, { max: 1440 }),
@@ -292,7 +294,7 @@ export function normStrengthSession(v, raw, p) {
     cooldown: v.arr(raw.cooldown, `${p}.cooldown`).map((c, i) => normCardio(v, c, `${p}.cooldown[${i}]`, { withDone: true, fallbackId: `cooldown-${i + 1}` })).filter(Boolean),
   }
   if (raw.origin) s.origin = String(raw.origin)
-  return s
+  return repairSessionDate(s) // data effettiva se registrata con quella programmata (vedi sessionDates.js)
 }
 
 function normBlocks(v, raw, p) {
@@ -345,7 +347,7 @@ export function normSwimSession(v, raw, p) {
   if (distanceSource === 'estimated' && !estimatedDistanceM) v.err(`${p}.estimatedDistanceM`, 'distanceSource "estimated" richiede estimatedDistanceM {min,max}')
   const tq = v.obj(raw.technique, `${p}.technique`) ?? {}
   const rating = (k) => v.num(tq[k], `${p}.technique.${k}`, { min: 1, max: 5 })
-  return {
+  return repairSessionDate({
     id: v.id(raw.id, `${p}.id`) ?? uid('swim'),
     kind: 'swim',
     ...sessionCommon(v, raw, p),
@@ -362,7 +364,7 @@ export function normSwimSession(v, raw, p) {
     isPartial: v.bool(raw.isPartial, `${p}.isPartial`),
     technique: { catch: rating('catch'), strokeQuality: rating('strokeQuality'), shoulderFatigue: rating('shoulderFatigue'), breathing: rating('breathing') },
     notes: v.str(pick(raw, 'notes', 'note'), `${p}.notes`),
-  }
+  })
 }
 
 // ---- Misure, profilo, obiettivi ----

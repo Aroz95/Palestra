@@ -230,7 +230,7 @@ export function sessionExerciseFromTemplate(tex, last) {
   }
 }
 
-export function createStrengthSession(template, sessions, { date = todayISO(), occurrenceKey = null, programId = null } = {}) {
+export function createStrengthSession(template, sessions, { date = todayISO(), plannedDate = null, occurrenceKey = null, programId = null } = {}) {
   const tpl = template ?? newTemplate({ name: 'Seduta libera', label: '' })
   return baseSession('strength', {
     date,
@@ -239,6 +239,7 @@ export function createStrengthSession(template, sessions, { date = todayISO(), o
     templateRevision: template?.revision ?? null,
     programId: programId ?? template?.programId ?? null,
     occurrenceKey,
+    ...(plannedDate ? { plannedDate } : {}),
     warmup: tpl.warmup.map((c) => ({ ...clone(c), id: uid('cardio'), done: false })),
     exercises: tpl.exercises.map((tex) => sessionExerciseFromTemplate(tex, lastPerformance(sessions, tex, { beforeDate: date }))),
     cooldown: tpl.cooldown.map((c) => ({ ...clone(c), id: uid('cardio'), done: false })),
@@ -249,11 +250,12 @@ export function newSessionExercise(partial = {}) {
   return sessionExerciseFromTemplate(newTemplateExercise({ sets: 1, ...partial }), null)
 }
 
-export function createSwimSession({ date = todayISO(), occurrenceKey = null, programId = null, plan = null } = {}) {
+export function createSwimSession({ date = todayISO(), plannedDate = null, occurrenceKey = null, programId = null, plan = null } = {}) {
   return baseSession('swim', {
     date,
     title: plan?.title || 'Nuoto',
     occurrenceKey,
+    ...(plannedDate ? { plannedDate } : {}),
     programId,
     isFree: !plan,
     poolLengthM: plan?.poolLengthM ?? 25,

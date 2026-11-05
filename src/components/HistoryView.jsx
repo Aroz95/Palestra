@@ -6,6 +6,7 @@ import { fmtDateShort } from '../lib/dates'
 import { SESSION_STATUS } from '../schema/constants'
 import { exportSession, fileNames } from '../lib/report'
 import { downloadJSON } from '../lib/download'
+import { isRescheduled } from '../lib/sessionDates'
 
 export default function HistoryView({ state, onOpen, onDelete }) {
   const [kind, setKind] = useState('all')
@@ -44,7 +45,10 @@ export default function HistoryView({ state, onOpen, onDelete }) {
           <div key={s.id} className={`rounded-2xl border p-4 ${s.id === state.activeSessionId ? 'border-primary bg-surface' : 'border-line bg-surface'}`}>
             <button onClick={() => onOpen(s.id)} className="block w-full text-left">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="font-semibold capitalize text-fg">{fmtDateShort(s.date)}</span>
+                <span className="font-semibold capitalize text-fg">
+                  {fmtDateShort(s.date)}
+                  {isRescheduled(s) && <span className="text-sm font-normal normal-case text-muted"> · programmata per {fmtDateShort(s.plannedDate)}</span>}
+                </span>
                 <Chip>{SESSION_STATUS[s.status]}</Chip>
               </div>
               <div className="text-sm text-muted">

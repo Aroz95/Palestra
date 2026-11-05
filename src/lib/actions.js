@@ -15,7 +15,9 @@ export function deleteSession(state, id) {
 
 // Crea (senza salvarla) la seduta per un'attività: palestra da scheda A/B o libera, oppure nuoto.
 export function buildSession(state, { occ = null, templateId = null, kind = 'strength', date = todayISO(), plan = null } = {}) {
-  const opts = occ ? { date: occ.date, occurrenceKey: occ.key, programId: occ.programId } : { date }
+  // Data della seduta = giorno in cui viene svolta (oggi), anche se l'attività era programmata per un altro giorno:
+  // la data programmata resta in plannedDate (e nell'occurrenceKey) per il calendario.
+  const opts = occ ? { date, plannedDate: occ.date, occurrenceKey: occ.key, programId: occ.programId } : { date }
   if ((occ?.kind ?? kind) === 'swim') return createSwimSession({ ...opts, plan: occ ? occ.swimPlan : plan })
   const template = state.workoutTemplates.find((t) => t.id === (occ ? occ.templateId : templateId)) ?? null
   return createStrengthSession(template, state.sessions, opts)

@@ -3,6 +3,7 @@ import { Validator } from '../lib/import/validate'
 import { normDietPlan, normDietLog } from '../lib/import/normalize'
 import { emptyState, emptyProfile, uid, clone } from './factories'
 import { toLocalISO, todayISO, combineDateTime } from '../lib/dates'
+import { repairSessionDate } from '../lib/sessionDates'
 
 // ---- Conversione degli oggetti legacy (schema v1/v2) ----
 
@@ -231,8 +232,10 @@ function upgradeDiet(state) {
 export function migrateToLatest(data) {
   if (!data || typeof data !== 'object') return emptyState()
   if ((data.schemaVersion ?? 0) >= 3) {
-    const s = normalizeState(clone(data))
-    return (data.schemaVersion ?? 0) < 4 ? upgradeDiet(s) : s
+    const n = normalizeState(clone(data))
+    const s = (data.schemaVersion ?? 0) < 4 ? upgradeDiet(n) : n
+    // sedute salvate con la data programmata invece che con quella effettiva (correzione idempotente a ogni avvio)
+    return { ...s, sessions: (s.sessions ?? []).map((x) => repairSessionDate(x, s.calendar.extra)) }
   }
   if (isLegacyBackup(data)) return migrateLegacyState(clone(data))
   return emptyState()
