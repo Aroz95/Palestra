@@ -20,7 +20,7 @@ test('SES-01 + TIM-01 + EXE-01: seduta parziale, recupero 2:00 → 1:30, fine co
   await main(page).getByLabel('Note Leg Press').fill('sedile 4')
   await page.getByRole('button', { name: /Inizia allenamento/ }).click()
   await wm(page).getByRole('button', { name: /Segna fatto senza timer/ }).click() // riscaldamento
-  await expect(wm(page).getByText('Nessuna esecuzione precedente')).toBeVisible()
+  await expect(wm(page).getByTestId('previous-line')).toContainText('nessuna esecuzione')
   await wm(page).getByRole('button', { name: /Serie fatta/ }).click()
   // recupero di Leg Press 2:00 → −15 −15 = 1:30
   await wm(page).getByRole('button', { name: '−15s' }).click()

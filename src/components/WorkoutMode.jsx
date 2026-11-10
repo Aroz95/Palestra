@@ -90,9 +90,9 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
     })
   }
 
-  const undoLast = (ex) => {
-    const i = ex.sets.map((s) => s.done).lastIndexOf(true)
-    if (i < 0) return
+  // Una serie fatta torna da fare (dal pannello di modifica della serie); il recupero in corso si ferma
+  const undoSet = (ex, i) => {
+    if (!ex.sets[i]?.done) return
     timers.stopRest()
     setExercise({ ...ex, sets: ex.sets.map((s, j) => (j === i ? { ...s, done: false, at: null } : s)) })
   }
@@ -147,7 +147,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
               timers={timers}
               onComplete={() => completeSet(step.item)}
               onStartTimed={() => startTimedSet(step.item)}
-              onUndo={() => undoLast(step.item)}
+              onUndoSet={(j) => undoSet(step.item, j)}
               previous={previousFor?.(step.item)}
             />
           ) : (
@@ -185,7 +185,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
   )
 }
 
-function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onStartTimed, onUndo, previous }) {
+function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onStartTimed, onUndoSet, previous }) {
   const isTime = ex.type === 'time'
   const i = ex.sets.findIndex((s) => !s.done)
   const cur = i >= 0 ? ex.sets[i] : null
@@ -193,7 +193,7 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
   const rest = ex.rest ?? DEFAULT_REST
   // obiettivo senza RIR: in modalità allenamento il RIR non si mostra né si chiede
   const target = targetText({ ...ex, target: ex.target && { ...ex.target, rir: null }, sets: ex.sets.map((s) => ({ ...s, target: s.target && { ...s.target, rir: null } })) })
-  const [noteOpen, setNoteOpen] = useState(false)
+  const [editing, setEditing] = useState(null) // indice della serie fatta da modificare
   // Nuova serie in coda con i valori dell'ultima (da fare)
   const addSet = () => {
     const { restSelectedSec, restActualSec, ...last } = ex.sets[ex.sets.length - 1] ?? {} // eslint-disable-line no-unused-vars
@@ -211,24 +211,8 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
   }
 
   const [prevOpen, setPrevOpen] = useState(false)
-  // azioni secondarie: sotto i controlli in verticale, sotto l'azione principale in orizzontale
-  const secondary = (
-    <>
-      {!working && (
-        <button onClick={addSet} className="btn-ghost px-3 text-sm">
-          + Serie
-        </button>
-      )}
-      <button onClick={() => setNoteOpen(true)} className="btn-ghost px-3 text-sm" aria-label={ex.notes ? 'Modifica nota' : '+ Nota'}>
-        {ex.notes ? 'Nota ✎' : '+ Nota'}
-      </button>
-      {ex.sets.some((s) => s.done) && !working && (
-        <button onClick={onUndo} className="btn-ghost px-3 text-sm" aria-label="↶ Annulla ultima serie">
-          ↶ Annulla
-        </button>
-      )}
-    </>
-  )
+  const editSet = (field, value) => onChange({ ...ex, sets: ex.sets.map((s, j) => (j === editing ? { ...s, [field]: value } : s)) })
+  const edited = editing != null ? ex.sets[editing] : null
 
   return (
     // Tutto in una schermata: intestazione e controlli a misura fissa, il pulsante principale occupa lo spazio che resta.
@@ -254,16 +238,35 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
         {/* Serie: quelle fatte vengono scalate */}
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
           <div className="flex flex-wrap justify-center gap-1.5">
-            {ex.sets.map((s, j) => (
-              <span
-                key={j}
-                className={`flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-sm font-semibold ${
-                  s.done ? 'bg-primary-soft text-primary line-through' : j === i ? 'bg-fg text-bg ring-2 ring-primary' : 'bg-surface-muted text-fg-soft'
-                }`}
+            {ex.sets.map((s, j) =>
+              s.done ? (
+                // serie fatta: si tocca per correggerla
+                <button
+                  key={j}
+                  onClick={() => setEditing(j)}
+                  className="flex h-8 min-w-8 items-center justify-center rounded-full bg-primary-soft px-2 text-sm font-semibold text-primary"
+                  aria-label={`Modifica serie ${j + 1}: ${isTime ? `${s.durationSec ?? '—'} s` : `${s.reps ?? '—'} × ${s.weight == null ? '—' : fmtNum(s.weight, 2)} kg`}`}
+                >
+                  <span className="anim-check inline-block">✓</span>
+                </button>
+              ) : (
+                <span
+                  key={j}
+                  className={`flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-sm font-semibold ${j === i ? 'bg-fg text-bg ring-2 ring-primary' : 'bg-surface-muted text-fg-soft'}`}
+                >
+                  {j + 1}
+                </span>
+              ),
+            )}
+            {!working && (
+              <button
+                onClick={addSet}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-line-strong text-lg font-semibold leading-none text-fg-soft"
+                aria-label="Aggiungi serie"
               >
-                {s.done ? <span className="anim-check inline-block">✓</span> : j + 1}
-              </span>
-            ))}
+                +
+              </button>
+            )}
           </div>
           <p className="text-sm text-fg-soft">
             {cur ? (
@@ -287,8 +290,6 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
           </div>
         )}
 
-        {ex.notes && <p className="truncate text-center text-sm text-fg-soft [@media(max-height:620px)]:hidden">Nota di oggi: “{ex.notes}”</p>}
-        <div className="flex justify-center gap-2 whitespace-nowrap [@media(max-height:500px)]:hidden">{secondary}</div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-1">
@@ -316,19 +317,45 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
           </>
         ) : null}
       </ActionArea>
-      <div className="hidden shrink-0 justify-center gap-2 [@media(max-height:500px)]:flex">{secondary}</div>
       </div>
 
       <Sheet open={prevOpen} onClose={() => setPrevOpen(false)} title={`Ultima volta · ${ex.name}`}>
-        <PreviousPerformance prev={previous} ex={ex} />
+        <div className="space-y-4">
+          {previous ? <PreviousPerformance prev={previous} ex={ex} /> : <p className="text-sm text-muted">Nessuna esecuzione precedente: valori dalla scheda.</p>}
+          <div className="space-y-2 border-t border-line pt-3">
+            <h3 className="text-sm font-semibold text-fg">Nota di oggi</h3>
+            <TextArea value={ex.notes} onChange={(notes) => onChange({ ...ex, notes })} rows={3} placeholder="Sensazioni, regolazioni della macchina…" aria-label={`Nota ${ex.name}`} />
+            <p className="text-xs text-muted">Si salva mentre scrivi e la ritrovi la prossima volta in “Ultima volta”.</p>
+          </div>
+          <button onClick={() => setPrevOpen(false)} className="btn-primary w-full">Fatto</button>
+        </div>
       </Sheet>
 
-      <Sheet open={noteOpen} onClose={() => setNoteOpen(false)} title={`Nota · ${ex.name}`}>
-        <div className="space-y-3">
-          <TextArea value={ex.notes} onChange={(notes) => onChange({ ...ex, notes })} rows={3} placeholder="Sensazioni, regolazioni della macchina…" aria-label={`Nota ${ex.name}`} />
-          <p className="text-xs text-muted">Si salva mentre scrivi e la ritrovi la prossima volta nel riquadro “Ultima volta”.</p>
-          <button onClick={() => setNoteOpen(false)} className="btn-primary w-full">Fatto</button>
-        </div>
+      <Sheet open={edited != null} onClose={() => setEditing(null)} title={`Serie ${editing + 1} · ${ex.name}`}>
+        {edited && (
+          <div className="space-y-4">
+            <div className="flex justify-center gap-4">
+              {!isTime && <Stepper label={`Kg${ex.perHand ? ' per mano' : ''}`} value={edited.weight} step={ex.step || 1} onChange={(v) => editSet('weight', v)} />}
+              {isTime ? (
+                <Stepper label="Secondi" value={edited.durationSec} step={5} onChange={(v) => editSet('durationSec', v)} />
+              ) : (
+                <Stepper label="Ripetizioni eseguite" value={edited.reps} step={1} onChange={(v) => editSet('reps', v)} />
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => setEditing(null)} className="btn-primary">Fatto</button>
+              <button
+                onClick={() => {
+                  onUndoSet(editing)
+                  setEditing(null)
+                }}
+                className="btn-ghost text-sm"
+              >
+                Segna come non fatta
+              </button>
+            </div>
+          </div>
+        )}
       </Sheet>
     </div>
   )
@@ -389,24 +416,27 @@ function ActionArea({ children }) {
 }
 
 // Riga compatta con l'ultima esecuzione; il dettaglio (note comprese) si apre toccandola
+// Riga "Ultima volta": apre il pannello con l'esecuzione precedente e la nota di oggi
 function PreviousLine({ prev, ex, onOpen }) {
-  if (!prev) return <p className="text-center text-sm text-muted">Nessuna esecuzione precedente: valori dalla scheda.</p>
-  const done = prev.exercise.sets.filter((s) => s.done)
-  const vals =
-    ex.type === 'time'
+  const done = prev ? prev.exercise.sets.filter((s) => s.done) : []
+  const vals = !prev
+    ? 'nessuna esecuzione'
+    : ex.type === 'time'
       ? done.map((s) => `${s.durationSec ?? '—'} s`).join(' · ')
       : `${done.map((s) => `${s.reps ?? '—'}×${s.weight == null ? '—' : fmtNum(s.weight, 2)}`).join(' · ')} kg`
-  const hasNotes = !!prev.exercise.notes || prev.exercise.sets.some((s) => s.note)
+  const hasNotes = !!prev && (!!prev.exercise.notes || prev.exercise.sets.some((s) => s.note))
+  const when = prev ? ` ${fmtDate(prev.date, { day: 'numeric', month: 'short' })}` : ''
   return (
     <button
       onClick={onOpen}
       data-testid="previous-line"
       className="mx-auto flex min-h-11 w-full max-w-md items-center gap-2 rounded-xl bg-surface-muted px-3 text-left text-sm"
-      aria-label={`Ultima volta ${fmtDate(prev.date, { day: 'numeric', month: 'short' })}: ${vals}${hasNotes ? ', con note' : ''}. Mostra dettagli`}
+      aria-label={`Ultima volta${when}: ${vals}${hasNotes ? ', con note' : ''}${ex.notes ? ', nota di oggi presente' : ''}. Mostra dettagli e nota`}
     >
       <span className="shrink-0 font-semibold text-fg">Ultima volta</span>
-      <span className="min-w-0 flex-1 truncate tabular-nums text-fg-soft">{vals}</span>
+      <span className={`min-w-0 flex-1 truncate tabular-nums ${prev ? 'text-fg-soft' : 'text-muted'}`}>{vals}</span>
       {hasNotes && <span className="shrink-0 rounded-full border border-line-strong px-1.5 text-xs text-fg-soft">nota</span>}
+      <span className={`shrink-0 text-xs font-medium ${ex.notes ? 'text-primary' : 'text-muted'}`}>{ex.notes ? '✎ oggi' : '+ nota'}</span>
       <span className="shrink-0 text-muted" aria-hidden="true">›</span>
     </button>
   )

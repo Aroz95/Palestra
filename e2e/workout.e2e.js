@@ -207,23 +207,42 @@ test('pesi: la seduta successiva parte dai carichi effettivi della precedente, n
   expect(next.exercises[0].target.weightKg).toBe(60)
 })
 
-test('modalità allenamento: + Serie e nota sull’esercizio in corso', async ({ page }) => {
+test('modalità allenamento: + Serie (cerchio), nota dal pannello “Ultima volta”, modifica di una serie fatta', async ({ page }) => {
   await startA(page)
   await wm(page).getByRole('button', { name: /Segna fatto senza timer/ }).click() // riscaldamento
   await expect(wm(page).getByRole('heading', { name: 'Leg Press' })).toBeVisible()
   await expect(wm(page).getByText('Serie 1 di 2')).toBeVisible()
-  await wm(page).getByRole('button', { name: '+ Serie' }).click()
+  await wm(page).getByRole('button', { name: 'Aggiungi serie' }).click()
   await expect(wm(page).getByText('Serie 1 di 3')).toBeVisible()
-  // nota
-  await wm(page).getByRole('button', { name: '+ Nota' }).click()
-  const sheet = page.getByRole('dialog', { name: 'Nota · Leg Press' })
+  // nota: nel pannello "Ultima volta" (non ci sono più pulsanti Nota / Annulla sotto)
+  await expect(wm(page).getByRole('button', { name: /Nota|Annulla/ })).toHaveCount(0)
+  await wm(page).getByTestId('previous-line').click()
+  const sheet = page.getByRole('dialog', { name: 'Ultima volta · Leg Press' })
+  await expect(sheet).toContainText('Nessuna esecuzione precedente')
   await sheet.getByLabel('Nota Leg Press').fill('sedile 4')
   await sheet.getByRole('button', { name: 'Fatto' }).click()
-  await expect(wm(page)).toContainText('Nota di oggi: “sedile 4”')
-  await expect(wm(page).getByRole('button', { name: 'Modifica nota' })).toBeVisible()
+  await expect(wm(page).getByTestId('previous-line')).toContainText('✎ oggi')
+  // serie fatta → si tocca e si corregge
+  await wm(page).getByRole('button', { name: /Serie fatta/ }).click()
+  await wm(page).getByRole('button', { name: 'Salta recupero' }).click()
+  await wm(page).getByRole('button', { name: 'Modifica serie 1: 12 × 60 kg' }).click()
+  const edit = page.getByRole('dialog', { name: 'Serie 1 · Leg Press' })
+  await edit.getByRole('button', { name: 'Diminuisci' }).last().click() // ripetizioni 12 → 11
+  await edit.getByRole('button', { name: 'Fatto' }).click()
+  await expect(wm(page).getByRole('button', { name: 'Modifica serie 1: 11 × 60 kg' })).toBeVisible()
+  await expect(wm(page).getByText('Serie 2 di 3')).toBeVisible()
   await waitSaved(page)
-  const ex = (await savedState(page)).sessions[0].exercises[0]
+  let ex = (await savedState(page)).sessions[0].exercises[0]
   expect(ex.notes).toBe('sedile 4')
   expect(ex.sets).toHaveLength(3)
+  expect(ex.sets[0]).toMatchObject({ done: true, weight: 60, reps: 11 })
+  expect(ex.sets[1]).toMatchObject({ done: false, weight: 60, reps: 12 }) // le serie da fare non cambiano
   expect(ex.sets[2]).toMatchObject({ done: false, weight: 60, reps: 12 })
+  // e si può riportare da fare dallo stesso pannello
+  await wm(page).getByRole('button', { name: /Modifica serie 1/ }).click()
+  await page.getByRole('dialog', { name: 'Serie 1 · Leg Press' }).getByRole('button', { name: 'Segna come non fatta' }).click()
+  await expect(wm(page).getByText('Serie 1 di 3')).toBeVisible()
+  await waitSaved(page)
+  ex = (await savedState(page)).sessions[0].exercises[0]
+  expect(ex.sets[0].done).toBe(false)
 })
