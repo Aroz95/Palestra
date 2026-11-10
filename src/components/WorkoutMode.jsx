@@ -175,9 +175,6 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
             <button onClick={() => go(1)} disabled={idx === steps.length - 1} className="btn-ghost w-11 shrink-0 px-0 disabled:opacity-30" aria-label="Passo successivo">
               ›
             </button>
-            <button onClick={() => onFinish(session)} className="btn-ghost shrink-0 px-3 text-sm" aria-label="Termina allenamento">
-              Termina
-            </button>
           </div>
         </div>
       )}

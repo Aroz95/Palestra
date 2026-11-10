@@ -30,13 +30,16 @@ test('SES-01 + TIM-01 + EXE-01: seduta parziale, recupero 2:00 → 1:30, fine co
   expect(st.sessions[0].exercises[0]).toMatchObject({ rest: 90, restChosen: true })
   expect(st.sessions[0].exercises[1].restChosen).toBeUndefined() // gli altri esercizi non cambiano
 
+  // nel dettaglio non c'è "Termina": si esce e si termina dalla seduta
+  await expect(wm(page).getByRole('button', { name: /^Termina/ })).toHaveCount(0)
+  await wm(page).getByRole('button', { name: /Esci/ }).click()
   // Termina con serie mancanti: avviso, si può tornare alla seduta
-  await wm(page).getByRole('button', { name: 'Termina allenamento' }).click()
+  await main(page).getByRole('button', { name: /Termina seduta/ }).click()
   const warn = page.getByRole('dialog', { name: 'Allenamento non completo' })
   await expect(warn).toContainText('non sono state completate')
   await warn.getByRole('button', { name: 'Torna alla seduta' }).click()
-  await expect(wm(page)).toBeVisible()
-  await wm(page).getByRole('button', { name: 'Termina allenamento' }).click()
+  await expect(warn).toHaveCount(0)
+  await main(page).getByRole('button', { name: /Termina seduta/ }).click()
   await warn.getByRole('button', { name: 'Concludi comunque' }).click()
 
   // seduta già salvata come completata, senza segnare come fatte le serie mancanti; timer fermi

@@ -113,7 +113,7 @@ for (const [w, h] of [[320, 568], [375, 667], [390, 844], [430, 932], [768, 1024
     await wm.getByRole('button', { name: /Serie fatta/ }).click()
     await expect(wm.getByRole('button', { name: 'Salta recupero' })).toBeVisible()
     expect(await overflow()).toBeLessThanOrEqual(0)
-    for (const name of ['−15s', 'Salta recupero', 'Aggiungi serie', 'Modifica serie 1: 12 × 60 kg', 'Termina allenamento']) await expect(wm.getByRole('button', { name })).toBeInViewport({ ratio: 1 })
+    for (const name of ['−15s', 'Salta recupero', 'Aggiungi serie', 'Modifica serie 1: 12 × 60 kg', 'Passo successivo']) await expect(wm.getByRole('button', { name })).toBeInViewport({ ratio: 1 })
     // esercizio a tempo: pulsante grande + "Segna fatta senza timer" (prima debordava di 16 px a 375x667)
     await wm.getByRole('button', { name: 'Salta recupero' }).click()
     await wm.getByLabel('Vai al passo').selectOption({ label: '4. Plank' })
