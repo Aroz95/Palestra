@@ -11,7 +11,7 @@ import { occurrencesOn } from '../src/lib/calendar'
 import { aggregateAll } from '../src/lib/report/aggregate'
 
 const tpl = newTemplate({ id: 'tpl-a', name: 'Full Body A', label: 'A', exercises: [newTemplateExercise({ id: 'leg-press', name: 'Leg Press', sets: 2 })] })
-const program = newProgram({ id: 'prog', isMain: true, weeklySchedule: [{ id: 'slot-ven', weekday: 5, kind: 'strength', templateId: 'tpl-a', label: '' }] })
+const program = newProgram({ id: 'prog', isMain: true, validFrom: '2026-11-01', weeklySchedule: [{ id: 'slot-ven', weekday: 5, kind: 'strength', templateId: 'tpl-a', label: '' }] })
 const base = () => ({ ...emptyState(), programs: [program], workoutTemplates: [{ ...tpl, programId: 'prog' }] })
 
 // Caso reale: seduta del 5/11 registrata con la data dell'attività del 6/11

@@ -25,7 +25,8 @@ test('E2E-03 Full Body A: tutte le serie registrate, durata corretta dopo refres
   await startA(page)
   await wm(page).getByRole('button', { name: /Segna fatto senza timer/ }).click() // riscaldamento
   await expect(wm(page).getByRole('heading', { name: 'Leg Press' })).toBeVisible()
-  await expect(wm(page).getByText('Obiettivo: 2 × 10–12 · 60 kg', { exact: true })).toBeVisible() // senza RIR in modalità allenamento
+  await expect(wm(page)).toContainText('Obiettivo 2 × 10–12 · 60 kg') // senza RIR in modalità allenamento
+  await expect(wm(page)).not.toContainText('RIR 3')
 
   await serieFatta(page)
   await expect(wm(page).getByRole('button', { name: 'Salta recupero' })).toBeVisible()

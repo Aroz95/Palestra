@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Stepper from './Stepper'
 import { fmtClock, fmtNum, strengthStats as sessionStats, hasPendingSets } from '../lib/stats'
 import { DEFAULT_REST } from '../schema/constants'
-import { toLocalISO } from '../lib/dates'
+import { fmtDate, toLocalISO } from '../lib/dates'
 import { targetText } from './ExerciseCard'
 import { finishPatch, withAutoStart } from '../lib/actions'
 import PreviousPerformance from './PreviousPerformance'
@@ -103,7 +103,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
   return (
     <div role="dialog" aria-modal="true" aria-label="Modalità allenamento" className="fixed inset-0 z-50 flex flex-col bg-bg pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] text-fg">
       {/* Barra superiore */}
-      <div className="border-b border-line px-4 py-2">
+      <div className="shrink-0 border-b border-line px-4 py-1.5 [@media(max-height:500px)]:py-1">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <button onClick={onClose} className="btn-ghost text-sm">✕ Esci</button>
           <div className="flex-1 text-center text-xs text-muted">
@@ -124,7 +124,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
             {fmtClock(timers.elapsed)}
           </button>
         </div>
-        <div className="mx-auto mt-2 h-1.5 max-w-2xl overflow-hidden rounded-full bg-surface-muted">
+        <div className="mx-auto mt-1.5 h-1.5 max-w-2xl overflow-hidden rounded-full bg-surface-muted [@media(max-height:500px)]:mt-1 [@media(max-height:500px)]:h-1">
           <div
             className="h-full rounded-full bg-primary transition-all"
             style={{ width: `${stats.totalSets ? (stats.doneSets / stats.totalSets) * 100 : 0}%` }}
@@ -132,8 +132,8 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex min-h-full max-w-2xl flex-col px-4 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto flex h-full min-h-[22rem] max-w-2xl flex-col px-4 py-2 [@media(max-height:620px)]:py-1 [@media(max-height:500px)]:min-h-[15rem]">
           {!step ? (
             <Finished stats={stats} timers={timers} session={session} onFinish={onFinish} />
           ) : step.kind === 'exercise' ? (
@@ -164,19 +164,17 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
 
       {/* Navigazione */}
       {step && (
-        <div className="border-t border-line px-4 py-2">
+        <div className="shrink-0 border-t border-line px-4 py-1.5 [@media(max-height:500px)]:py-1">
           <div className="mx-auto flex max-w-2xl items-center gap-2">
-            <button onClick={() => go(-1)} disabled={idx === 0} className="btn-ghost text-sm disabled:opacity-30">
-              ‹ Precedente
+            <button onClick={() => go(-1)} disabled={idx === 0} className="btn-ghost w-11 shrink-0 px-0 disabled:opacity-30" aria-label="Passo precedente">
+              ‹
             </button>
             <StepPicker steps={steps} currentId={currentId} onPick={setCurrentId} />
-            <button onClick={() => go(1)} disabled={idx === steps.length - 1} className="btn-ghost text-sm disabled:opacity-30">
-              Successivo ›
+            <button onClick={() => go(1)} disabled={idx === steps.length - 1} className="btn-ghost w-11 shrink-0 px-0 disabled:opacity-30" aria-label="Passo successivo">
+              ›
             </button>
-          </div>
-          <div className="mx-auto mt-1 flex max-w-2xl justify-center">
-            <button onClick={() => onFinish(session)} className="min-h-11 px-3 text-sm font-medium text-fg-soft underline underline-offset-4">
-              Termina allenamento
+            <button onClick={() => onFinish(session)} className="btn-ghost shrink-0 px-3 text-sm" aria-label="Termina allenamento">
+              Termina
             </button>
           </div>
         </div>
@@ -210,105 +208,111 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
     })
   }
 
+  const [prevOpen, setPrevOpen] = useState(false)
+
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="text-center">
-        {resting && cur && <div className="text-xs font-semibold text-fg-soft">Prossima serie</div>}
-        <h1 className="text-2xl font-bold text-fg">{ex.name}</h1>
-        <p className="text-sm text-muted">{ex.group}</p>
-        {target && (
-          <p className="mt-1 text-sm text-swim">
-            Obiettivo: <span className="text-fg">{target}</span>
+    // Tutto in una schermata: intestazione e controlli a misura fissa, il pulsante principale occupa lo spazio che resta.
+    // In orizzontale (altezza ridotta) due colonne: informazioni e controlli a sinistra, azione principale a destra.
+    <div className="flex min-h-0 flex-1 flex-col gap-2 [@media(max-height:620px)]:gap-1 [@media(max-height:500px)]:grid [@media(max-height:500px)]:grid-cols-2 [@media(max-height:500px)]:gap-4">
+      <div className="flex shrink-0 flex-col gap-2 [@media(max-height:620px)]:gap-1">
+        <div className="text-center">
+          {resting && cur && <div className="text-xs font-semibold text-fg-soft [@media(max-height:500px)]:hidden">Prossima serie</div>}
+          <h1 className="text-xl font-bold leading-tight text-fg [@media(max-height:620px)]:text-lg">{ex.name}</h1>
+          <p className="line-clamp-2 text-sm text-muted [@media(max-height:620px)]:line-clamp-1">
+            {ex.group}
+            {target && (
+              <>
+                {ex.group ? ' · ' : ''}
+                <span className="text-fg-soft">Obiettivo {target}</span>
+              </>
+            )}
           </p>
-        )}
-        <PreviousPerformance prev={previous} ex={ex} className="mx-auto mt-2 max-w-md text-left" />
-      </div>
+        </div>
 
-      {/* Serie: quelle fatte vengono scalate */}
-      <div className="mt-3 flex flex-wrap justify-center gap-2">
-        {ex.sets.map((s, j) => (
-          <span
-            key={j}
-            className={`flex h-9 min-w-9 items-center justify-center rounded-full px-2 text-sm font-semibold ${
-              s.done
-                ? 'bg-primary-soft text-primary line-through'
-                : j === i
-                  ? 'bg-fg text-bg ring-2 ring-primary'
-                  : 'bg-surface-muted text-fg-soft'
-            }`}
-          >
-            {s.done ? <span className="anim-check inline-block">✓</span> : j + 1}
-          </span>
-        ))}
-      </div>
-      <p className="mt-2 text-center text-base text-fg-soft">
-        {cur ? (
-          <>
-            Serie <b className="text-fg">{i + 1}</b> di {ex.sets.length} ·{' '}
-            <b className="text-fg">{left === 1 ? 'ultima serie' : `ne restano ${left}`}</b>
-          </>
-        ) : (
-          <span className="font-semibold text-primary">Esercizio completato ✓</span>
-        )}
-      </p>
+        <PreviousLine prev={previous} ex={ex} onOpen={() => setPrevOpen(true)} />
 
-      {cur && (
-        <div className="mt-4 flex justify-center gap-4">
-          {!isTime && (
-            <Stepper
-              label={`Kg${ex.perHand ? ' per mano' : ''}`}
-              value={cur.weight}
-              step={ex.step || 1}
-              onChange={(v) => editCurrent('weight', v)}
-            />
+        {/* Serie: quelle fatte vengono scalate */}
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+          <div className="flex flex-wrap justify-center gap-1.5">
+            {ex.sets.map((s, j) => (
+              <span
+                key={j}
+                className={`flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-sm font-semibold ${
+                  s.done ? 'bg-primary-soft text-primary line-through' : j === i ? 'bg-fg text-bg ring-2 ring-primary' : 'bg-surface-muted text-fg-soft'
+                }`}
+              >
+                {s.done ? <span className="anim-check inline-block">✓</span> : j + 1}
+              </span>
+            ))}
+          </div>
+          <p className="text-sm text-fg-soft">
+            {cur ? (
+              <>
+                Serie <b className="text-fg">{i + 1}</b> di {ex.sets.length} · <b className="text-fg">{left === 1 ? 'ultima serie' : `ne restano ${left}`}</b>
+              </>
+            ) : (
+              <span className="font-semibold text-primary">Esercizio completato ✓</span>
+            )}
+          </p>
+        </div>
+
+        {cur && (
+          <div className="flex justify-center gap-4">
+            {!isTime && <Stepper label={`Kg${ex.perHand ? ' per mano' : ''}`} value={cur.weight} step={ex.step || 1} onChange={(v) => editCurrent('weight', v)} />}
+            {isTime ? (
+              <Stepper label="Secondi" value={cur.durationSec} step={5} onChange={(v) => editCurrent('durationSec', v)} />
+            ) : (
+              <Stepper label="Ripetizioni eseguite" value={cur.reps} step={1} onChange={(v) => editCurrent('reps', v)} />
+            )}
+          </div>
+        )}
+
+        {ex.notes && <p className="truncate text-center text-sm text-fg-soft [@media(max-height:620px)]:hidden">Nota di oggi: “{ex.notes}”</p>}
+        <div className="flex justify-center gap-2">
+          {!working && (
+            <button onClick={addSet} className="btn-ghost px-3 text-sm">
+              + Serie
+            </button>
           )}
-          {isTime ? (
-            <Stepper label="Secondi" value={cur.durationSec} step={5} onChange={(v) => editCurrent('durationSec', v)} />
-          ) : (
-            <Stepper label="Ripetizioni eseguite" value={cur.reps} step={1} onChange={(v) => editCurrent('reps', v)} />
+          <button onClick={() => setNoteOpen(true)} className="btn-ghost px-3 text-sm" aria-label={ex.notes ? 'Modifica nota' : '+ Nota'}>
+            {ex.notes ? 'Nota ✎' : '+ Nota'}
+          </button>
+          {ex.sets.some((s) => s.done) && !working && (
+            <button onClick={onUndo} className="btn-ghost px-3 text-sm" aria-label="↶ Annulla ultima serie">
+              ↶ Annulla
+            </button>
           )}
         </div>
-      )}
+      </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center py-6">
+      <ActionArea>
         {resting ? (
-          <>
-            <Countdown timers={timers} color="sky" title="Recupero" />
-          </>
+          <Countdown timers={timers} color="sky" title="Recupero" />
         ) : working ? (
           <Countdown timers={timers} color="amber" title="In corso" />
         ) : cur ? (
-          <BigButton onClick={isTime ? onStartTimed : onComplete} color={isTime ? 'amber' : 'emerald'}>
-            <span className="text-5xl">{isTime ? '▶' : '⏱'}</span>
-            <span className="mt-2 text-xl font-extrabold uppercase">{isTime ? `Avvia ${cur.durationSec}s` : 'Serie fatta'}</span>
-            <span className="mt-1 text-sm font-medium opacity-80">
-              {isTime ? 'si segna da sola a fine tempo' : `poi recupero ${fmtClock(rest * 1000)}`}
-            </span>
-          </BigButton>
+          <>
+            <BigButton onClick={isTime ? onStartTimed : onComplete} color={isTime ? 'amber' : 'emerald'}>
+              <span style={{ fontSize: 'calc(var(--big) * 0.18)' }}>{isTime ? '▶' : '⏱'}</span>
+              <span className="font-extrabold uppercase" style={{ fontSize: 'max(0.95rem, calc(var(--big) * 0.085))' }}>
+                {isTime ? `Avvia ${cur.durationSec}s` : 'Serie fatta'}
+              </span>
+              <span className="font-medium opacity-80" style={{ fontSize: 'max(0.75rem, calc(var(--big) * 0.055))' }}>
+                {isTime ? 'si segna da sola a fine tempo' : `poi recupero ${fmtClock(rest * 1000)}`}
+              </span>
+            </BigButton>
+            {isTime && (
+              <button onClick={onComplete} className="btn-ghost mt-2 shrink-0 text-sm">
+                ✓ Segna fatta senza timer
+              </button>
+            )}
+          </>
         ) : null}
-      </div>
+      </ActionArea>
 
-      {ex.notes && (
-        <p className="mx-auto mb-2 max-w-md text-center text-sm text-fg-soft">
-          Nota di oggi: “{ex.notes}”
-        </p>
-      )}
-      <div className="flex flex-wrap justify-center gap-2">
-        {!working && (
-          <button onClick={addSet} className="btn-ghost text-sm">
-            + Serie
-          </button>
-        )}
-        <button onClick={() => setNoteOpen(true)} className="btn-ghost text-sm">
-          {ex.notes ? 'Modifica nota' : '+ Nota'}
-        </button>
-        {cur && isTime && !working && !resting && (
-          <button onClick={onComplete} className="btn-ghost text-sm">✓ Segna fatta senza timer</button>
-        )}
-        {ex.sets.some((s) => s.done) && !working && (
-          <button onClick={onUndo} className="btn-ghost text-sm">↶ Annulla ultima serie</button>
-        )}
-      </div>
+      <Sheet open={prevOpen} onClose={() => setPrevOpen(false)} title={`Ultima volta · ${ex.name}`}>
+        <PreviousPerformance prev={previous} ex={ex} />
+      </Sheet>
 
       <Sheet open={noteOpen} onClose={() => setNoteOpen(false)} title={`Nota · ${ex.name}`}>
         <div className="space-y-3">
@@ -323,41 +327,79 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
 
 function CardioStep({ c, section, onChange, resting, working, timers, onStart }) {
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="text-center">
-        <div className="text-xs font-semibold text-muted">{section}</div>
-        <h1 className="text-2xl font-bold text-fg">{c.name}</h1>
-        {c.note && <p className="text-sm text-muted">{c.note}</p>}
-        {c.done && <p className="mt-1 font-semibold text-primary">Completato ✓</p>}
+    <div className="flex min-h-0 flex-1 flex-col gap-2 [@media(max-height:620px)]:gap-1 [@media(max-height:500px)]:grid [@media(max-height:500px)]:grid-cols-2 [@media(max-height:500px)]:gap-4">
+      <div className="flex shrink-0 flex-col gap-2 [@media(max-height:620px)]:gap-1">
+        <div className="text-center">
+          <div className="text-xs font-semibold text-muted">{section}</div>
+          <h1 className="text-xl font-bold leading-tight text-fg">{c.name}</h1>
+          {c.note && <p className="line-clamp-2 text-sm text-muted">{c.note}</p>}
+          {c.done && <p className="font-semibold text-primary">Completato ✓</p>}
+        </div>
+        <div className="flex justify-center gap-4">
+          <Stepper label="Minuti" value={c.minutes} step={0.5} onChange={(minutes) => onChange({ ...c, minutes })} />
+          <Stepper label="km/h" value={c.speed} step={0.5} onChange={(speed) => onChange({ ...c, speed })} />
+        </div>
+        <p className="text-center text-sm text-muted">≈ {fmtNum(((Number(c.minutes) || 0) / 60) * (Number(c.speed) || 0), 2)} km</p>
+        <div className="flex justify-center">
+          {!working && (
+            <button onClick={() => onChange({ ...c, done: !c.done })} className="btn-ghost text-sm">
+              {c.done ? '↶ Segna da fare' : '✓ Segna fatto senza timer'}
+            </button>
+          )}
+        </div>
       </div>
-      <div className="mt-4 flex justify-center gap-4">
-        <Stepper label="Minuti" value={c.minutes} step={0.5} onChange={(minutes) => onChange({ ...c, minutes })} />
-        <Stepper label="km/h" value={c.speed} step={0.5} onChange={(speed) => onChange({ ...c, speed })} />
-      </div>
-      <p className="mt-2 text-center text-sm text-muted">
-        ≈ {fmtNum(((Number(c.minutes) || 0) / 60) * (Number(c.speed) || 0), 2)} km
-      </p>
-      <div className="flex flex-1 flex-col items-center justify-center py-6">
+      <ActionArea>
         {working ? (
           <Countdown timers={timers} color="amber" title="In corso" />
         ) : resting ? (
           <Countdown timers={timers} color="sky" title="Recupero" />
         ) : !c.done ? (
           <BigButton onClick={onStart} color="amber">
-            <span className="text-5xl">▶</span>
-            <span className="mt-2 text-xl font-extrabold uppercase">Avvia {fmtNum(c.minutes)} min</span>
-            <span className="mt-1 text-sm font-medium opacity-80">si segna da solo a fine tempo</span>
+            <span style={{ fontSize: 'calc(var(--big) * 0.18)' }}>▶</span>
+            <span className="font-extrabold uppercase" style={{ fontSize: 'max(0.95rem, calc(var(--big) * 0.085))' }}>
+              Avvia {fmtNum(c.minutes)} min
+            </span>
+            <span className="font-medium opacity-80" style={{ fontSize: 'max(0.75rem, calc(var(--big) * 0.055))' }}>
+              si segna da solo a fine tempo
+            </span>
           </BigButton>
         ) : null}
-      </div>
-      <div className="flex justify-center">
-        {!working && (
-          <button onClick={() => onChange({ ...c, done: !c.done })} className="btn-ghost text-sm">
-            {c.done ? '↶ Segna da fare' : '✓ Segna fatto senza timer'}
-          </button>
-        )}
-      </div>
+      </ActionArea>
     </div>
+  )
+}
+
+// Area dell'azione principale: occupa lo spazio rimasto; pulsante e cerchio del timer si dimensionano su di essa
+// (unità del contenitore: niente scorrimento su schermi bassi, grandi su quelli alti)
+function ActionArea({ children }) {
+  return (
+    <div className="flex min-h-[8.5rem] flex-1 flex-col items-center justify-center" style={{ containerType: 'size' }}>
+      {children}
+    </div>
+  )
+}
+
+// Riga compatta con l'ultima esecuzione; il dettaglio (note comprese) si apre toccandola
+function PreviousLine({ prev, ex, onOpen }) {
+  if (!prev) return <p className="text-center text-sm text-muted">Nessuna esecuzione precedente: valori dalla scheda.</p>
+  const done = prev.exercise.sets.filter((s) => s.done)
+  const vals =
+    ex.type === 'time'
+      ? done.map((s) => `${s.durationSec ?? '—'} s`).join(' · ')
+      : `${done.map((s) => `${s.reps ?? '—'}×${s.weight == null ? '—' : fmtNum(s.weight, 2)}`).join(' · ')} kg`
+  const hasNotes = !!prev.exercise.notes || prev.exercise.sets.some((s) => s.note)
+  return (
+    <button
+      onClick={onOpen}
+      data-testid="previous-line"
+      className="mx-auto flex min-h-11 w-full max-w-md items-center gap-2 rounded-xl bg-surface-muted px-3 text-left text-sm"
+      aria-label={`Ultima volta ${fmtDate(prev.date, { day: 'numeric', month: 'short' })}: ${vals}${hasNotes ? ', con note' : ''}. Mostra dettagli`}
+    >
+      <span className="shrink-0 font-semibold text-fg">Ultima volta</span>
+      <span className="min-w-0 flex-1 truncate tabular-nums text-fg-soft">{vals}</span>
+      {hasNotes && <span className="shrink-0 rounded-full border border-line-strong px-1.5 text-xs text-fg-soft">nota</span>}
+      <span className="shrink-0 text-muted" aria-hidden="true">›</span>
+    </button>
   )
 }
 
@@ -374,8 +416,8 @@ function Countdown({ timers, color, title }) {
   const r = 110
   const len = 2 * Math.PI * r
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative h-64 w-64">
+    <div className="flex flex-col items-center" style={{ '--ring': 'min(16rem, calc(100cqh - 3.5rem), 85cqw)' }}>
+      <div className="relative" style={{ width: 'var(--ring)', height: 'var(--ring)' }}>
         <svg viewBox="0 0 240 240" className="h-full w-full -rotate-90">
           <circle cx="120" cy="120" r={r} className="fill-none stroke-line" strokeWidth="14" />
           <circle
@@ -390,12 +432,16 @@ function Countdown({ timers, color, title }) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-sm font-semibold uppercase tracking-widest ${RING[color].text}`}>{title}</span>
-          <span className="font-mono text-6xl font-bold tabular-nums text-fg">{fmtClock(left + 999)}</span>
-          {color === 'amber' && <span className="mt-1 max-w-44 truncate text-xs text-muted">{label}</span>}
+          <span className={`font-semibold uppercase tracking-widest ${RING[color].text}`} style={{ fontSize: 'max(0.7rem, calc(var(--ring) * 0.055))' }}>
+            {title}
+          </span>
+          <span className="font-mono font-bold tabular-nums text-fg" style={{ fontSize: 'calc(var(--ring) * 0.23)', lineHeight: 1.1 }}>
+            {fmtClock(left + 999)}
+          </span>
+          {color === 'amber' && <span className="max-w-[70%] truncate text-xs text-muted">{label}</span>}
         </div>
       </div>
-      <div className="mt-4 flex gap-2">
+      <div className="mt-2 flex gap-2">
         <button onClick={() => timers.addRest(-15)} className="btn-ghost">−15s</button>
         <button onClick={() => timers.addRest(15)} className="btn-ghost">+15s</button>
         <button onClick={timers.stopRest} className="btn bg-fg text-bg">
@@ -415,7 +461,8 @@ function BigButton({ onClick, color, children }) {
   return (
     <button
       onClick={onClick}
-      className={`flex h-64 w-64 flex-col items-center justify-center rounded-full shadow-lg transition-transform duration-150 active:scale-[0.98] ${BIG[color]}`}
+      style={{ '--big': 'min(16rem, 100cqh, 85cqw)', width: 'var(--big)', height: 'var(--big)' }}
+      className={`flex shrink-0 flex-col items-center justify-center gap-1 rounded-full shadow-lg transition-transform duration-150 active:scale-[0.98] ${BIG[color]}`}
     >
       {children}
     </button>

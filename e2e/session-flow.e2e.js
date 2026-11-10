@@ -84,7 +84,11 @@ test('SES-01 + TIM-01 + EXE-01: seduta parziale, recupero 2:00 → 1:30, fine co
   expect(next.exercises[0].sets.every((x) => !x.done)).toBe(true)
   await page.getByRole('button', { name: /Inizia allenamento/ }).click()
   await wm(page).getByRole('button', { name: /Segna fatto senza timer/ }).click()
-  await expect(wm(page).getByTestId('previous-performance')).toContainText('“sedile 4”')
+  // modalità allenamento: riga compatta "Ultima volta"; il dettaglio con le note si apre toccandola
+  await expect(wm(page).getByTestId('previous-line')).toContainText('nota')
+  await wm(page).getByTestId('previous-line').click()
+  await expect(page.getByRole('dialog', { name: 'Ultima volta · Leg Press' })).toContainText('“sedile 4”')
+  await page.keyboard.press('Escape')
   await wm(page).getByRole('button', { name: /Serie fatta/ }).click()
   expect((await page.evaluate(() => JSON.parse(localStorage.getItem('palestra:rest')))).duration).toBe(90)
 })

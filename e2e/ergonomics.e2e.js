@@ -78,3 +78,41 @@ for (const width of [320, 375, 390, 430]) {
     expect(await noHorizontalScroll(page)).toBe(true)
   })
 }
+
+// Dettaglio dell'esercizio in modalità allenamento: tutto in una schermata, senza scorrere, su telefoni piccoli e
+// grandi, tablet e in orizzontale; con "Ultima volta", nota di oggi e durante il recupero
+for (const [w, h] of [[320, 568], [375, 667], [390, 844], [430, 932], [768, 1024], [844, 390], [667, 375]]) {
+  test(`modalità allenamento senza scorrimento a ${w}x${h}`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h })
+    await openApp(page)
+    await goImport(page)
+    await importFile(page, EX('programma-ab.json'))
+    await nav(page, /Oggi/)
+    await page.getByRole('button', { name: /A · Full Body A/ }).click()
+    await main(page).getByLabel('Note Leg Press').fill('sedile 4, schienale 2')
+    await main(page).getByRole('button', { name: 'Tutte fatte' }).first().click()
+    await main(page).getByRole('button', { name: /Termina seduta/ }).click()
+    await page.getByRole('button', { name: 'Concludi comunque' }).click()
+    await page.getByRole('button', { name: 'Conferma e concludi' }).click()
+    await page.clock.runFor(2 * 86_400_000)
+    await nav(page, /Oggi/)
+    await page.getByRole('button', { name: /A · Full Body A/ }).click()
+    await page.getByRole('button', { name: /Inizia allenamento/ }).click()
+    const wm = page.getByRole('dialog', { name: 'Modalità allenamento' })
+    await wm.getByRole('button', { name: /Segna fatto senza timer/ }).click()
+    await wm.getByRole('button', { name: '+ Nota' }).click()
+    await page.getByLabel('Nota Leg Press').fill('oggi più leggero')
+    await page.getByRole('button', { name: 'Fatto' }).click()
+    await expect(page.getByRole('dialog', { name: 'Nota · Leg Press' })).toHaveCount(0)
+    const overflow = () => page.evaluate(() => {
+      const el = document.querySelector('[aria-label="Modalità allenamento"] .overflow-y-auto')
+      return el.scrollHeight - el.clientHeight
+    })
+    expect(await overflow()).toBeLessThanOrEqual(0)
+    await expect(wm.getByRole('button', { name: /Serie fatta/ })).toBeInViewport({ ratio: 1 })
+    await wm.getByRole('button', { name: /Serie fatta/ }).click()
+    await expect(wm.getByRole('button', { name: 'Salta recupero' })).toBeVisible()
+    expect(await overflow()).toBeLessThanOrEqual(0)
+    for (const name of ['−15s', 'Salta recupero', '+ Serie', 'Termina allenamento']) await expect(wm.getByRole('button', { name })).toBeInViewport({ ratio: 1 })
+  })
+}
