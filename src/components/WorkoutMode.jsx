@@ -209,6 +209,24 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
   }
 
   const [prevOpen, setPrevOpen] = useState(false)
+  // azioni secondarie: sotto i controlli in verticale, sotto l'azione principale in orizzontale
+  const secondary = (
+    <>
+      {!working && (
+        <button onClick={addSet} className="btn-ghost px-3 text-sm">
+          + Serie
+        </button>
+      )}
+      <button onClick={() => setNoteOpen(true)} className="btn-ghost px-3 text-sm" aria-label={ex.notes ? 'Modifica nota' : '+ Nota'}>
+        {ex.notes ? 'Nota ✎' : '+ Nota'}
+      </button>
+      {ex.sets.some((s) => s.done) && !working && (
+        <button onClick={onUndo} className="btn-ghost px-3 text-sm" aria-label="↶ Annulla ultima serie">
+          ↶ Annulla
+        </button>
+      )}
+    </>
+  )
 
   return (
     // Tutto in una schermata: intestazione e controlli a misura fissa, il pulsante principale occupa lo spazio che resta.
@@ -268,23 +286,10 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
         )}
 
         {ex.notes && <p className="truncate text-center text-sm text-fg-soft [@media(max-height:620px)]:hidden">Nota di oggi: “{ex.notes}”</p>}
-        <div className="flex justify-center gap-2">
-          {!working && (
-            <button onClick={addSet} className="btn-ghost px-3 text-sm">
-              + Serie
-            </button>
-          )}
-          <button onClick={() => setNoteOpen(true)} className="btn-ghost px-3 text-sm" aria-label={ex.notes ? 'Modifica nota' : '+ Nota'}>
-            {ex.notes ? 'Nota ✎' : '+ Nota'}
-          </button>
-          {ex.sets.some((s) => s.done) && !working && (
-            <button onClick={onUndo} className="btn-ghost px-3 text-sm" aria-label="↶ Annulla ultima serie">
-              ↶ Annulla
-            </button>
-          )}
-        </div>
+        <div className="flex justify-center gap-2 [@media(max-height:500px)]:hidden">{secondary}</div>
       </div>
 
+      <div className="flex min-h-0 flex-1 flex-col gap-1">
       <ActionArea>
         {resting ? (
           <Countdown timers={timers} color="sky" title="Recupero" />
@@ -309,6 +314,8 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
           </>
         ) : null}
       </ActionArea>
+      <div className="hidden shrink-0 justify-center gap-2 [@media(max-height:500px)]:flex">{secondary}</div>
+      </div>
 
       <Sheet open={prevOpen} onClose={() => setPrevOpen(false)} title={`Ultima volta · ${ex.name}`}>
         <PreviousPerformance prev={previous} ex={ex} />
@@ -373,7 +380,7 @@ function CardioStep({ c, section, onChange, resting, working, timers, onStart })
 // (unità del contenitore: niente scorrimento su schermi bassi, grandi su quelli alti)
 function ActionArea({ children }) {
   return (
-    <div className="flex min-h-[8.5rem] flex-1 flex-col items-center justify-center" style={{ containerType: 'size' }}>
+    <div className="flex min-h-[7rem] flex-1 flex-col items-center justify-center" style={{ containerType: 'size' }}>
       {children}
     </div>
   )
