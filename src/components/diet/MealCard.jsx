@@ -4,6 +4,7 @@ import { NutritionLine, fmtDelta } from './NutritionView'
 import { optionsOf, optionOf, optionNutrition, optionDelta, consumptionQuality, MAIN_KEYS, NUTRIENTS } from '../../lib/diet'
 import { ADHERENCE } from '../../schema/constants'
 import { clone } from '../../schema/factories'
+import { itemText } from '../../lib/mealReminders'
 import { fmtNum } from '../../lib/stats'
 import * as A from '../../lib/actions'
 
@@ -58,7 +59,7 @@ const LOGGED = {
   skipped: 'Pasto saltato',
 }
 
-export default function MealCard({ meal: m, plan, date, state, update, next, workoutRole, selectedId, savedId, onPreview }) {
+export default function MealCard({ meal: m, plan, date, state, update, next, workoutRole, selectedId, savedId, onPreview, open, onToggle, tips = [] }) {
   const [logging, setLogging] = useState(false)
   const [details, setDetails] = useState(false)
   const options = optionsOf(m)
@@ -73,21 +74,55 @@ export default function MealCard({ meal: m, plan, date, state, update, next, wor
   const titleId = `meal-${m.id}-${date}`
 
   return (
-    <article aria-labelledby={titleId} className={`rounded-2xl border bg-surface p-4 ${next ? 'border-primary/60 ring-1 ring-primary/30' : 'border-line'}`}>
-      {/* Livello primario: nome, orario, alimenti e quantità */}
-      <header className="flex items-baseline justify-between gap-3">
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-          <h3 id={titleId} className="text-lg font-semibold leading-tight text-fg">
-            {m.label}
-          </h3>
-          {next && <span className="text-sm font-semibold text-primary">Prossimo</span>}
-          {workoutRole && <span className="text-sm text-fg-soft">{workoutRole === 'pre' ? 'Pre-allenamento' : 'Post-allenamento'}</span>}
-        </div>
-        {m.time && <time className="shrink-0 text-base font-semibold tabular-nums text-fg-soft">{m.time}</time>}
-      </header>
+    <article aria-labelledby={titleId} className={`rounded-2xl border bg-surface px-4 py-2 transition-colors duration-150 ${next ? 'border-primary/60 ring-1 ring-primary/30' : 'border-line'}`}>
+      {/* Riga sempre visibile: spunta rapida, nome, orario e sintesi degli alimenti. Il resto si apre toccando la riga. */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => (log ? onToggle(!open) : update((s) => A.logMeal(s, { ...ref, status: 'followed' })))}
+          aria-pressed={!!log}
+          aria-label={log ? `${m.label}: ${LOGGED[log.status].toLowerCase()}. Mostra dettagli` : `Spunta ${m.label} come consumato`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 text-base font-bold transition-colors duration-150 ${
+            !log ? 'border-line-strong text-transparent' : log.status === 'skipped' ? 'border-surface-strong bg-surface-strong text-fg' : 'border-primary bg-primary text-on-primary'
+          }`}
+        >
+          <span key={log?.status ?? 'none'} className={log ? 'anim-check inline-block' : ''} aria-hidden="true">
+            {log?.status === 'skipped' ? '–' : '✓'}
+          </span>
+        </button>
+        <h3 className="min-w-0 flex-1">
+          <button onClick={() => onToggle(!open)} aria-expanded={open} aria-controls={`${titleId}-body`} className="flex min-h-14 w-full items-center gap-2 py-1 text-left">
+            <span className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-baseline gap-x-2">
+                <span id={titleId} className={`text-lg font-semibold leading-tight ${log && !open ? 'text-fg-soft' : 'text-fg'}`}>
+                  {m.label}
+                </span>
+                {next && <span className="text-sm font-semibold text-primary">Prossimo</span>}
+                {workoutRole && <span className="text-sm text-fg-soft">{workoutRole === 'pre' ? 'Pre-allenamento' : 'Post-allenamento'}</span>}
+              </span>
+              {!open && (
+                <span className={`mt-0.5 text-sm font-normal text-muted ${log ? 'line-clamp-1' : 'line-clamp-2'}`}>
+                  {log ? `${LOGGED[log.status]} · ` : ''}
+                  {isAlt ? `${option.label}: ` : ''}
+                  {option.items.map(itemText).join(' · ') || 'Nessun alimento indicato'}
+                </span>
+              )}
+            </span>
+            <span className="shrink-0 text-right">
+              {m.time && <time className="block text-base font-semibold tabular-nums text-fg-soft">{m.time}</time>}
+              {!open && n.kcal.value != null && <span className="block text-xs font-normal tabular-nums text-muted">{fmtNum(n.kcal.value, 0)} kcal</span>}
+            </span>
+            <svg viewBox="0 0 20 20" className={`h-5 w-5 shrink-0 text-muted transition-transform duration-[var(--motion-disclosure)] ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+              <path d="m5 8 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </h3>
+      </div>
 
+      <div id={`${titleId}-body`} className="disclosure-panel" data-open={open} inert={open ? undefined : ''}>
+        <div>
+          <div className="pb-2">
       {options.length > 1 && (
-        <div className="-mx-1 mt-3 flex gap-1 overflow-x-auto px-1" role="group" aria-label={`Opzioni ${m.label}`}>
+        <div className="-mx-1 mt-1 flex gap-1 overflow-x-auto px-1" role="group" aria-label={`Opzioni ${m.label}`}>
           {options.map((o) => {
             const on = option.id === o.id
             return (
@@ -121,6 +156,16 @@ export default function MealCard({ meal: m, plan, date, state, update, next, wor
           )}
         </div>
       </div>
+
+      {tips.length > 0 && (
+        <Disclosure className="mt-2 rounded-xl bg-surface-muted px-3" buttonClassName="text-sm font-medium text-fg" summary={`I tuoi suggerimenti (${tips.length})`}>
+          <ul className="list-disc space-y-1 pb-3 pl-5 text-sm text-fg-soft">
+            {tips.map((t) => (
+              <li key={t.id} className="whitespace-pre-line">{t.text}</li>
+            ))}
+          </ul>
+        </Disclosure>
+      )}
 
       {previewing && (
         <div className="anim-pop mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-surface-muted px-3 py-2 text-sm text-fg-soft" role="status">
@@ -199,6 +244,9 @@ export default function MealCard({ meal: m, plan, date, state, update, next, wor
           {log && log.planRevision != null && log.planRevision !== plan.revision && <p className="text-fg-soft">Registrato sulla revisione {log.planRevision} del piano (il pasto può essere cambiato).</p>}
         </div>
       </Disclosure>
+          </div>
+        </div>
+      </div>
 
       <ConsumptionSheet
         open={logging}

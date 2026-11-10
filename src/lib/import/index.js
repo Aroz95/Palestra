@@ -17,6 +17,7 @@ import { FILE_TYPES, LIMITS, SCHEMA_VERSION } from '../../schema/constants'
 import { isLegacyBackup, migrateLegacySession, migrateLegacyState } from '../../schema/migrate'
 import { clone, emptyState, uid } from '../../schema/factories'
 import { toLocalISO, localDate } from '../dates'
+import { normTip } from '../dietTips'
 
 const emptyBatch = () => ({
   fullBackup: false,
@@ -31,6 +32,7 @@ const emptyBatch = () => ({
   calendar: null,
   dietLog: [],
   dietSelections: [],
+  dietTips: [],
   activeSessionId: null,
   sources: [],
 })
@@ -174,6 +176,7 @@ function collectBackup(v, raw, path, batch) {
   batch.calendar = raw.calendar && typeof raw.calendar === 'object' ? clone(raw.calendar) : null
   batch.dietLog = v.arr(raw.dietLog, p('dietLog')).map((l, i) => normDietLog(v, l, p(`dietLog[${i}]`))).filter(Boolean)
   batch.dietSelections = v.arr(raw.dietSelections, p('dietSelections')).map((x, i) => normDietSelection(v, x, p(`dietSelections[${i}]`))).filter(Boolean)
+  batch.dietTips = (Array.isArray(raw.dietTips) ? raw.dietTips : []).map(normTip).filter(Boolean)
   batch.activeSessionId = raw.activeSessionId ?? null
 }
 
@@ -359,6 +362,7 @@ export function applyImport(state, batch, preview, options = {}) {
     next.calendar = { overrides: batch.calendar?.overrides ?? {}, extra: batch.calendar?.extra ?? [] }
     next.dietLog = batch.dietLog
     next.dietSelections = batch.dietSelections
+    next.dietTips = batch.dietTips
     next.activeSessionId = next.sessions.some((s) => s.id === batch.activeSessionId) ? batch.activeSessionId : null
     next.meta = { ...next.meta, restoredAt: toLocalISO() }
     log.inserted = preview.items.map((i) => i.label)
@@ -437,6 +441,9 @@ export function applyImport(state, batch, preview, options = {}) {
     const ds = addMissing(next.dietSelections ?? [], batch.dietSelections, (x) => `${x.date}|${x.planId}|${x.mealId}`)
     next.dietLog = dl.list
     next.dietSelections = ds.list
+    const tips = addMissing(next.dietTips ?? [], batch.dietTips, (t) => `${t.category}|${t.meal}|${t.text}`)
+    next.dietTips = tips.list
+    if (tips.added) log.inserted.push(`${tips.added} suggerimenti per l’alimentazione`)
     if (dl.added) log.inserted.push(`${dl.added} registrazioni del diario alimentare`)
     if (ds.added) log.inserted.push(`${ds.added} scelte di alternative`)
     if (batch.calendar) {

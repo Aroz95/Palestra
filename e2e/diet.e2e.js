@@ -1,6 +1,6 @@
 // NUT: piano alimentare v4 — obiettivi, programmato, alternative per data, consumato, fuori piano, guida
 import { test, expect } from '@playwright/test'
-import { openApp, nav, main, goImport, importFile, savedState, waitSaved, EX } from './helpers'
+import { openApp, nav, main, goImport, importFile, savedState, waitSaved, openMeal, EX } from './helpers'
 
 test('NUT v4: obiettivo ≠ programmato ≠ consumato, alternativa per data, guida', async ({ page }) => {
   await openApp(page) // sabato 31/10: il piano inizia lunedì 2/11 (giorno di riposo senza attività)
@@ -20,6 +20,7 @@ test('NUT v4: obiettivo ≠ programmato ≠ consumato, alternativa per data, gui
   await expect(summary).not.toContainText('Consumato')
 
   // anteprima dell'alternativa: nulla viene salvato finché non si sceglie
+  await openMeal(page, 'Colazione')
   const opts = main(page).getByRole('group', { name: 'Opzioni Colazione' })
   await opts.getByRole('button', { name: 'Skyr e avena' }).click()
   await expect(main(page)).toContainText('Anteprima · non ancora salvata')
@@ -37,6 +38,7 @@ test('NUT v4: obiettivo ≠ programmato ≠ consumato, alternativa per data, gui
   // consumato: registrazione precompilata con l'opzione scelta
   const card = main(page).getByRole('article', { name: 'Colazione' })
   await card.getByRole('button', { name: 'Registra dettagli' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
   await page.getByRole('dialog').getByRole('button', { name: 'Salva', exact: true }).click()
   await expect(summary).toContainText('Consumato')
   await waitSaved(page)
@@ -55,12 +57,14 @@ test('NUT v4: obiettivo ≠ programmato ≠ consumato, alternativa per data, gui
   await waitSaved(page)
   await page.reload()
   await nav(page, /Alimentazione/)
+  await openMeal(page, 'Colazione')
   await expect(main(page).getByRole('group', { name: 'Opzioni Colazione' }).getByRole('button', { name: 'Skyr e avena ✓' })).toBeVisible()
   await expect(main(page)).toContainText('Caffè e cornetto')
   st = await savedState(page)
   expect(st.dietLog.filter((l) => l.status === 'extra')).toHaveLength(1)
 
-  // guida del piano tra le informazioni secondarie, comprimibile
+  // guida del piano nella scheda Suggerimenti, comprimibile
+  await page.getByRole('tab', { name: /Suggerimenti/ }).click()
   await main(page).getByText('Guida del piano').click()
   await expect(main(page)).toContainText('Idratazione')
 })

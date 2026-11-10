@@ -2,12 +2,16 @@ import { useState } from 'react'
 import { Card, Disclosure, Empty, Field, Section, Segmented, Select, Sheet, TextArea, TextInput } from './ui'
 import { newDietPlan, uid, clone } from '../schema/factories'
 import { addDays, fmtDate, todayISO, toLocalISO, weekdayOf, WEEKDAYS_SHORT } from '../lib/dates'
-import { pickDay, sortedMeals, nextMeal, isValidated, isTrainingDay, resolveTarget, hasTargets, dayPlanned, dayConsumed, deltaToTarget, selectionsFor, planCompleteness, initialDate, rangeStatus } from '../lib/diet'
+import { pickDay, sortedMeals, isValidated, isTrainingDay, resolveTarget, hasTargets, dayPlanned, dayConsumed, deltaToTarget, selectionsFor, planCompleteness, initialDate, rangeStatus } from '../lib/diet'
 import { activityOn } from '../lib/calendar'
 import * as A from '../lib/actions'
 import MealCard, { ConsumptionSheet } from './diet/MealCard'
 import { DayTable, NutritionLine } from './diet/NutritionView'
-import { GuideView, WorkoutTips, hasGuide } from './diet/GuideView'
+import { WorkoutTips } from './diet/GuideView'
+import DaySummary from './diet/DaySummary'
+import TipsView from './diet/TipsView'
+import RemindersSheet from './diet/RemindersSheet'
+import { tipsForMeal } from '../lib/dietTips'
 import { TargetsEditor, GuidelinesEditor, DayTargetEditor, MealEditor } from './diet/editors'
 import { optionNutrition } from '../lib/diet'
 import { exportDietPlan, fileNames } from '../lib/report'
@@ -31,7 +35,9 @@ export default function DietView({ state, update, onImport }) {
   const [dayType, setDayType] = useState(null)
   const [editing, setEditing] = useState(null) // bozza del piano in modifica
   const [manageOpen, setManageOpen] = useState(false)
-  const [guideOpen, setGuideOpen] = useState(false)
+  const [view, setView] = useState('meals') // 'meals' | 'tips'
+  const [remindersOpen, setRemindersOpen] = useState(false)
+  const [expanded, setExpanded] = useState({}) // pasti aperti/chiusi a mano: { [mealId]: boolean }
   const [preview, setPreview] = useState({}) // anteprima delle alternative: { [data]: { [mealId]: alternativeId|null } }
   const [extraOpen, setExtraOpen] = useState(false)
   const [dir, setDir] = useState('next') // direzione dell'ultimo cambio giorno, per la transizione
@@ -72,7 +78,6 @@ export default function DietView({ state, update, onImport }) {
   const training = isTrainingDay(day, activity)
   const meals = sortedMeals(day)
   const isToday = date === today
-  const nextMealId = isToday ? nextMeal(day, nowHHMM())?.id : null
   const weekStart = addDays(date, 1 - wd)
   const outOfRange = rangeStatus(shown, date)
   const todayOutOfRange = rangeStatus(shown, today)
@@ -91,9 +96,11 @@ export default function DietView({ state, update, onImport }) {
   const targetSources = target ? [...new Set(['kcal', 'proteinG', 'carbsG', 'fatG'].map((k) => target[k].source).filter(Boolean))] : []
   const completeness = shown ? planCompleteness(shown) : null
   const prePost = (m) => (training && shown?.guidelines?.preWorkout?.mealCategories?.includes(m.category) ? 'pre' : training && shown?.guidelines?.postWorkout?.mealCategories?.includes(m.category) ? 'post' : null)
-  const loggedCount = meals.filter((m) => logs.some((l) => l.mealId === m.id && l.status !== 'extra')).length
-  const plannedKcal = planned?.kcal.status === 'complete' ? planned.kcal.value : null
-  const targetKcal = target?.kcal.value ?? null
+  const isLogged = (m) => logs.some((l) => l.mealId === m.id && l.planId === plan?.id && l.status !== 'extra')
+  const loggedCount = meals.filter(isLogged).length
+  // Prossimo pasto di oggi: il primo non registrato da qui in avanti, altrimenti l'ultimo non registrato
+  const todo = isToday ? meals.filter((m) => !isLogged(m)) : []
+  const nextMealId = (todo.find((m) => m.time && m.time >= nowHHMM()) ?? todo[todo.length - 1])?.id ?? null
   const status = !plan ? '' : plan.archived ? 'Archiviato' : isValidated(plan) ? 'Validato' : 'Bozza'
 
   const setPlan = (p) => update((s) => A.upsertIn(s, 'dietPlans', p))
@@ -152,11 +159,31 @@ export default function DietView({ state, update, onImport }) {
           </p>
         </div>
         {!editing && (
-          <button onClick={() => setManageOpen(true)} className="btn-ghost shrink-0 text-sm" aria-haspopup="dialog">
-            Gestisci piano
-          </button>
+          <div className="flex shrink-0 gap-1">
+            <button onClick={() => setRemindersOpen(true)} className="btn-ghost relative h-11 w-11 px-0" aria-haspopup="dialog" aria-label="Promemoria dei pasti">
+              <HeaderIcon d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6M10 19a2 2 0 0 0 4 0" />
+              {state.settings.mealReminders?.enabled && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" aria-hidden="true" />}
+            </button>
+            <button onClick={() => setManageOpen(true)} className="btn-ghost h-11 w-11 px-0" aria-haspopup="dialog" aria-label="Gestisci piano">
+              <HeaderIcon d="M4 7h10M18 7h2M4 17h2M10 17h10M14 7a2 2 0 1 0 4 0 2 2 0 0 0-4 0M6 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0" />
+            </button>
+          </div>
         )}
       </header>
+
+      {!editing && (
+        <Segmented
+          value={view}
+          onChange={setView}
+          aria-label="Sezioni dell’alimentazione"
+          options={[
+            { id: 'meals', label: 'Pasti' },
+            { id: 'tips', label: `Suggerimenti${state.dietTips?.length ? ` (${state.dietTips.length})` : ''}` },
+          ]}
+        />
+      )}
+      {!editing && view === 'tips' && <TipsView state={state} update={update} plan={plan} />}
+      {(editing || view === 'meals') && <>
 
       {plan && !plan.active && !plan.archived && !editing && (
         <p className="flex flex-wrap items-center gap-2 text-sm text-fg-soft">
@@ -217,9 +244,12 @@ export default function DietView({ state, update, onImport }) {
       {/* 3. Contenuto del giorno: titolo e pasti subito sotto */}
       <section aria-labelledby="diet-day-title" className="space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h2 id="diet-day-title" className="min-w-0 text-xl font-semibold capitalize leading-tight text-fg">
-            {fmtLong(date)}
-          </h2>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2">
+            <h2 id="diet-day-title" className="min-w-0 text-xl font-semibold capitalize leading-tight text-fg">
+              {fmtLong(date)}
+            </h2>
+            {isToday && <span className="rounded-full border border-line-strong px-2 py-0.5 text-xs font-semibold text-fg">Oggi</span>}
+          </div>
           <div className="flex shrink-0 gap-1">
             <button onClick={() => goDate(addDays(date, -7))} className="btn-ghost h-11 w-11 px-0" aria-label="Settimana precedente">
               ‹
@@ -230,25 +260,11 @@ export default function DietView({ state, update, onImport }) {
           </div>
         </div>
 
-        {/* Mini-riepilogo (solo valori disponibili e completi, niente stime) e ritorno a oggi */}
-        <div className="-mt-1 flex min-h-11 flex-wrap items-center justify-between gap-x-3 text-sm text-fg-soft">
-          <p data-testid="day-summary">
-            {isToday && <span className="mr-1.5 rounded-full border border-line-strong px-2 py-0.5 text-xs font-semibold text-fg">Oggi</span>}
-            {day && meals.length > 0 && !editing && (
-              <>
-                {meals.length} {meals.length === 1 ? 'pasto' : 'pasti'}
-                {plannedKcal != null && <> · <b className="font-semibold text-fg">{fmtNum(plannedKcal, 0)} kcal</b> programmate</>}
-                {targetKcal != null && <> · obiettivo {fmtNum(targetKcal, 0)} kcal</>}
-                {loggedCount > 0 && <> · {loggedCount} di {meals.length} registrati</>}
-              </>
-            )}
-          </p>
-          {!isToday && (
-            <button onClick={() => goDate(today)} className="min-h-11 font-medium text-primary underline underline-offset-4">
-              Torna a oggi
-            </button>
-          )}
-        </div>
+        {!isToday && (
+          <button onClick={() => goDate(today)} className="-mt-2 block min-h-11 text-sm font-medium text-primary underline underline-offset-4">
+            Torna a oggi
+          </button>
+        )}
 
         {outOfRange && (
           <p role="note" className="text-sm text-fg-soft">
@@ -303,6 +319,27 @@ export default function DietView({ state, update, onImport }) {
             </Empty>
           )}
           {day && editing && <DayTargetEditor key={day.id} day={day} onChange={editDay} />}
+          {day && meals.length > 0 && target && !editing && (
+            <div className="rounded-2xl border border-line bg-surface px-4 pt-4">
+              <DaySummary meals={meals.length} loggedCount={loggedCount} planned={planned} target={target} consumed={consumed} training={training} previewing={previewing} />
+              <Disclosure className="mt-1" buttonClassName="text-sm font-medium text-fg-soft" summary="Riepilogo nutrizionale">
+                <div className="space-y-2 pb-4">
+                  <DayTable
+                    rows={[
+                      { label: 'Obiettivo', kind: 'target', hint: hasTargets(target) ? targetSources.map((x) => sourceLabel[x]).join(', ') : 'non specificato', cells: Object.fromEntries(['kcal', 'proteinG', 'carbsG', 'fatG'].map((k) => [k, target[k].value])) },
+                      { label: 'Programmato', kind: 'total', hint: 'dal piano, non consumato', cells: planned },
+                      ...(hasTargets(target) ? [{ label: 'Scostamento', kind: 'delta', hint: 'programmato − obiettivo', cells: deltaToTarget(planned, target), muted: true }] : []),
+                      ...(consumed ? [{ label: 'Consumato', kind: 'total', hint: 'solo quanto registrato', cells: consumed }] : []),
+                      ...(consumed && hasTargets(target) ? [{ label: 'Scostamento', kind: 'delta', hint: 'consumato − obiettivo', cells: deltaToTarget(consumed, target), muted: true }] : []),
+                    ]}
+                  />
+                  <p className="text-xs text-muted">
+                    ND = non disponibile. Gli scostamenti compaiono solo con totali completi. {completeness?.total ? `Pasti del piano con valori completi: ${completeness.complete}/${completeness.total}.` : ''}
+                  </p>
+                </div>
+              </Disclosure>
+            </div>
+          )}
           {day && !meals.length && !editing && <Empty>Nessun pasto previsto per questo giorno.</Empty>}
           {day &&
             meals.map((m) =>
@@ -321,6 +358,9 @@ export default function DietView({ state, update, onImport }) {
                   selectedId={selections[m.id] ?? null}
                   savedId={saved[m.id] ?? null}
                   onPreview={(altId) => setPreview({ ...preview, [date]: { ...datePreview, [m.id]: altId } })}
+                  open={expanded[m.id] ?? m.id === nextMealId}
+                  onToggle={(v) => setExpanded({ ...expanded, [m.id]: v })}
+                  tips={tipsForMeal(state.dietTips, m.category)}
                 />
               ),
             )}
@@ -336,36 +376,7 @@ export default function DietView({ state, update, onImport }) {
       </section>
 
       {/* 4. Informazioni secondarie */}
-      {day && target && !editing && (
-        <Disclosure
-          className="rounded-2xl border border-line bg-surface px-4"
-          buttonClassName="py-2"
-          summary={
-            <span className="flex flex-wrap items-baseline gap-x-2">
-              <span className="text-lg font-semibold text-fg">Riepilogo nutrizionale</span>
-              <span className="text-sm text-muted">obiettivo · programmato{consumed ? ' · consumato' : ''}</span>
-              {previewing && <span className="text-sm font-medium text-fg-soft">con anteprima alternative</span>}
-            </span>
-          }
-        >
-          <div className="space-y-2 pb-4">
-            <p className="text-sm text-fg-soft">{training ? 'Giorno di allenamento' : 'Giorno di riposo'}</p>
-            <DayTable
-              rows={[
-                { label: 'Obiettivo', kind: 'target', hint: hasTargets(target) ? targetSources.map((x) => sourceLabel[x]).join(', ') : 'non specificato', cells: Object.fromEntries(['kcal', 'proteinG', 'carbsG', 'fatG'].map((k) => [k, target[k].value])) },
-                { label: 'Programmato', kind: 'total', hint: 'dal piano, non consumato', cells: planned },
-                ...(hasTargets(target) ? [{ label: 'Scostamento', kind: 'delta', hint: 'programmato − obiettivo', cells: deltaToTarget(planned, target), muted: true }] : []),
-                ...(consumed ? [{ label: 'Consumato', kind: 'total', hint: 'solo quanto registrato', cells: consumed }] : []),
-                ...(consumed && hasTargets(target) ? [{ label: 'Scostamento', kind: 'delta', hint: 'consumato − obiettivo', cells: deltaToTarget(consumed, target), muted: true }] : []),
-              ]}
-            />
-            <p className="text-xs text-muted">
-              ND = non disponibile. Gli scostamenti compaiono solo con totali completi. {completeness?.total ? `Pasti del piano con valori completi: ${completeness.complete}/${completeness.total}.` : ''}
-            </p>
-          </div>
-        </Disclosure>
-      )}
-      {!editing && <WorkoutTips plan={shown} training={training} onOpenGuide={() => setGuideOpen(true)} />}
+      {!editing && <WorkoutTips plan={shown} training={training} onOpenGuide={() => setView('tips')} />}
 
       {day && !editing && plan && (
         <Section title="Fuori piano" right={<button onClick={() => setExtraOpen(true)} className="min-h-11 px-1 text-sm font-medium text-primary">+ Aggiungi</button>}>
@@ -389,24 +400,7 @@ export default function DietView({ state, update, onImport }) {
         </Section>
       )}
 
-      {plan && !editing && (
-        <Disclosure
-          open={guideOpen}
-          onToggle={setGuideOpen}
-          className="rounded-2xl border border-line bg-surface px-4"
-          buttonClassName="py-2"
-          summary={
-            <span className="flex items-baseline gap-2">
-              <span className="text-lg font-semibold text-fg">Guida del piano</span>
-              {!hasGuide(plan.guidelines) && <span className="text-sm text-muted">vuota</span>}
-            </span>
-          }
-        >
-          <div className="pb-4">
-            <GuideView plan={plan} />
-          </div>
-        </Disclosure>
-      )}
+      </>}
 
       {plan && (
         <ConsumptionSheet
@@ -421,6 +415,8 @@ export default function DietView({ state, update, onImport }) {
           }}
         />
       )}
+
+      <RemindersSheet open={remindersOpen} onClose={() => setRemindersOpen(false)} state={state} update={update} plan={plan} />
 
       <Sheet open={manageOpen} onClose={() => setManageOpen(false)} title="Gestisci piano">
         {plan && (
@@ -461,6 +457,14 @@ export default function DietView({ state, update, onImport }) {
         )}
       </Sheet>
     </div>
+  )
+}
+
+function HeaderIcon({ d }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={d} />
+    </svg>
   )
 }
 

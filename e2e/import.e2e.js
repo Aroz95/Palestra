@@ -1,7 +1,7 @@
 // E2E-02, 05, 06, 07, 09, 10, 11, 12 e sostituzione da backup
 import fs from 'node:fs'
 import { test, expect } from '@playwright/test'
-import { openApp, nav, tab, main, goImport, importFile, savedState, waitSaved, EX, FIX, readJSON, LEGACY_REAL } from './helpers'
+import { openApp, nav, tab, main, goImport, importFile, savedState, waitSaved, EX, FIX, readJSON, LEGACY_REAL, openMeal } from './helpers'
 
 test('E2E-02 programma A/B: anteprima, calendario corretto, nessun duplicato', async ({ page }) => {
   await openApp(page)
@@ -51,6 +51,7 @@ test('E2E-06 dieta: mercoledì con pasti ordinati, alternative e valori ignoti N
   await nav(page, /Alimentazione/)
   await main(page).getByRole('button', { name: /^mercoledì/ }).click()
   const meals = main(page).locator('article')
+  await openMeal(page, 'Colazione')
   await expect(meals.nth(0)).toContainText('Colazione') // 07:30 prima delle 20:00
   await expect(meals.nth(0)).toContainText('oppure: Gallette 30 g')
   await expect(meals.nth(0)).toContainText('P 12 g · C ND · G ND')

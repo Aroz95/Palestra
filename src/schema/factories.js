@@ -40,7 +40,8 @@ export function emptyState() {
     dietPlans: [],
     dietLog: [],
     dietSelections: [], // alternative scelte per data: { date, planId, planRevision, mealId, alternativeId }
-    settings: { restSeconds: DEFAULT_REST, autoRest: true, sound: true, reportExcludeNotes: true },
+    dietTips: [], // suggerimenti personali: { id, category, meal, text, createdAt }
+    settings: { restSeconds: DEFAULT_REST, autoRest: true, sound: true, reportExcludeNotes: true, mealReminders: { enabled: false, leadMin: 10 } },
     meta: { createdAt: toLocalISO(), migratedFrom: null },
   }
 }

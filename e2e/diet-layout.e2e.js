@@ -1,7 +1,7 @@
 // CR-UX-ALIM-001: piano del giorno subito visibile, bozza compatta, giorno conservato, responsive e tastiera
 import fs from 'node:fs'
 import { test, expect } from '@playwright/test'
-import { openApp, nav, main, goImport, importFile, waitSaved, EX, FIX, readJSON } from './helpers'
+import { openApp, nav, main, goImport, importFile, waitSaved, savedState, openMeal, EX, FIX, readJSON } from './helpers'
 
 // Piano v4 senza periodo di validità: "oggi" (sabato 31/10) è compreso
 async function openPlan(page, info, extra = []) {
@@ -110,7 +110,10 @@ test.describe('CR-UX-ALIM-002 390x844', () => {
 
   test('alimenti e quantità in primo piano; dettagli su richiesta, animati e accessibili da tastiera', async ({ page }, info) => {
     await openPlan(page, info)
-    const c = card(page, 'Colazione')
+    // riga compatta: il pasto chiuso mostra già alimenti e quantità; si apre toccandolo
+    await expect(card(page, 'Colazione').locator('h3 button')).toContainText('Latte parzialmente scremato 250 ml')
+    await expect(card(page, 'Pranzo').locator('h3 button')).toHaveAttribute('aria-expanded', 'true') // il prossimo pasto di oggi è già aperto
+    const c = await openMeal(page, 'Colazione')
     // primario: alimenti con quantità; la provenienza dei valori non è nella lettura principale
     await expect(c.getByRole('listitem').first()).toContainText('250 ml')
     const details = c.getByRole('button', { name: 'Dettagli', exact: true })
@@ -133,21 +136,31 @@ test.describe('CR-UX-ALIM-002 390x844', () => {
     await openPlan(page, info)
     const c = card(page, 'Pranzo')
     await c.getByRole('button', { name: 'Segna consumato' }).click()
-    const done = c.getByRole('status').filter({ hasText: 'Consumato come previsto' })
-    await expect(done).toBeVisible()
-    await expect(done).toHaveClass(/anim-pop/)
+    // il pasto registrato si richiude con la spunta; il "prossimo" passa al pasto successivo
+    await expect(c.locator('h3 button')).toHaveAttribute('aria-expanded', 'false')
+    await expect(c.locator('h3 button')).toContainText('Consumato come previsto')
+    await expect(c.getByRole('button', { name: /Pranzo: consumato come previsto/ })).toHaveAttribute('aria-pressed', 'true')
+    await expect(card(page, 'Merenda')).toContainText('Prossimo')
     await expect(main(page).getByTestId('day-summary')).toContainText('1 di 4 registrati')
+    // spunta rapida dalla riga chiusa
+    await card(page, 'Colazione').getByRole('button', { name: 'Spunta Colazione come consumato' }).click()
+    await expect(main(page).getByTestId('day-summary')).toContainText('2 di 4 registrati')
     await waitSaved(page)
+    expect((await savedState(page)).dietLog.map((l) => l.status)).toEqual(['followed', 'followed'])
     await page.reload()
     await nav(page, /Alimentazione/)
-    await expect(card(page, 'Pranzo').getByText('Consumato come previsto')).toBeVisible()
+    await openMeal(page, 'Pranzo')
+    const done = card(page, 'Pranzo').getByRole('status').filter({ hasText: 'Consumato come previsto' })
+    await expect(done).toBeVisible()
+    await expect(done).toHaveClass(/anim-pop/)
     await card(page, 'Pranzo').getByRole('button', { name: 'Annulla registrazione Pranzo' }).click()
     await expect(card(page, 'Pranzo').getByRole('button', { name: 'Segna consumato' })).toBeVisible()
+    await expect(main(page).getByTestId('day-summary')).toContainText('1 di 4 registrati')
   })
 
   test('alternativa: anteprima distinta dal salvataggio, conferma persistente', async ({ page }, info) => {
     await openPlan(page, info)
-    const c = card(page, 'Colazione')
+    const c = await openMeal(page, 'Colazione')
     await c.getByRole('group', { name: 'Opzioni Colazione' }).getByRole('button', { name: 'Skyr e avena' }).click()
     await expect(c.getByRole('status').filter({ hasText: 'Anteprima' })).toContainText('non ancora salvata')
     await c.getByRole('button', { name: 'Annulla', exact: true }).click()
@@ -188,7 +201,7 @@ test.describe('CR-UX-ALIM-002 390x844', () => {
 
   test('aree interattive essenziali dei pasti almeno 44x44 px', async ({ page }, info) => {
     await openPlan(page, info)
-    const c = card(page, 'Colazione')
+    const c = await openMeal(page, 'Colazione')
     for (const b of await c.getByRole('button').all()) {
       const box = await b.boundingBox()
       expect(box.height, await b.textContent()).toBeGreaterThanOrEqual(44)

@@ -224,6 +224,8 @@ Pasto: `{ id, category, label, time, items[], alternatives[], nutrition, guidanc
 
 - `dietLog[]`: `{ id, date, planId, planRevision, mealId, label, status: "followed" | "modified" | "skipped" | "extra", consumption, note }`. `consumption`: `{ source: "manual" | "plan" | "device", chosenAlternativeId, items[], nutrition }`. Un pasto saltato vale 0; “seguito” senza `consumption` indica l’aderenza ma i nutrienti restano ND; `extra` = cibo fuori piano. `note` è privata (esclusa dai report per impostazione).
 - `dietSelections[]`: `{ id, date, planId, planRevision, mealId, alternativeId }` — alternativa scelta per una data; non modifica il piano. Le registrazioni passate restano legate alla revisione su cui sono state fatte.
+- `dietTips[]`: `{ id, category, meal, text, createdAt }` — suggerimenti personali dell'utente (`category`: `alternative` | `hunger` | `out` | `other`; `meal`: categoria del pasto solo per le alternative, altrimenti `null`). Non fanno parte del piano; sono inclusi nel backup.
+- `settings.mealReminders`: `{ enabled, leadMin }` — notifiche dei pasti ad app aperta e anticipo (minuti) usato anche per il file del calendario.
 
 ## Misure (`palestra-body-measurements`)
 

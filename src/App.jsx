@@ -25,6 +25,8 @@ import { Icon } from './components/icons'
 import { IncompleteSheet, SavedSheet, SessionSummary, pendingCount } from './components/SessionEnd'
 import { useTheme } from './lib/theme'
 import { usePinchLock } from './lib/zoomLock'
+import { useMealReminders } from './lib/useMealReminders'
+import { fmtClock } from './lib/stats'
 
 const TABS = [
   { id: 'today', label: 'Oggi' },
@@ -54,6 +56,7 @@ export default function App() {
   const [hideMigrated, setHideMigrated] = useState(false)
   const stateRef = useRef(state)
   stateRef.current = state
+  useMealReminders(state)
   const timers = useTimers({ sound: state?.settings.sound ?? true, onCountdownEnd: (c) => onCountdownEnd(c) })
 
   // Fine di una serie/cardio a tempo: la segna come fatta e, se restano serie, avvia il recupero
@@ -198,7 +201,10 @@ export default function App() {
       setState((s) => A.recordRest(s, r.target, { selectedSec: r.duration, actualSec: r.duration - r.left / 1000 }))
     }
   }
-  const showTimer = tab === 'training' || timers.running || timers.rest.active || timers.elapsed > 0
+  // Cronometro e recupero completi solo nella seduta; altrove, se un allenamento sta andando, solo un richiamo compatto
+  const inSession = tab === 'training' && sub.training === 'session' && !summarySession
+  const timerLive = timers.running || timers.rest.active
+  const showTimer = inSession && (!!active || timerLive || timers.elapsed > 0)
 
   return (
     <div className="min-h-dvh bg-bg text-fg lg:pl-60">
@@ -209,6 +215,18 @@ export default function App() {
         </div>
       )}
       {showTimer && <TimerBar timers={sessionTimers} restSeconds={state.settings.restSeconds} />}
+      {!inSession && timerLive && !workout && (
+        <button
+          onClick={() => go('training', 'session')}
+          className="sticky top-0 z-30 flex min-h-11 w-full items-center justify-center gap-2 border-b border-line bg-bg/95 px-4 pt-[env(safe-area-inset-top)] text-sm text-fg-soft backdrop-blur"
+          aria-label="Allenamento in corso: torna alla seduta"
+        >
+          <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
+          <span className="font-medium text-fg">Allenamento in corso</span>
+          <span className="font-mono tabular-nums">{timers.rest.active ? `${timers.rest.kind === 'work' ? timers.rest.label : 'recupero'} ${fmtClock(timers.rest.left + 999)}` : fmtClock(timers.elapsed)}</span>
+          <span className="font-medium text-primary">Torna ›</span>
+        </button>
+      )}
 
       <main className="mx-auto max-w-2xl px-4 pb-28 pt-4 sm:px-6 lg:max-w-3xl lg:px-8 lg:pb-12">
         <SaveBadge status={status} />

@@ -52,3 +52,12 @@ export async function waitSaved(page) {
 }
 
 export const main = (page) => page.locator('main')
+
+// Alimentazione: i pasti sono righe compatte; apre il pasto (se chiuso) per vedere alimenti, opzioni e azioni
+export async function openMeal(page, name) {
+  const card = page.getByRole('main').getByRole('article', { name })
+  const toggle = card.locator('h3 button')
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  return card
+}

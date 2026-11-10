@@ -4,7 +4,9 @@ import { OccurrenceItem, SessionChip, freeSessionsOn } from './CalendarView'
 import { occurrencesOn, mainProgram, activityOn } from '../lib/calendar'
 import { fmtDate, todayISO, weekdayOf, timeOf, localDate } from '../lib/dates'
 import { fmtNum } from '../lib/stats'
-import { pickDay, nextMeal } from '../lib/diet'
+import { pickDay, nextMeal, optionOf, selectionsFor, sortedMeals } from '../lib/diet'
+import { itemText } from '../lib/mealReminders'
+import * as A from '../lib/actions'
 import { SESSION_STATUS } from '../schema/constants'
 
 export default function TodayView({ state, update, onStart, onOpenSession, go }) {
@@ -89,7 +91,7 @@ export default function TodayView({ state, update, onStart, onOpenSession, go })
         </Section>
       )}
 
-      <NextMeal state={state} go={go} />
+      <NextMeal state={state} go={go} update={update} />
 
       {lastMeasure && (
         <Section title="Ultima misura">
@@ -133,14 +135,19 @@ export default function TodayView({ state, update, onStart, onOpenSession, go })
 }
 
 // Solo il pasto corrente/prossimo: il diario è facoltativo
-function NextMeal({ state, go }) {
+function NextMeal({ state, go, update }) {
   const plan = state.dietPlans.find((d) => d.active && !d.archived)
   if (!plan) return null
   const today = todayISO()
   const training = activityOn(state, today)
   const { day } = pickDay(plan, today, { isTraining: training })
   if (!day?.meals.length) return null
-  const next = nextMeal(day, timeOf(new Date().toISOString()))
+  // il primo pasto non ancora registrato da adesso in poi (altrimenti quello d'orario), con l'alternativa scelta per oggi
+  const logged = new Set(state.dietLog.filter((l) => l.date === today && l.planId === plan.id).map((l) => l.mealId))
+  const now = timeOf(new Date().toISOString())
+  const next = sortedMeals(day).find((m) => !logged.has(m.id) && m.time && m.time >= now) ?? nextMeal(day, now)
+  const option = optionOf(next, selectionsFor(state, today, plan.id)[next.id])
+  const done = logged.has(next.id)
   return (
     <Section title="Prossimo pasto" right={<button onClick={() => go('diet')} className="text-xs text-primary">Piano</button>}>
       <Card className="space-y-1 py-3">
@@ -148,8 +155,15 @@ function NextMeal({ state, go }) {
           <span className="font-semibold text-fg">{next.label}</span>
           <span className="text-sm text-muted">{next.time ?? ''}</span>
         </div>
-        <p className="text-sm text-fg-soft">{next.items.map((i) => `${i.name}${i.quantity != null ? ` ${fmtNum(i.quantity, 1)} ${i.unit}` : ''}`).join(' · ') || '—'}</p>
-        {next.alternatives.length > 0 && <p className="text-xs text-muted">{next.alternatives.length} alternative disponibili</p>}
+        <p className="text-sm text-fg-soft">{option.items.map(itemText).join(' · ') || '—'}</p>
+        {next.alternatives.length > 0 && <p className="text-xs text-muted">{option.id ? `Alternativa scelta: ${option.label}` : `${next.alternatives.length} alternative disponibili`}</p>}
+        {done ? (
+          <p className="text-sm font-semibold text-primary">✓ Registrato</p>
+        ) : (
+          <button onClick={() => update((s) => A.logMeal(s, { date: today, planId: plan.id, planRevision: plan.revision, mealId: next.id, status: 'followed' }))} className="btn-ghost mt-1 w-full text-sm">
+            Segna consumato
+          </button>
+        )}
       </Card>
     </Section>
   )

@@ -206,7 +206,8 @@ export function normalizeState(s) {
     schemaVersion: SCHEMA_VERSION,
     profile: { ...base.profile, ...(s.profile ?? {}) },
     calendar: { overrides: { ...(s.calendar?.overrides ?? {}) }, extra: [...(s.calendar?.extra ?? [])] },
-    settings: { ...base.settings, ...(s.settings ?? {}) },
+    settings: { ...base.settings, ...(s.settings ?? {}), mealReminders: { ...base.settings.mealReminders, ...(s.settings?.mealReminders ?? {}) } },
+    dietTips: Array.isArray(s.dietTips) ? s.dietTips : [],
     meta: { ...base.meta, ...(s.meta ?? {}) },
   }
 }
