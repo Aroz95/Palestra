@@ -114,5 +114,44 @@ for (const [w, h] of [[320, 568], [375, 667], [390, 844], [430, 932], [768, 1024
     await expect(wm.getByRole('button', { name: 'Salta recupero' })).toBeVisible()
     expect(await overflow()).toBeLessThanOrEqual(0)
     for (const name of ['−15s', 'Salta recupero', '+ Serie', 'Termina allenamento']) await expect(wm.getByRole('button', { name })).toBeInViewport({ ratio: 1 })
+    // esercizio a tempo: pulsante grande + "Segna fatta senza timer" (prima debordava di 16 px a 375x667)
+    await wm.getByRole('button', { name: 'Salta recupero' }).click()
+    await wm.getByLabel('Vai al passo').selectOption({ label: '4. Plank' })
+    await expect(wm.getByRole('button', { name: /Avvia 30s/ })).toBeVisible()
+    expect(await overflow()).toBeLessThanOrEqual(0)
+    await expect(wm.getByRole('button', { name: /Segna fatta senza timer/ })).toBeInViewport({ ratio: 1 })
   })
 }
+
+test('pannello a schermo intero: la pagina sotto non scorre (niente barra di iOS) e torna alla stessa posizione', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openApp(page)
+  await goImport(page)
+  await importFile(page, EX('programma-ab.json'))
+  await nav(page, /Oggi/)
+  await page.getByRole('button', { name: /A · Full Body A/ }).click()
+  // pagina scorsa in basso, poi avvio senza che il clic riporti il pulsante in vista
+  const y = await page.evaluate(() => {
+    window.scrollTo(0, 300)
+    const y = Math.round(window.scrollY)
+    ;[...document.querySelectorAll('button')].find((b) => /Inizia allenamento/.test(b.textContent)).click()
+    return y
+  })
+  expect(y).toBeGreaterThan(0)
+  const wm = page.getByRole('dialog', { name: 'Modalità allenamento' })
+  await expect(wm).toBeVisible()
+  // pagina bloccata nella posizione corrente; il pannello non passa lo scorrimento alla pagina
+  expect(await page.evaluate(() => [document.body.style.position, document.body.style.top])).toEqual(['fixed', `-${y}px`])
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('[aria-label="Modalità allenamento"] .overflow-y-auto')).overscrollBehaviorY)).toBe('contain')
+  await page.mouse.move(195, 400)
+  await page.mouse.wheel(0, 800)
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 1)).toBe(true)
+  // un pannello sopra l'altro: il blocco resta finché si chiude l'ultimo
+  await wm.getByLabel('Vai al passo').selectOption({ label: '2. Leg Press' })
+  await wm.getByRole('button', { name: '+ Nota' }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: /^Nota/ })).toHaveCount(0)
+  expect(await page.evaluate(() => document.body.style.position)).toBe('fixed')
+  await wm.getByRole('button', { name: /Esci/ }).click()
+  expect(await page.evaluate(() => [document.body.style.position, Math.round(window.scrollY)])).toEqual(['', y])
+})

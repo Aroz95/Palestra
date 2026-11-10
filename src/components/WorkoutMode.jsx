@@ -7,6 +7,7 @@ import { targetText } from './ExerciseCard'
 import { finishPatch, withAutoStart } from '../lib/actions'
 import PreviousPerformance from './PreviousPerformance'
 import { Sheet, TextArea } from './ui'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Sequenza dei passi: riscaldamento → esercizi → defaticamento
 export function buildSteps(session) {
@@ -30,6 +31,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
   const step = idx >= 0 ? steps[idx] : null
   const stats = sessionStats(session)
   useWakeLock()
+  useScrollLock()
 
   const nextIncompleteId = (fromIdx) => {
     const after = steps.slice(fromIdx + 1).find((s) => !isDone(s))
@@ -132,7 +134,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex h-full min-h-[22rem] max-w-2xl flex-col px-4 py-2 [@media(max-height:620px)]:py-1 [@media(max-height:500px)]:min-h-[15rem]">
           {!step ? (
             <Finished stats={stats} timers={timers} session={session} onFinish={onFinish} />
@@ -297,7 +299,7 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
           <Countdown timers={timers} color="amber" title="In corso" />
         ) : cur ? (
           <>
-            <BigButton onClick={isTime ? onStartTimed : onComplete} color={isTime ? 'amber' : 'emerald'}>
+            <BigButton onClick={isTime ? onStartTimed : onComplete} color={isTime ? 'amber' : 'emerald'} reserve={isTime ? '3.25rem' : '0px'}>
               <span style={{ fontSize: 'calc(var(--big) * 0.18)' }}>{isTime ? '▶' : '⏱'}</span>
               <span className="font-extrabold uppercase" style={{ fontSize: 'max(0.95rem, calc(var(--big) * 0.085))' }}>
                 {isTime ? `Avvia ${cur.durationSec}s` : 'Serie fatta'}
@@ -423,7 +425,7 @@ function Countdown({ timers, color, title }) {
   const r = 110
   const len = 2 * Math.PI * r
   return (
-    <div className="flex flex-col items-center" style={{ '--ring': 'min(16rem, calc(100cqh - 3.5rem), 85cqw)' }}>
+    <div className="flex flex-col items-center" style={{ '--ring': 'min(16rem, calc(100cqh - 3.5rem - 4px), 85cqw)' }}>
       <div className="relative" style={{ width: 'var(--ring)', height: 'var(--ring)' }}>
         <svg viewBox="0 0 240 240" className="h-full w-full -rotate-90">
           <circle cx="120" cy="120" r={r} className="fill-none stroke-line" strokeWidth="14" />
@@ -470,11 +472,11 @@ const BIG = {
   amber: 'bg-primary text-on-primary active:bg-primary',
 }
 
-function BigButton({ onClick, color, children }) {
+function BigButton({ onClick, color, children, reserve = '0px' }) {
   return (
     <button
       onClick={onClick}
-      style={{ '--big': 'min(16rem, 100cqh, 85cqw)', width: 'var(--big)', height: 'var(--big)' }}
+      style={{ '--big': `min(16rem, calc(100cqh - ${reserve} - 4px), 85cqw)`, width: 'var(--big)', height: 'var(--big)' }}
       className={`flex shrink-0 flex-col items-center justify-center gap-1 rounded-full shadow-lg transition-transform duration-150 active:scale-[0.98] ${BIG[color]}`}
     >
       {children}

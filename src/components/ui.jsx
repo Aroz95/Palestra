@@ -1,5 +1,6 @@
 // Componenti di interfaccia condivisi
 import { useEffect, useRef, useState } from 'react'
+import { useScrollLock } from '../lib/scrollLock'
 
 export function Section({ title, right, children, className = '' }) {
   return (
@@ -181,6 +182,7 @@ export function Sheet({ open, onClose, title, children }) {
   const closeRef = useRef(onClose)
   closeRef.current = onClose
   const [closing, setClosing] = useState(false)
+  useScrollLock(open || closing)
   const last = useRef({ title, children })
   if (open) last.current = { title, children }
   const wasOpen = useRef(open)
@@ -235,7 +237,7 @@ export function Sheet({ open, onClose, title, children }) {
         aria-modal="true"
         aria-label={shown.title}
         aria-hidden={open ? undefined : true}
-        className={`max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-t-[20px] border border-line bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] outline-none sm:rounded-[20px] ${open ? 'anim-sheet' : 'anim-sheet-out'}`}
+        className={`max-h-[90dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[20px] border border-line bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] outline-none sm:rounded-[20px] ${open ? 'anim-sheet' : 'anim-sheet-out'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between gap-2">
