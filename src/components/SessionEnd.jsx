@@ -69,7 +69,7 @@ export function SessionSummary({ session, sessions, onHistory, onHome, onExport 
       <header>
         <p className="text-sm font-semibold text-primary">Allenamento concluso</p>
         <h1 className="text-[28px] font-bold leading-tight text-fg">{session.title || 'Seduta'}</h1>
-        <p className="text-sm capitalize text-muted">
+        <p className="text-sm cap-first text-muted">
           {fmtDate(session.date)}
           {isRescheduled(session) && <span className="normal-case"> · programmata per {fmtDate(session.plannedDate, { weekday: 'short', day: 'numeric', month: 'short' })}</span>}
         </p>

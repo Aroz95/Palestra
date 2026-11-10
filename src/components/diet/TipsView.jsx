@@ -22,21 +22,19 @@ export default function TipsView({ state, update, plan }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-fg-soft">Le tue idee a portata di mano: cosa sostituire in un pasto, come gestire la fame, cosa fare fuori casa.</p>
-        <button onClick={() => setDraft(newTip({ category: filter === 'all' ? 'hunger' : filter }))} className="btn-primary shrink-0 text-sm">
-          + Aggiungi
-        </button>
-      </div>
+      <p className="text-sm text-fg-soft">Le tue idee a portata di mano: cosa sostituire in un pasto, come gestire la fame, cosa fare fuori casa.</p>
+      <button onClick={() => setDraft(newTip({ category: filter === 'all' ? 'hunger' : filter }))} className="btn-primary w-full text-sm">
+        + Aggiungi
+      </button>
 
       {tips.length > 0 && (
-        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" role="group" aria-label="Filtra i suggerimenti">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtra i suggerimenti">
           {[['all', 'Tutti'], ...Object.entries(TIP_CATEGORIES)].map(([k, label]) => (
             <button
               key={k}
               onClick={() => setFilter(k)}
               aria-pressed={filter === k}
-              className={`min-h-11 shrink-0 rounded-full border px-3 text-sm font-medium transition-colors duration-150 ${filter === k ? 'border-fg bg-fg text-bg' : 'border-line bg-surface text-fg-soft'}`}
+              className={`min-h-11 rounded-full border px-3 text-sm font-medium transition-colors duration-150 ${filter === k ? 'border-fg bg-fg text-bg' : 'border-line bg-surface text-fg-soft'}`}
             >
               {label}
             </button>

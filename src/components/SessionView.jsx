@@ -70,37 +70,33 @@ export default function SessionView({ session, state, onChange, timers, settings
   return (
     <div className="space-y-5">
       <header className="space-y-2">
-        <div className="flex items-center gap-2">
-          <input
-            value={session.title}
-            onChange={(e) => set({ title: e.target.value })}
-            aria-label="Titolo seduta"
-            className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-fg outline-none"
-          />
+        <input
+          value={session.title}
+          onChange={(e) => set({ title: e.target.value })}
+          aria-label="Titolo seduta"
+          className="w-full min-w-0 bg-transparent text-[28px] font-bold leading-tight text-fg outline-none"
+        />
+        <p className="text-sm text-muted" data-testid="session-date">
+          <span className="cap-first">{fmtDate(session.date)}</span>
+          {isRescheduled(session) && <span> · programmata per {fmtDate(session.plannedDate, { weekday: 'short', day: 'numeric', month: 'short' })}</span>}
+          <span>
+            {' · '}
+            {template
+              ? `Scheda ${template.label}, revisione ${session.templateRevision ?? 'non nota'}${session.templateRevision && template.revision !== session.templateRevision ? ` (attuale: ${template.revision})` : ''}`
+              : session.templateId
+                ? 'Scheda non più presente'
+                : 'Seduta libera'}
+          </span>
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <StatusSelect value={session.status} onChange={(status) => (status === 'completed' && session.status !== 'completed' ? finish() : onChange({ ...session, status }))} />
           <input
             type="date"
             value={session.date}
             aria-label="Data seduta"
             onChange={(e) => e.target.value && set({ date: e.target.value })}
-            className="rounded-lg border border-line-strong bg-surface px-2 py-1 text-sm text-fg"
+            className="w-full min-w-0 rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg"
           />
-        </div>
-        <p className="text-sm capitalize text-muted" data-testid="session-date">
-          {fmtDate(session.date)}
-          {isRescheduled(session) && <span className="normal-case"> · programmata per {fmtDate(session.plannedDate, { weekday: 'short', day: 'numeric', month: 'short' })}</span>}
-        </p>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-          <span className="w-40">
-            <StatusSelect value={session.status} onChange={(status) => (status === 'completed' && session.status !== 'completed' ? finish() : onChange({ ...session, status }))} />
-          </span>
-          {template ? (
-            <span>
-              Scheda {template.label} · revisione {session.templateRevision ?? 'non nota'}
-              {session.templateRevision && template.revision !== session.templateRevision ? ` (attuale: ${template.revision})` : ''}
-            </span>
-          ) : (
-            <span>{session.templateId ? 'Scheda non più presente' : 'Seduta libera'}</span>
-          )}
         </div>
       </header>
 
@@ -159,14 +155,16 @@ export default function SessionView({ session, state, onChange, timers, settings
       <FeedbackCard session={session} onChange={onChange} />
       <EnergyCard session={session} onChange={onChange} measurements={state.measurements} />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="space-y-2">
         {session.status !== 'completed' && (
-          <button onClick={finish} className="btn flex-1 bg-primary text-on-primary">Termina seduta</button>
+          <button onClick={finish} className="btn-primary w-full">Termina seduta</button>
         )}
-        <button onClick={onExport} className="btn-ghost">Esporta JSON</button>
-        <button onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete()} className="rounded-xl px-3 py-2 text-sm text-danger">
-          Elimina
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={onExport} className="btn-ghost text-sm">Esporta JSON</button>
+          <button onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete()} className="btn-ghost text-sm text-danger">
+            Elimina seduta
+          </button>
+        </div>
       </div>
 
       <Sheet open={adding} onClose={() => setAdding(false)} title="Aggiungi esercizio">

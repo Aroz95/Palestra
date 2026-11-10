@@ -33,16 +33,18 @@ export function Chip({ children, className = '' }) {
   return <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${base} ${className}`}>{children}</span>
 }
 
+// Selettore a segmenti: ogni voce prende lo spazio del proprio testo e il resto si distribuisce;
+// se non stanno su una riga vanno a capo come voci intere (mai scorrimento laterale, mai parole spezzate).
 export function Segmented({ options, value, onChange, className = '', ...rest }) {
   return (
-    <div role="tablist" {...rest} className={`flex gap-1 overflow-x-auto rounded-xl border border-line bg-surface-muted p-1 ${className}`}>
+    <div role="tablist" {...rest} className={`flex flex-wrap gap-1 rounded-xl border border-line bg-surface-muted p-1 ${className}`}>
       {options.map((o) => (
         <button
           key={o.id}
           role="tab"
           aria-selected={value === o.id}
           onClick={() => onChange(o.id)}
-          className={`min-h-10 shrink-0 flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
+          className={`min-h-11 flex-auto whitespace-nowrap rounded-lg px-1 text-sm min-[360px]:px-2 font-medium transition-colors duration-150 ${
             value === o.id ? 'bg-surface text-fg shadow-sm ring-1 ring-line' : 'text-muted'
           }`}
         >
@@ -292,14 +294,14 @@ export function Empty({ children, action }) {
 // Valore con unità; null = "ND" (non disponibile), distinto da 0
 export function Metric({ label, value, unit, hint, estimate }) {
   return (
-    <div className="rounded-xl bg-surface-muted px-3 py-2">
+    <div className="min-w-0 rounded-xl bg-surface-muted px-2.5 py-2 min-[360px]:px-3">
       <div className="text-xs font-medium text-muted">
         {label}
         {estimate && <span className="ml-1 rounded bg-warning-soft px-1 font-semibold text-warning">stima</span>}
       </div>
       <div className="text-lg font-bold tabular-nums text-fg">
         {value ?? 'ND'}
-        {value != null && unit ? <span className="ml-1 text-xs font-normal text-muted">{unit}</span> : null}
+        {value != null && unit ? <span className="text-xs font-normal text-muted"> {unit}</span> : null}
       </div>
       {hint && <div className="text-[11px] text-muted">{hint}</div>}
     </div>

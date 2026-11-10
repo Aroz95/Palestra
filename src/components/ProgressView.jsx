@@ -3,7 +3,7 @@ import { Card, Chip, Metric, Section, Segmented, Toggle } from './ui'
 import { DayTable } from './diet/NutritionView'
 import { MAIN_KEYS } from '../lib/diet'
 import LineChart from './LineChart'
-import { PERIODS, periodRange, previousPeriod, todayISO } from '../lib/dates'
+import { PERIODS, fmtDate, periodRange, previousPeriod, todayISO } from '../lib/dates'
 import { aggregateAll, weightSeries, measurementSeries } from '../lib/report/aggregate'
 import { comparableKey, exerciseHistory, fmtNum, fmtRange } from '../lib/stats'
 import { buildReport, reportToCSV, REPORT_SECTIONS, CSV_DIALECTS, fileNames } from '../lib/report'
@@ -23,6 +23,8 @@ function Delta({ cur, prev, digits = 0, unit = '' }) {
   )
 }
 
+const nSedute = (n) => `${n} ${n === 1 ? 'seduta' : 'sedute'}`
+
 export default function ProgressView({ state, settings }) {
   const [kind, setKind] = useState('30d')
   const [custom, setCustom] = useState({ from: '', to: todayISO() })
@@ -34,16 +36,17 @@ export default function ProgressView({ state, settings }) {
 
   return (
     <div className="space-y-5">
-      <Segmented options={PERIODS} value={kind} onChange={setKind} />
+      <h1 className="text-[28px] font-bold leading-tight text-fg lg:text-[32px]">Progressi</h1>
+      <Segmented options={PERIODS} value={kind} onChange={setKind} aria-label="Periodo" />
       {kind === 'custom' && (
         <div className="grid grid-cols-2 gap-2">
-          <input type="date" value={custom.from} onChange={(e) => setCustom({ ...custom, from: e.target.value })} aria-label="Dal" className="rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
-          <input type="date" value={custom.to} onChange={(e) => setCustom({ ...custom, to: e.target.value })} aria-label="Al" className="rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
+          <input type="date" value={custom.from} onChange={(e) => setCustom({ ...custom, from: e.target.value })} aria-label="Dal" className="w-full min-w-0 rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
+          <input type="date" value={custom.to} onChange={(e) => setCustom({ ...custom, to: e.target.value })} aria-label="Al" className="w-full min-w-0 rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
         </div>
       )}
       <div className="flex items-center justify-between px-1 text-xs text-muted">
         <span>
-          {period.from} → {period.to}
+          {fmtDate(period.from, { day: 'numeric', month: 'short', year: 'numeric' })} – {fmtDate(period.to, { day: 'numeric', month: 'short', year: 'numeric' })}
         </span>
         <span className="w-48">
           <Toggle checked={compare} onChange={setCompare} label="Confronta" />
@@ -75,8 +78,8 @@ function TrainingWidget({ a, p }) {
           {p && <Delta cur={t.swimSessions} prev={p.training.swimSessions} />}
         </div>
         <Metric label="Giorni allenati" value={t.daysTrained} />
-        <Metric label="Minuti palestra" value={t.strengthMinutes.value} unit="min" hint={t.strengthMinutes.missing ? `${t.strengthMinutes.missing} sedute senza durata` : null} />
-        <Metric label="Minuti nuoto" value={t.swimMinutes.value} unit="min" hint={t.swimMinutes.missing ? `${t.swimMinutes.missing} sedute senza durata` : null} />
+        <Metric label="Minuti palestra" value={t.strengthMinutes.value} unit="min" hint={t.strengthMinutes.missing ? `${nSedute(t.strengthMinutes.missing)} senza durata` : null} />
+        <Metric label="Minuti nuoto" value={t.swimMinutes.value} unit="min" hint={t.swimMinutes.missing ? `${nSedute(t.swimMinutes.missing)} senza durata` : null} />
         <Metric
           label="Aderenza calendario"
           value={t.adherence.ratio != null ? `${Math.round(t.adherence.ratio * 100)}%` : null}
@@ -120,7 +123,7 @@ function StrengthWidget({ a, p, state }) {
             <div className="flex flex-wrap gap-1">
               {s.newRecords.map((r) => (
                 <Chip key={r.key} className="bg-primary-soft text-primary">
-                  {r.name}: {fmtNum(r.weight, 1)} kg × {r.reps} ({r.date}) — prima {fmtNum(r.prevBest.weight, 1)} kg
+                  {r.name}: {fmtNum(r.weight, 1)} kg × {r.reps} ({fmtDate(r.date, { day: 'numeric', month: 'short' })}) — prima {fmtNum(r.prevBest.weight, 1)} kg
                 </Chip>
               ))}
             </div>
@@ -139,7 +142,7 @@ function StrengthWidget({ a, p, state }) {
               series={[{ name: 'Carico massimo', points: hist.filter((h) => h.maxWeight != null).map((h) => ({ date: h.date, value: h.maxWeight })) }]}
             />
             <p className="text-[11px] text-muted">
-              Confronto solo tra sedute dello stesso esercizio e attrezzo. Ultime: {hist.slice(-3).map((h) => `${h.date} ${h.reps.join('/')} rip.${h.avgRir != null ? ` RIR ${fmtNum(h.avgRir, 1)}` : ''}`).join(' · ') || '—'}
+              Confronto solo tra sedute dello stesso esercizio e attrezzo. Ultime: {hist.slice(-3).map((h) => `${fmtDate(h.date, { day: 'numeric', month: 'short' })}: ${h.reps.join('/')} rip.${h.avgRir != null ? ` RIR ${fmtNum(h.avgRir, 1)}` : ''}`).join(' · ') || '—'}
             </p>
           </div>
         )}
@@ -157,7 +160,7 @@ function SwimWidget({ a, p }) {
           <Metric label="Sedute" value={s.sessions} />
           <Metric label="Minuti" value={s.minutes.value} unit="min" />
           <div>
-            <Metric label="Distanza misurata" value={s.measuredM != null ? fmtNum(s.measuredM / 1000, 2) : null} unit="km" hint={`${s.measuredSessions} sedute`} />
+            <Metric label="Distanza misurata" value={s.measuredM != null ? fmtNum(s.measuredM / 1000, 2) : null} unit="km" hint={nSedute(s.measuredSessions)} />
             {p && <Delta cur={s.measuredM} prev={p.swim.measuredM} unit=" m" />}
           </div>
           <Metric label="Distanza stimata" value={s.estimatedM ? fmtRange({ min: s.estimatedM.min / 1000, max: s.estimatedM.max / 1000 }, 2) : null} unit="km" estimate={!!s.estimatedM} hint={`${s.estimatedSessions} sedute · non sommata alla misurata`} />
@@ -298,7 +301,7 @@ function ReportExport({ state, period, settings }) {
         <p className="text-xs text-muted">Un report è un riepilogo da condividere: non è un backup e non si può reimportare.</p>
         <div className="flex flex-wrap gap-1">
           {Object.entries(REPORT_SECTIONS).map(([k, label]) => (
-            <button key={k} onClick={() => toggle(k)} aria-pressed={sections.includes(k)} className={`rounded-lg px-2 py-1 text-xs font-medium ${sections.includes(k) ? 'bg-primary text-on-primary' : 'bg-surface-muted text-muted'}`}>
+            <button key={k} onClick={() => toggle(k)} aria-pressed={sections.includes(k)} className={`min-h-11 rounded-xl px-3 text-sm font-medium ${sections.includes(k) ? 'bg-primary text-on-primary' : 'bg-surface-muted text-fg-soft'}`}>
               {label}
             </button>
           ))}

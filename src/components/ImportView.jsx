@@ -90,7 +90,7 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
         }}
         className={`rounded-2xl border-2 border-dashed p-6 text-center ${drag ? 'border-primary bg-primary-soft' : 'border-line'}`}
       >
-        <button onClick={() => fileRef.current?.click()} className="btn-primary">Scegli file JSON</button>
+        <button onClick={() => fileRef.current?.click()} className="btn-primary w-full sm:w-auto">Scegli file JSON</button>
         <p className="mt-2 text-xs text-muted">oppure trascinalo qui · max {LIMITS.fileBytes / 1024 / 1024} MB</p>
         <input
           ref={fileRef}
@@ -104,18 +104,18 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
         />
       </div>
 
-      <details className="rounded-2xl bg-surface p-3">
-        <summary className="cursor-pointer text-sm text-fg-soft">Incolla JSON</summary>
-        <div className="mt-2 space-y-2">
+      <details className="rounded-2xl border border-line bg-surface px-4">
+        <summary className="text-sm font-medium text-fg-soft">Incolla il testo JSON</summary>
+        <div className="space-y-2 pb-4">
           <TextArea value={paste} onChange={setPaste} rows={6} placeholder='{"type": "palestra-program", ...}' aria-label="JSON da importare" />
-          <button disabled={!paste.trim()} onClick={() => load(paste, 'testo incollato', paste.length)} className="btn-ghost text-sm disabled:opacity-40">Analizza</button>
+          <button disabled={!paste.trim()} onClick={() => load(paste, 'testo incollato', paste.length)} className="btn-ghost w-full text-sm disabled:opacity-40">Analizza</button>
         </div>
       </details>
 
       {parsed && (
         <Card tone={parsed.errors.length ? 'warn' : 'default'} className="space-y-3">
           <div className="text-sm text-fg-soft">
-            <b className="text-fg">{parsed.fileName}</b>
+            <b className="break-all text-fg">{parsed.fileName}</b>
             {parsed.batch.sources.length > 0 && <span className="text-muted"> · {[...new Set(parsed.batch.sources)].join(', ')}</span>}
           </div>
           {parsed.errors.length > 0 && (
@@ -153,7 +153,7 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
                   {preview.items.map((it) => (
                     <li key={it.key} className="rounded-xl bg-surface-muted/60 p-2 text-sm">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-fg">{it.label}</span>
+                        <span className="min-w-0 text-fg">{it.label}</span>
                         <Chip className={STATUS[it.status].cls}>{STATUS[it.status].label}</Chip>
                       </div>
                       {it.status !== 'new' && (
@@ -161,7 +161,7 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
                           value={decisions[it.key] ?? 'skip'}
                           onChange={(e) => setDecisions({ ...decisions, [it.key]: e.target.value })}
                           aria-label={`Azione per ${it.label}`}
-                          className="mt-2 w-full rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg"
+                          className="mt-2 w-full min-w-0 rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg"
                         >
                           <option value="skip">Salta (mantieni l’esistente)</option>
                           <option value="update">Aggiorna l’esistente con il file</option>
@@ -202,15 +202,18 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
               {log.updated.map((x, i) => <li key={`u${i}`}>↻ {x}</li>)}
               {log.skipped.map((x, i) => <li key={`s${i}`}>– {x}</li>)}
             </ul>
-            <button onClick={() => downloadJSON(`palestra-import-log-${log.at.slice(0, 10)}.json`, log)} className="btn-ghost text-sm">Scarica log</button>
+            <button onClick={() => downloadJSON(`palestra-import-log-${log.at.slice(0, 10)}.json`, log)} className="link-btn -ml-2">Scarica log</button>
           </Card>
         </Section>
       )}
 
       {undo && (
         <Card tone="info" className="space-y-2 text-sm">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-fg">Ultima importazione: {undo.label}</span>
+          <div className="space-y-2">
+            <p className="text-fg">
+              <span className="block text-xs font-semibold text-fg-soft">Ultima importazione</span>
+              <span className="block break-all">{undo.label}</span>
+            </p>
             {undo.available && (
               <button
                 onClick={async () => {
@@ -220,7 +223,7 @@ export default function ImportView({ state, onApply, undo, onUndo }) {
                     setFailure(`Annullamento NON salvato: ${e.message}`)
                   }
                 }}
-                className="btn-ghost text-sm"
+                className="btn-ghost w-full text-sm"
               >
                 Annulla importazione
               </button>

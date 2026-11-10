@@ -152,7 +152,7 @@ export default function LineChart({ series, unit = '', digits = 1, label }) {
           <tbody>
             {dates.map((d) => (
               <tr key={d} className="border-t border-line">
-                <td className="py-1">{d}</td>
+                <td className="py-1">{/^\d{4}-\d{2}-\d{2}$/.test(d) ? fmtDate(d, { day: 'numeric', month: 'short', year: '2-digit' }) : d}</td>
                 {series.map((s) => {
                   const p = s.points.find((q) => q.date === d)
                   return (

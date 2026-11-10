@@ -10,7 +10,7 @@ export default function TimerBar({ timers, restSeconds }) {
 
   return (
     <div className="sticky top-0 z-30 border-b border-line bg-bg/95 backdrop-blur pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto max-w-2xl px-4 py-2 sm:px-6 lg:max-w-3xl lg:px-8">
+      <div className="mx-auto max-w-2xl px-3 py-2 min-[360px]:px-4 sm:px-6 lg:max-w-3xl lg:px-8">
         {/* Cronometro */}
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
@@ -42,7 +42,7 @@ export default function TimerBar({ timers, restSeconds }) {
         </div>
 
         {laps.length > 0 && (
-          <button onClick={() => setShowLaps((v) => !v)} className="mt-1 text-xs text-muted underline">
+          <button onClick={() => setShowLaps((v) => !v)} className="link-btn link-btn-muted -ml-2">
             {showLaps ? 'Nascondi giri' : `Giri (${laps.length})`}
           </button>
         )}
@@ -76,13 +76,12 @@ export default function TimerBar({ timers, restSeconds }) {
             {timers.finished.kind === 'work' ? `${timers.finished.label}: completato` : 'Recupero finito — via!'}
           </div>
         ) : (
-          <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1">
-            <span className="shrink-0 text-xs text-muted">Recupero:</span>
+          <div className="mt-2 grid grid-cols-5 gap-1.5" role="group" aria-label="Avvia un recupero">
             {PRESETS.map((s) => (
               <button
                 key={s}
                 onClick={() => timers.startRest(s)}
-                className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium ${
+                className={`min-h-11 min-w-0 rounded-xl px-1 text-sm font-medium tabular-nums ${
                   s === restSeconds ? 'bg-swim text-on-swim' : 'bg-surface-muted text-fg'
                 }`}
               >

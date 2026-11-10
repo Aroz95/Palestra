@@ -66,7 +66,7 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
 
   return (
     <div id={`exercise-${ex.id}`} className={`scroll-mt-28 rounded-2xl border ${allDone ? 'border-primary/50 bg-primary-soft' : 'border-line bg-surface'}`}>
-      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center gap-3 px-4 py-3 text-left" aria-expanded={open}>
+      <button onClick={() => setOpen((v) => !v)} className="flex min-h-16 w-full items-center gap-2.5 px-3 py-3 text-left min-[360px]:gap-3 min-[360px]:px-4" aria-expanded={open}>
         <span
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
             allDone ? 'bg-primary text-on-primary' : 'bg-surface-muted text-fg-soft'
@@ -82,14 +82,14 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
             {!open && ex.sets.length > 0 && <> · {summaryText(ex)}</>}
           </div>
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${allDone ? 'bg-primary-soft text-primary' : 'bg-surface-muted text-fg-soft'}`}>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${allDone ? 'bg-primary-soft text-primary' : 'bg-surface-muted text-fg-soft'}`}>
           {doneCount}/{ex.sets.length}
         </span>
-        <span className={`text-muted transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
+        <span className={`shrink-0 text-muted transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true">▾</span>
       </button>
 
       {open && (
-        <div className="border-t border-line px-3 pb-3 pt-2">
+        <div className="border-t border-line px-2 pb-3 pt-2 min-[360px]:px-3">
           <div className="mb-2 space-y-2 px-1">
             {(target || ex.instructions) && (
               <div className="space-y-1 text-sm">
@@ -105,30 +105,30 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
             <PreviousPerformance prev={previous} ex={ex} />
           </div>
           {ex.sets.length > 0 && (
-            <div className="mb-1 grid grid-cols-[1.75rem_1fr_1fr_3rem] items-center gap-2 px-1 text-xs font-medium text-muted">
+            <div className="mb-1 grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)_2.75rem] items-center gap-1.5 text-xs font-medium text-muted min-[360px]:px-1">
               <span>#</span>
-              <span className="text-center">{isTime ? '' : `Kg eseguiti${ex.perHand ? ' / mano' : ''}`}</span>
+              <span className="text-center">{isTime ? '' : `Kg${ex.perHand ? ' / mano' : ''}`}</span>
               <span className="text-center">{isTime ? 'Secondi' : 'Ripetizioni'}</span>
               <span className="text-center">Fatto</span>
             </div>
           )}
           <ul className="space-y-2">
             {ex.sets.map((s, i) => (
-              <li key={i} className={`rounded-xl px-1 py-1 ${s.done ? 'bg-primary-soft' : ''}`}>
-                <div className="grid grid-cols-[1.75rem_1fr_1fr_3rem] items-center gap-2">
+              <li key={i} className={`rounded-xl py-1 min-[360px]:px-1 ${s.done ? 'bg-primary-soft' : ''}`}>
+                <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)_2.75rem] items-center gap-1.5">
                   <button
                     onClick={() => setDetail(i)}
-                    className="h-9 rounded-lg bg-surface-muted text-sm font-semibold text-fg-soft"
+                    className="h-11 rounded-lg bg-surface-muted text-sm font-semibold text-fg-soft"
                     aria-label={`Dettagli serie ${i + 1}`}
                     title="RIR, fastidio, note, elimina"
                   >
                     {i + 1}
                   </button>
-                  <div className="flex justify-center">
+                  <div className="flex min-w-0 justify-center">
                     {isTime ? (
                       <button
                         onClick={() => onStartTimer?.(ex, i)}
-                        className="rounded-xl bg-swim px-3 py-2 text-sm font-semibold text-on-swim active:bg-swim"
+                        className="min-h-11 w-full rounded-xl bg-swim px-2 text-sm font-semibold text-on-swim active:bg-swim"
                       >
                         ▶ Avvia {s.durationSec}s
                       </button>
@@ -136,7 +136,7 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
                       <Stepper value={s.weight} step={ex.step || 1} onChange={(weight) => updateSet(i, { weight })} label={null} />
                     )}
                   </div>
-                  <div className="flex justify-center">
+                  <div className="flex min-w-0 justify-center">
                     {isTime ? (
                       <Stepper value={s.durationSec} step={5} onChange={(durationSec) => updateSet(i, { durationSec })} />
                     ) : (
@@ -181,19 +181,19 @@ export default function ExerciseCard({ exercise, index, onChange, onRemove, onSe
             )}
             <button
               onClick={() => confirm(`Rimuovere "${ex.name}" da questa seduta?`) && onRemove()}
-              className="ml-auto rounded-xl px-3 py-2 text-sm text-danger active:bg-danger-soft"
+              className="link-btn link-btn-danger ml-auto"
             >
-              Rimuovi
+              Rimuovi esercizio
             </button>
           </div>
 
           <textarea
             value={ex.notes}
             onChange={(e) => onChange({ ...ex, notes: e.target.value })}
-            placeholder="Note di oggi (sensazioni, regolazioni macchina…)"
+            placeholder="Note di oggi"
             aria-label={`Note ${ex.name}`}
             rows={1}
-            className="mt-2 w-full resize-y rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted outline-none focus:ring-2 focus:ring-primary"
+            className="mt-2 min-h-11 w-full resize-y rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       )}
@@ -258,7 +258,7 @@ export function SetDetail({ open, set, index, isTime, onClose, onChange, onRemov
           <TextInput value={set.note} onChange={(note) => onChange({ note })} placeholder="Nota sulla serie" />
         </Field>
         <div className="flex justify-between">
-          <button onClick={onRemove} className="rounded-xl px-3 py-2 text-sm text-danger active:bg-danger-soft">Elimina serie</button>
+          <button onClick={onRemove} className="link-btn link-btn-danger -ml-2">Elimina serie</button>
           <button onClick={onClose} className="btn-primary">Fatto</button>
         </div>
       </div>

@@ -84,7 +84,7 @@ export default function MeasurementsView({ state, update }) {
           {list.map((m) => (
             <Card key={m.id} className="space-y-1 py-3">
               <div className="flex items-baseline justify-between">
-                <span className="font-semibold capitalize text-fg">
+                <span className="font-semibold cap-first text-fg">
                   {fmtDateShort(localDate(m.at))} {timeOf(m.at) !== '00:00' ? timeOf(m.at) : ''}
                 </span>
                 <span className="text-xs text-muted">{SOURCES[m.source]}</span>
@@ -98,8 +98,8 @@ export default function MeasurementsView({ state, update }) {
               </div>
               {m.notes && <p className="text-xs text-muted">{m.notes}</p>}
               <div className="flex gap-3 pt-1 text-xs">
-                <button onClick={() => setDraft({ ...m, date: localDate(m.at), time: timeOf(m.at) })} className="text-fg-soft underline">Modifica</button>
-                <button onClick={() => confirm('Eliminare questa misura?') && update((s) => A.removeIn(s, 'measurements', m.id))} className="text-danger underline">Elimina</button>
+                <button onClick={() => setDraft({ ...m, date: localDate(m.at), time: timeOf(m.at) })} className="link-btn link-btn-muted -ml-2">Modifica</button>
+                <button onClick={() => confirm('Eliminare questa misura?') && update((s) => A.removeIn(s, 'measurements', m.id))} className="link-btn link-btn-danger">Elimina</button>
               </div>
             </Card>
           ))}

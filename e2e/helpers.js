@@ -19,7 +19,14 @@ export async function openApp(page, { legacy = null, clock = true } = {}) {
 }
 
 export const nav = (page, name) => page.getByRole('navigation', { name: 'Navigazione principale' }).getByRole('button', { name }).click()
-export const tab = (page, name) => page.getByRole('tab', { name, exact: true }).click()
+// Scheda di una barra a segmenti oppure sezione di "Altro" (elenco di voci, ciascuna con la propria pagina)
+export const tab = async (page, name) => {
+  const t = page.getByRole('tab', { name, exact: true })
+  if (await t.count()) return t.click()
+  const back = page.getByRole('button', { name: 'Torna ad Altro' })
+  if (await back.count()) await back.click()
+  await page.getByRole('main').getByRole('button', { name, exact: true }).click()
+}
 
 export async function goImport(page) {
   await nav(page, /Altro/)

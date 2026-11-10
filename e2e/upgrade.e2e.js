@@ -33,6 +33,6 @@ test('migrazione unica, storico invariato, snapshot recuperabile', async ({ page
   // Snapshot della versione precedente scaricabile
   await nav(page, /Altro/)
   await tab(page, 'Opzioni')
-  const [dl] = await Promise.all([page.waitForEvent('download'), page.getByText('Copia dei dati della versione precedente').getByRole('button', { name: 'Scarica' }).click()])
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('div').filter({ hasText: /^Copia dei dati della versione precedente/ }).getByRole('button', { name: 'Scarica' }).click()])
   expect(JSON.parse(await (await import('node:fs')).promises.readFile(await dl.path(), 'utf8'))).toEqual(legacy)
 })

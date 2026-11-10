@@ -30,7 +30,7 @@ export function OccurrenceItem({ state, occ, update, onOpenSession, onStart }) {
           <div className="text-xs font-medium text-muted">{ACTIVITY_KINDS[occ.kind]}</div>
           <div className="font-semibold text-fg">{occurrenceTitle(state, occ)}</div>
           {template?.estimatedMinutes && <div className="text-xs text-muted">~{template.estimatedMinutes} min</div>}
-          {occ.movedFrom && <div className="text-xs text-swim">Rinviata dal {occ.movedFrom}</div>}
+          {occ.movedFrom && <div className="text-xs text-swim">Rinviata dal {fmtDate(occ.movedFrom, { day: 'numeric', month: 'short' })}</div>}
           {occ.status === 'postponed' && occ.movedTo && <div className="text-xs text-swim">Spostata al {occ.movedTo}</div>}
           {done && done.date !== occ.date && (
             <div className="text-xs font-medium text-fg-soft">
@@ -56,7 +56,7 @@ export function OccurrenceItem({ state, occ, update, onOpenSession, onStart }) {
         </div>
       )}
       {['skipped', 'postponed'].includes(occ.status) && !occ.sessionId && (
-        <button onClick={() => update((s) => A.setOccurrenceStatus(s, occ, null))} className="mt-2 text-xs text-muted underline">
+        <button onClick={() => update((s) => A.setOccurrenceStatus(s, occ, null))} className="link-btn link-btn-muted -ml-2">
           Annulla ({OCC_STATUS[occ.status].label.toLowerCase()})
         </button>
       )}

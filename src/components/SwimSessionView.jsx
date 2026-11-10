@@ -32,15 +32,14 @@ export default function SwimSessionView({ session: s, state, onChange, timers, o
   return (
     <div className="space-y-5">
       <header className="space-y-2">
-        <div className="flex items-center gap-2">
-          <input value={s.title} onChange={(e) => set({ title: e.target.value })} aria-label="Titolo" placeholder="Nuoto" className="min-w-0 flex-1 bg-transparent text-2xl font-bold text-fg outline-none" />
-          <input type="date" value={s.date} aria-label="Data" onChange={(e) => e.target.value && set({ date: e.target.value })} className="rounded-lg border border-line-strong bg-surface px-2 py-1 text-sm text-fg" />
-        </div>
-        <p className="text-sm capitalize text-muted">{fmtDate(s.date)} · {s.isFree ? 'sessione libera' : 'da programma'}
-          {isRescheduled(s) && <span className="normal-case"> · programmata per {fmtDate(s.plannedDate, { weekday: 'short', day: 'numeric', month: 'short' })}</span>}
+        <input value={s.title} onChange={(e) => set({ title: e.target.value })} aria-label="Titolo" placeholder="Nuoto" className="w-full min-w-0 bg-transparent text-[28px] font-bold leading-tight text-fg outline-none placeholder:text-fg" />
+        <p className="text-sm text-muted">
+          <span className="cap-first">{fmtDate(s.date)}</span> · {s.isFree ? 'sessione libera' : 'da programma'}
+          {isRescheduled(s) && <span> · programmata per {fmtDate(s.plannedDate, { weekday: 'short', day: 'numeric', month: 'short' })}</span>}
         </p>
-        <div className="w-40">
+        <div className="grid grid-cols-2 gap-2">
           <StatusSelect value={s.status} onChange={(status) => set({ status })} />
+          <input type="date" value={s.date} aria-label="Data" onChange={(e) => e.target.value && set({ date: e.target.value })} className="w-full min-w-0 rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" />
         </div>
       </header>
 
@@ -161,10 +160,12 @@ export default function SwimSessionView({ session: s, state, onChange, timers, o
       <FeedbackCard session={s} onChange={onChange} swim />
       <EnergyCard session={s} onChange={onChange} measurements={state.measurements} />
 
-      <div className="flex flex-wrap gap-2">
-        {s.status !== 'completed' && <button onClick={finish} className="btn flex-1 bg-primary text-on-primary">Termina nuotata</button>}
-        <button onClick={onExport} className="btn-ghost">Esporta JSON</button>
-        <button onClick={() => confirm('Eliminare definitivamente questa nuotata?') && onDelete()} className="rounded-xl px-3 py-2 text-sm text-danger">Elimina</button>
+      <div className="space-y-2">
+        {s.status !== 'completed' && <button onClick={finish} className="btn-primary w-full">Termina nuotata</button>}
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={onExport} className="btn-ghost text-sm">Esporta JSON</button>
+          <button onClick={() => confirm('Eliminare definitivamente questa nuotata?') && onDelete()} className="btn-ghost text-sm text-danger">Elimina nuotata</button>
+        </div>
       </div>
     </div>
   )

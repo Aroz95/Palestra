@@ -163,6 +163,18 @@
   time {
     font-variant-numeric: tabular-nums;
   }
+  /* Aree toccabili: campi e menu a tendina alti almeno 44 px; le voci espandibili hanno respiro verticale */
+  :where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']), select) {
+    min-height: 2.75rem;
+  }
+  :where(summary) {
+    padding-block: 0.875rem;
+    cursor: pointer;
+  }
+  /* Nomi di file, indirizzi e parole senza spazi non devono mai allargare il contenitore */
+  :where(p, li, dd, dt, h1, h2, h3, span, b, button, a, label, td, th) {
+    overflow-wrap: break-word;
+  }
   :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
     outline: 2px solid var(--focus);
     outline-offset: 2px;
@@ -170,6 +182,33 @@
 }
 
 @layer components {
+  /* Azione testuale secondaria (es. "Modifica", "+ Obiettivo"): testo piccolo ma area toccabile piena */
+  .link-btn {
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-sm font-medium text-primary select-none;
+  }
+  .link-btn:active {
+    @apply bg-surface-muted;
+  }
+  .link-btn-danger {
+    @apply text-danger;
+  }
+  .link-btn-muted {
+    @apply text-fg-soft;
+  }
+  /* Pulsante a sola icona: 44×44 */
+  .icon-btn {
+    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-fg-soft select-none;
+  }
+  .icon-btn:active {
+    @apply bg-surface-muted;
+  }
+  /* Date in italiano: maiuscola solo all'inizio ("Sabato 31 ottobre") */
+  span.cap-first {
+    display: inline-block;
+  }
+  .cap-first::first-letter {
+    text-transform: uppercase;
+  }
   /* Pulsanti: un solo primary per area decisionale; target tattile minimo 44 px */
   .btn,
   .btn-primary,

@@ -37,7 +37,7 @@ export default function HistoryView({ state, onOpen, onDelete }) {
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 w-full rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
         </label>
       </div>
-      <p className="px-1 text-xs text-muted">{list.length} sedute</p>
+      <p className="px-1 text-xs text-muted">{list.length} {list.length === 1 ? 'seduta' : 'sedute'}</p>
       {list.length === 0 && <Empty>Nessuna seduta registrata con questi filtri.</Empty>}
       {list.map((s) => {
         const d = sessionDuration(s)
@@ -45,14 +45,14 @@ export default function HistoryView({ state, onOpen, onDelete }) {
           <div key={s.id} className={`rounded-2xl border p-4 ${s.id === state.activeSessionId ? 'border-primary bg-surface' : 'border-line bg-surface'}`}>
             <button onClick={() => onOpen(s.id)} className="block w-full text-left">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="font-semibold capitalize text-fg">
+                <span className="font-semibold cap-first text-fg">
                   {fmtDateShort(s.date)}
                   {isRescheduled(s) && <span className="text-sm font-normal normal-case text-muted"> · programmata per {fmtDateShort(s.plannedDate)}</span>}
                 </span>
                 <Chip>{SESSION_STATUS[s.status]}</Chip>
               </div>
               <div className="text-sm text-muted">
-                {s.kind === 'swim' ? '🏊 Nuoto' : '🏋️ Palestra'} · {s.title || '—'}
+                {s.kind === 'swim' ? 'Nuoto' : 'Palestra'}{s.title ? ` · ${s.title}` : ''}
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {s.kind === 'swim' ? <SwimChips s={s} /> : <StrengthChips s={s} />}
@@ -63,7 +63,7 @@ export default function HistoryView({ state, onOpen, onDelete }) {
             <div className="mt-3 flex gap-2">
               <button onClick={() => onOpen(s.id)} className="btn-ghost text-sm">Apri</button>
               <button onClick={() => downloadJSON(fileNames.session(s), exportSession(s))} className="btn-ghost text-sm">Esporta JSON</button>
-              <button onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete(s.id)} className="ml-auto rounded-xl px-3 py-2 text-sm text-danger active:bg-danger-soft">
+              <button onClick={() => confirm('Eliminare definitivamente questa seduta?') && onDelete(s.id)} className="link-btn link-btn-danger ml-auto">
                 Elimina
               </button>
             </div>

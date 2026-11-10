@@ -127,8 +127,8 @@ export default function DietView({ state, update, onImport }) {
     <div className="space-y-4">
       {/* 1. Intestazione compatta: piano consultato e stato come testo, gestione in posizione secondaria */}
       <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-[28px] font-bold leading-tight text-fg lg:text-[32px]">Alimentazione</h1>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[26px] font-bold leading-tight text-fg min-[360px]:text-[28px] lg:text-[32px]">Alimentazione</h1>
           <p className="mt-0.5 flex min-w-0 items-center gap-x-1.5 whitespace-nowrap text-sm text-muted">
             {plans.length > 1 ? (
               <select
@@ -245,7 +245,7 @@ export default function DietView({ state, update, onImport }) {
       <section aria-labelledby="diet-day-title" className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2">
-            <h2 id="diet-day-title" className="min-w-0 text-xl font-semibold capitalize leading-tight text-fg">
+            <h2 id="diet-day-title" className="min-w-0 text-xl font-semibold cap-first leading-tight text-fg">
               {fmtLong(date)}
             </h2>
             {isToday && <span className="rounded-full border border-line-strong px-2 py-0.5 text-xs font-semibold text-fg">Oggi</span>}
@@ -508,7 +508,7 @@ function ManagePlan({ plan, plans, datedDays, onGoDate, onSwitch, onActivate, on
             {datedDays.map((d) => (
               <li key={d.date}>
                 <button onClick={() => onGoDate(d.date)} className="flex min-h-11 w-full items-center justify-between gap-2 text-left text-fg">
-                  <span className="capitalize">
+                  <span className="cap-first">
                     {fmtLong(d.date)}
                     {d.label ? <span className="text-muted"> · {d.label}</span> : null}
                   </span>
@@ -538,7 +538,7 @@ function ManagePlan({ plan, plans, datedDays, onGoDate, onSwitch, onActivate, on
           <ul className="mt-1 space-y-1">
             {plan.history.map((h) => (
               <li key={h.revision} className="flex items-center justify-between">
-                Rev. {h.revision} · {h.savedAt.slice(0, 10)}
+                Rev. {h.revision} · {fmtDate(h.savedAt.slice(0, 10), { day: 'numeric', month: 'short', year: 'numeric' })}
                 <button onClick={() => onRestore(h)} className="min-h-11 px-2 underline">
                   Ripristina
                 </button>

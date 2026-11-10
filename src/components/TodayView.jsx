@@ -26,7 +26,7 @@ export default function TodayView({ state, update, onStart, onOpenSession, go })
     <div className="space-y-5">
       <header>
         <h1 className="text-[28px] font-bold leading-tight text-fg lg:text-[32px]">Oggi</h1>
-        <p className="text-sm capitalize text-muted">{fmtDate(today)}</p>
+        <p className="text-sm cap-first text-muted">{fmtDate(today)}</p>
       </header>
 
       {nothing && (
@@ -97,9 +97,9 @@ export default function TodayView({ state, update, onStart, onOpenSession, go })
         <Section title="Ultima misura">
           <Card className="flex items-center justify-between py-3 text-sm">
             <span className="text-fg-soft">
-              {localDate(lastMeasure.at)} · {[lastMeasure.weightKg != null && `${fmtNum(lastMeasure.weightKg, 1)} kg`, lastMeasure.waistCm != null && `vita ${fmtNum(lastMeasure.waistCm, 1)} cm`, lastMeasure.abdomenCm != null && `addome ${fmtNum(lastMeasure.abdomenCm, 1)} cm`].filter(Boolean).join(' · ')}
+              {fmtDate(localDate(lastMeasure.at), { day: 'numeric', month: 'short' })} · {[lastMeasure.weightKg != null && `${fmtNum(lastMeasure.weightKg, 1)} kg`, lastMeasure.waistCm != null && `vita ${fmtNum(lastMeasure.waistCm, 1)} cm`, lastMeasure.abdomenCm != null && `addome ${fmtNum(lastMeasure.abdomenCm, 1)} cm`].filter(Boolean).join(' · ')}
             </span>
-            <button onClick={() => go('more', 'measures')} className="text-xs text-primary">Misure</button>
+            <button onClick={() => go('more', 'measures')} className="link-btn -mr-2 shrink-0">Misure</button>
           </Card>
         </Section>
       )}
@@ -149,14 +149,14 @@ function NextMeal({ state, go, update }) {
   const option = optionOf(next, selectionsFor(state, today, plan.id)[next.id])
   const done = logged.has(next.id)
   return (
-    <Section title="Prossimo pasto" right={<button onClick={() => go('diet')} className="text-xs text-primary">Piano</button>}>
+    <Section title="Prossimo pasto" right={<button onClick={() => go('diet')} className="link-btn -my-2">Piano</button>}>
       <Card className="space-y-1 py-3">
         <div className="flex justify-between">
           <span className="font-semibold text-fg">{next.label}</span>
           <span className="text-sm text-muted">{next.time ?? ''}</span>
         </div>
         <p className="text-sm text-fg-soft">{option.items.map(itemText).join(' · ') || '—'}</p>
-        {next.alternatives.length > 0 && <p className="text-xs text-muted">{option.id ? `Alternativa scelta: ${option.label}` : `${next.alternatives.length} alternative disponibili`}</p>}
+        {next.alternatives.length > 0 && <p className="text-xs text-muted">{option.id ? `Alternativa scelta: ${option.label}` : next.alternatives.length === 1 ? '1 alternativa disponibile' : `${next.alternatives.length} alternative disponibili`}</p>}
         {done ? (
           <p className="text-sm font-semibold text-primary">✓ Registrato</p>
         ) : (

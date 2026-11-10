@@ -4,7 +4,9 @@ import MeasurementsView from './MeasurementsView'
 import ImportView from './ImportView'
 import Stepper from './Stepper'
 import { newGoal } from '../schema/factories'
-import { toLocalISO } from '../lib/dates'
+import { fmtDate, toLocalISO } from '../lib/dates'
+
+const DAY = { day: 'numeric', month: 'short', year: 'numeric' }
 import * as A from '../lib/actions'
 import { THEMES } from '../lib/theme'
 import { exportBackup, exportProgram, exportDietPlan, exportMeasurements, fileNames } from '../lib/report'
@@ -12,17 +14,49 @@ import { downloadJSON } from '../lib/download'
 import { getLegacySnapshot, getSnapshot } from '../lib/persist'
 
 export const MORE_TABS = [
-  { id: 'profile', label: 'Profilo' },
-  { id: 'measures', label: 'Misure' },
-  { id: 'import', label: 'Importa' },
-  { id: 'export', label: 'Esporta' },
-  { id: 'settings', label: 'Opzioni' },
+  { id: 'profile', label: 'Profilo', hint: 'Dati personali e obiettivi', icon: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M4 21a8 8 0 0 1 16 0' },
+  { id: 'measures', label: 'Misure', hint: 'Peso e circonferenze nel tempo', icon: 'M3 8h18v8H3zM7 8v3M11 8v4M15 8v3M19 8v4' },
+  { id: 'import', label: 'Importa', hint: 'Programmi, piani alimentari, backup', icon: 'M12 3v12M7 10l5 5 5-5M4 21h16' },
+  { id: 'export', label: 'Esporta', hint: 'Backup completo e singoli file', icon: 'M12 15V3M7 8l5-5 5 5M4 21h16' },
+  { id: 'settings', label: 'Opzioni', hint: 'Tema, timer, dati e privacy', icon: 'M4 7h10M18 7h2M4 17h2M10 17h10M14 7a2 2 0 1 0 4 0 2 2 0 0 0-4 0M6 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0' },
 ]
 
 export default function MoreView({ state, update, sub, setSub, status, importProps, onReset, theme, setTheme, pinchLock, setPinchLock }) {
+  const current = MORE_TABS.find((t) => t.id === sub)
+  // Elenco delle sezioni: ogni voce apre la propria pagina (niente barra di schede che scorre di lato)
+  if (!current) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-[28px] font-bold leading-tight text-fg lg:text-[32px]">Altro</h1>
+        <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
+          {MORE_TABS.map((t) => (
+            <li key={t.id}>
+              <button onClick={() => setSub(t.id)} aria-label={t.label} aria-describedby={`more-${t.id}`} className="flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left active:bg-surface-muted">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={t.icon} />
+                  </svg>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold text-fg">{t.label}</span>
+                  <span id={`more-${t.id}`} className="block text-sm text-muted">{t.hint}</span>
+                </span>
+                <span className="shrink-0 text-muted" aria-hidden="true">›</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
   return (
     <div className="space-y-4">
-      <Segmented options={MORE_TABS} value={sub} onChange={setSub} />
+      <header>
+        <button onClick={() => setSub(null)} className="link-btn -ml-2" aria-label="Torna ad Altro">
+          ‹ Altro
+        </button>
+        <h1 className="text-[28px] font-bold leading-tight text-fg lg:text-[32px]">{current.label}</h1>
+      </header>
       {sub === 'profile' && <ProfileView state={state} update={update} />}
       {sub === 'measures' && <MeasurementsView state={state} update={update} />}
       {sub === 'import' && <ImportView state={state} {...importProps} />}
@@ -40,7 +74,7 @@ function ProfileView({ state, update }) {
     <div className="space-y-4">
       <Card className="space-y-3">
         <p className="text-xs text-muted">
-          Tutti i campi sono facoltativi e restano su questo dispositivo. {p.updatedAt ? `Aggiornato il ${p.updatedAt.slice(0, 10)}.` : ''}
+          Tutti i campi sono facoltativi e restano su questo dispositivo. {p.updatedAt ? `Aggiornato il ${fmtDate(p.updatedAt.slice(0, 10), DAY)}.` : ''}
         </p>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Altezza (cm)">
@@ -78,7 +112,7 @@ function ProfileView({ state, update }) {
         </Field>
       </Card>
 
-      <Section title="Obiettivi" right={<button onClick={() => setGoal(newGoal({ label: 'Nuovo obiettivo' }))} className="text-sm text-primary">+ Obiettivo</button>}>
+      <Section title="Obiettivi" right={<button onClick={() => setGoal(newGoal({ label: 'Nuovo obiettivo' }))} className="link-btn">+ Obiettivo</button>}>
         <div className="space-y-2">
           {state.goals.length === 0 && <p className="px-1 text-sm text-muted">Nessun obiettivo.</p>}
           {state.goals.map((g) => (
@@ -103,24 +137,24 @@ function GoalCard({ goal: g, onChange, onRemove }) {
   return (
     <Card className="space-y-2">
       <TextInput value={g.label} onChange={(label) => onChange({ ...g, label })} aria-label="Obiettivo" />
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Field label="Valore">
           <NumberInput value={g.targetValue} onChange={(targetValue) => set({ targetValue })} min={-1e9} />
         </Field>
         <Field label="Unità">
           <TextInput value={g.unit} onChange={(unit) => onChange({ ...g, unit })} placeholder="kg, m…" />
         </Field>
-        <Field label="Entro il">
-          <input type="date" value={g.targetDate ?? ''} onChange={(e) => set({ targetDate: e.target.value || null })} className="w-full rounded-lg border border-line-strong bg-surface px-2 py-2 text-sm text-fg" />
+        <Field label="Entro il" className="col-span-2">
+          <input type="date" value={g.targetDate ?? ''} onChange={(e) => set({ targetDate: e.target.value || null })} className="w-full min-w-0 rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" />
         </Field>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex-1">
           <Select value={g.status} onChange={(status) => set({ status })} options={Object.entries(GOAL_STATUS).map(([value, label]) => ({ value, label }))} />
         </div>
-        <button onClick={onRemove} className="text-sm text-danger">Elimina</button>
+        <button onClick={onRemove} className="link-btn link-btn-danger">Elimina</button>
       </div>
-      {g.history.length > 0 && <p className="text-[11px] text-muted">{g.history.length} modifiche registrate (ultima {g.history[g.history.length - 1].at.slice(0, 10)})</p>}
+      {g.history.length > 0 && <p className="text-[11px] text-muted">{g.history.length} modifiche registrate (ultima {fmtDate(g.history[g.history.length - 1].at.slice(0, 10), DAY)})</p>}
     </Card>
   )
 }
@@ -131,25 +165,31 @@ function ExportView({ state }) {
       <Card className="space-y-2">
         <div className="font-semibold text-fg">Backup completo</div>
         <p className="text-sm text-muted">Tutti i dati, ripristinabili con “Importa”. È l’unico modo per spostare i dati su un altro dispositivo.</p>
-        <button onClick={() => downloadJSON(fileNames.backup(), exportBackup(state))} className="btn-primary">Scarica backup</button>
+        <button onClick={() => downloadJSON(fileNames.backup(), exportBackup(state))} className="btn-primary w-full">Scarica backup</button>
       </Card>
       <Card className="space-y-2">
         <div className="font-semibold text-fg">Programmi (schede A/B)</div>
         {state.programs.length === 0 && <p className="text-sm text-muted">Nessun programma.</p>}
         {state.programs.map((p) => (
-          <button key={p.id} onClick={() => downloadJSON(fileNames.program(p), exportProgram(state, p.id))} className="btn-ghost mr-2 text-sm">{p.name}</button>
+          <button key={p.id} onClick={() => downloadJSON(fileNames.program(p), exportProgram(state, p.id))} className="btn-ghost w-full justify-between text-left text-sm">
+            <span className="min-w-0">{p.name}</span>
+            <span className="shrink-0 text-muted" aria-hidden="true">↓</span>
+          </button>
         ))}
       </Card>
       <Card className="space-y-2">
         <div className="font-semibold text-fg">Piani alimentari</div>
         {state.dietPlans.length === 0 && <p className="text-sm text-muted">Nessun piano.</p>}
         {state.dietPlans.map((d) => (
-          <button key={d.id} onClick={() => downloadJSON(fileNames.diet(d), exportDietPlan(d))} className="btn-ghost mr-2 text-sm">{d.name}</button>
+          <button key={d.id} onClick={() => downloadJSON(fileNames.diet(d), exportDietPlan(d))} className="btn-ghost w-full justify-between text-left text-sm">
+            <span className="min-w-0">{d.name}</span>
+            <span className="shrink-0 text-muted" aria-hidden="true">↓</span>
+          </button>
         ))}
       </Card>
       <Card className="space-y-2">
         <div className="font-semibold text-fg">Misure corporee</div>
-        <button disabled={!state.measurements.length} onClick={() => downloadJSON(fileNames.measurements(), exportMeasurements(state))} className="btn-ghost text-sm disabled:opacity-40">
+        <button disabled={!state.measurements.length} onClick={() => downloadJSON(fileNames.measurements(), exportMeasurements(state))} className="btn-ghost w-full text-sm disabled:opacity-40">
           Scarica {state.measurements.length} misure
         </button>
       </Card>
@@ -226,26 +266,31 @@ function SettingsView({ state, update, status, onReset, theme, setTheme, pinchLo
             <button onClick={() => navigator.storage.persist().then(setPersisted)} className="btn-ghost text-sm">Chiedi archiviazione persistente</button>
           )}
           {snapshot && (
-            <div className="rounded-xl bg-surface-muted/60 p-3 text-xs text-fg-soft">
-              Copia dei dati della versione precedente (salvata il {snapshot.savedAt.slice(0, 10)} prima dell’aggiornamento).
-              <button onClick={() => downloadJSON(`palestra-dati-versione-precedente-${snapshot.savedAt.slice(0, 10)}.json`, snapshot.data)} className="ml-2 underline">Scarica</button>
+            <div className="rounded-xl bg-surface-muted/60 p-3 text-sm text-fg-soft">
+              <p>Copia dei dati della versione precedente (salvata il {fmtDate(snapshot.savedAt.slice(0, 10), DAY)} prima dell’aggiornamento).</p>
+              <button onClick={() => downloadJSON(`palestra-dati-versione-precedente-${snapshot.savedAt.slice(0, 10)}.json`, snapshot.data)} className="link-btn -ml-2">Scarica</button>
             </div>
           )}
           {copies.length > 0 && (
-            <div className="space-y-1 rounded-xl bg-surface-muted/60 p-3 text-xs text-fg-soft">
+            <div className="rounded-xl bg-surface-muted/60 p-3 text-sm text-fg-soft">
               <div className="font-semibold text-fg">Copie di sicurezza automatiche</div>
-              {copies.map((c) => (
-                <div key={c.kind} className="flex items-center justify-between gap-2">
-                  <span>
-                    {SNAPSHOT_LABELS[c.kind]} · {c.savedAt.slice(0, 16).replace('T', ' ')}
-                    {c.label ? ` · ${c.label}` : ''}
-                  </span>
-                  <button onClick={() => downloadJSON(`palestra-copia-${c.kind}-${c.savedAt.slice(0, 10)}.json`, exportBackup(c.state))} className="underline">
-                    Scarica
-                  </button>
-                </div>
-              ))}
-              <p className="text-muted">Ogni copia è un backup completo reimportabile con “Importa”.</p>
+              <ul className="divide-y divide-line">
+                {copies.map((c) => (
+                  <li key={c.kind} className="flex items-center gap-2 py-1">
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-fg">{SNAPSHOT_LABELS[c.kind]}</span>
+                      <span className="block text-xs text-muted">
+                        {fmtDate(c.savedAt.slice(0, 10), DAY)}, {c.savedAt.slice(11, 16)}
+                        {c.label ? ` · ${c.label}` : ''}
+                      </span>
+                    </span>
+                    <button onClick={() => downloadJSON(`palestra-copia-${c.kind}-${c.savedAt.slice(0, 10)}.json`, exportBackup(c.state))} className="link-btn shrink-0" aria-label={`Scarica la copia: ${SNAPSHOT_LABELS[c.kind]}`}>
+                      Scarica
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-muted">Ogni copia è un backup completo reimportabile con “Importa”.</p>
             </div>
           )}
           <Toggle checked={s.reportExcludeNotes} onChange={(reportExcludeNotes) => set({ reportExcludeNotes })} label="Escludi le note dai report condivisi (predefinito)" />
@@ -258,7 +303,7 @@ function SettingsView({ state, update, status, onReset, theme, setTheme, pinchLo
                 alert(`Cancellazione non eseguita: ${e.message}`)
               }
             }}
-            className="rounded-xl px-3 py-2 text-sm text-danger active:bg-danger-soft"
+            className="link-btn link-btn-danger -ml-2"
           >
             Cancella tutti i dati
           </button>

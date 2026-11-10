@@ -87,11 +87,11 @@ test('cronometro e recupero solo nella seduta; altrove un richiamo compatto se l
   await nav(page, /Oggi/)
   await page.getByRole('button', { name: /A · Full Body A/ }).click()
   await expect(bar).toBeVisible() // seduta aperta
-  await expect(page.getByText('Recupero:')).toBeVisible()
+  await expect(page.getByRole('group', { name: 'Avvia un recupero' })).toBeVisible()
   for (const t of [/Oggi/, /Alimentazione/, /Progressi/, /Altro/]) {
     await nav(page, t)
     await expect(bar).toHaveCount(0)
-    await expect(page.getByText('Recupero:')).toHaveCount(0)
+    await expect(page.getByRole('group', { name: 'Avvia un recupero' })).toHaveCount(0)
     await expect(live).toHaveCount(0)
   }
   // anche nelle altre sezioni degli allenamenti (calendario, schede, storico) niente cronometro

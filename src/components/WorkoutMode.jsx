@@ -116,7 +116,7 @@ export default function WorkoutMode({ session, onChange: save, timers, onClose, 
           </div>
           <button
             onClick={timers.running ? timers.pauseStopwatch : timers.startStopwatch}
-            className={`rounded-xl px-3 py-1.5 font-mono text-lg font-bold tabular-nums ${
+            className={`min-h-11 rounded-xl px-3 font-mono text-lg font-bold tabular-nums ${
               timers.running ? 'bg-surface-muted text-primary' : 'bg-surface-muted text-muted'
             }`}
             title={timers.running ? 'Metti in pausa il tempo totale' : 'Riprendi il tempo totale'}
@@ -234,7 +234,7 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
 
         {/* Serie: quelle fatte vengono scalate */}
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-          <div className="flex flex-wrap justify-center gap-1.5">
+          <div className="flex flex-wrap justify-center gap-1.5" data-tap-ok="cerchi delle serie: compatti per scelta (più spazio al pulsante principale)">
             {ex.sets.map((s, j) =>
               s.done ? (
                 // serie fatta: si tocca per correggerla

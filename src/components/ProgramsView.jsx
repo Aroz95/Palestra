@@ -4,7 +4,7 @@ import { EQUIPMENT, ACTIVITY_KINDS, SWIM_STYLES } from '../schema/constants'
 import { newProgram, newTemplateExercise, newCardio, uid } from '../schema/factories'
 import { exampleProgram } from '../schema/example'
 import * as A from '../lib/actions'
-import { WEEKDAYS } from '../lib/dates'
+import { WEEKDAYS, fmtDate } from '../lib/dates'
 import { previewBlock, blockIssues, regenerateBlocks, expandedSegments, blockTotal, blocksTotal, formatBlock } from '../lib/swim'
 import { exportProgram, fileNames } from '../lib/report'
 import { downloadJSON } from '../lib/download'
@@ -95,7 +95,7 @@ function ProgramCard({ program: p, state, update, open, onToggle, onEditTemplate
             {p.isMain && <Chip className="bg-swim text-on-swim">Principale</Chip>}
             <Chip>{{ active: 'Attivo', draft: 'Bozza', archived: 'Archiviato' }[p.status]}</Chip>
             <Chip>{templates.filter((t) => !t.archived).length} schede</Chip>
-            {p.validFrom && <Chip>dal {p.validFrom}</Chip>}
+            {p.validFrom && <Chip>dal {fmtDate(p.validFrom, { day: 'numeric', month: 'short', year: 'numeric' })}</Chip>}
           </div>
         </div>
         <span className={`text-muted transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
@@ -132,7 +132,7 @@ function ProgramCard({ program: p, state, update, open, onToggle, onEditTemplate
             <button onClick={() => update((s) => A.setMainProgram(s, p.id))} className="btn-ghost text-sm">Imposta come principale</button>
           )}
 
-          <Section title="Schede" right={<button onClick={() => update((s) => A.addTemplate(s, p.id, nextLabel).state)} className="text-sm text-primary">+ Scheda {nextLabel}</button>}>
+          <Section title="Schede" right={<button onClick={() => update((s) => A.addTemplate(s, p.id, nextLabel).state)} className="link-btn">+ Scheda {nextLabel}</button>}>
             <TemplateList templates={templates} update={update} onEdit={onEditTemplate} onStart={onStartTemplate} />
           </Section>
 
@@ -140,7 +140,7 @@ function ProgramCard({ program: p, state, update, open, onToggle, onEditTemplate
 
           <div className="flex flex-wrap gap-2">
             <button onClick={() => downloadJSON(fileNames.program(p), exportProgram(state, p.id))} className="btn-ghost text-sm">Esporta JSON</button>
-            <button onClick={remove} className="rounded-xl px-3 py-2 text-sm text-danger">Elimina programma</button>
+            <button onClick={remove} className="btn-ghost text-sm text-danger">Elimina programma</button>
           </div>
         </div>
       )}
@@ -165,16 +165,16 @@ function TemplateList({ templates, update, onEdit, onStart }) {
                 {!t.exercises.length && <span className="text-warning"> · incompleta</span>}
               </div>
             </div>
-            <button onClick={() => update((s) => A.moveTemplate(s, t.id, -1))} className="px-1 text-muted" aria-label={`Sposta su ${t.name}`}>↑</button>
-            <button onClick={() => update((s) => A.moveTemplate(s, t.id, 1))} className="px-1 text-muted" aria-label={`Sposta giù ${t.name}`}>↓</button>
+            <button onClick={() => update((s) => A.moveTemplate(s, t.id, -1))} className="icon-btn h-11 w-9" aria-label={`Sposta su ${t.name}`}>↑</button>
+            <button onClick={() => update((s) => A.moveTemplate(s, t.id, 1))} className="icon-btn h-11 w-9" aria-label={`Sposta giù ${t.name}`}>↓</button>
           </div>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-2 grid grid-cols-2 gap-2">
             {!t.archived && (
-              <button onClick={() => onStart(t.id)} className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-on-primary">▶ Avvia</button>
+              <button onClick={() => onStart(t.id)} className="btn-primary text-sm">▶ Avvia</button>
             )}
-            <button onClick={() => onEdit(t.id)} className="btn-ghost py-1.5 text-sm">Modifica</button>
-            <button onClick={() => update((s) => A.duplicateTemplate(s, t.id))} className="btn-ghost py-1.5 text-sm">Duplica</button>
-            <button onClick={() => update((s) => ({ ...s, workoutTemplates: s.workoutTemplates.map((x) => (x.id === t.id ? { ...x, archived: !x.archived } : x)) }))} className="btn-ghost py-1.5 text-sm">
+            <button onClick={() => onEdit(t.id)} className="btn-ghost text-sm">Modifica</button>
+            <button onClick={() => update((s) => A.duplicateTemplate(s, t.id))} className="btn-ghost text-sm">Duplica</button>
+            <button onClick={() => update((s) => ({ ...s, workoutTemplates: s.workoutTemplates.map((x) => (x.id === t.id ? { ...x, archived: !x.archived } : x)) }))} className="btn-ghost text-sm">
               {t.archived ? 'Ripristina' : 'Archivia'}
             </button>
           </div>
@@ -198,11 +198,11 @@ function ScheduleEditor({ program, templates, onChange }) {
           <div key={wd} className="rounded-xl bg-surface-muted/40 p-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-fg">{WEEKDAYS[wd]}</span>
-              <button onClick={() => add(wd)} className="text-xs text-primary" aria-label={`Aggiungi attività ${WEEKDAYS[wd]}`}>+ attività</button>
+              <button onClick={() => add(wd)} className="link-btn" aria-label={`Aggiungi attività ${WEEKDAYS[wd]}`}>+ attività</button>
             </div>
             {slots.filter((s) => s.weekday === wd).map((s) => (
-              <div key={s.id} className="mt-2 flex flex-wrap items-center gap-2">
-                <select value={s.kind} onChange={(e) => upd(s.id, { kind: e.target.value, swimPlan: null })} className="rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" aria-label="Tipo attività">
+              <div key={s.id} className="mt-2 flex items-center gap-2">
+                <select value={s.kind} onChange={(e) => upd(s.id, { kind: e.target.value, swimPlan: null })} className="w-[6.5rem] shrink-0 rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" aria-label="Tipo attività">
                   {Object.entries(ACTIVITY_KINDS).map(([k, l]) => (
                     <option key={k} value={k}>{l}</option>
                   ))}
@@ -216,14 +216,14 @@ function ScheduleEditor({ program, templates, onChange }) {
                   </select>
                 )}
                 {s.kind === 'swim' && (
-                  <button onClick={() => setSwimEdit(s.id)} className="btn-ghost flex-1 py-1.5 text-left text-sm">
+                  <button onClick={() => setSwimEdit(s.id)} className="btn-ghost min-w-0 flex-1 justify-start text-left text-sm">
                     {s.swimPlan?.plannedBlocks?.length ? `Piano: ${blocksTotal(s.swimPlan.plannedBlocks)} m` : 'Nuoto libero (aggiungi piano)'}
                   </button>
                 )}
                 {(s.kind === 'other' || s.kind === 'rest') && (
                   <input value={s.label} onChange={(e) => upd(s.id, { label: e.target.value })} placeholder="Etichetta" className="min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm text-fg" />
                 )}
-                <button onClick={() => onChange(slots.filter((x) => x.id !== s.id))} className="px-2 text-danger" aria-label="Rimuovi attività">✕</button>
+                <button onClick={() => onChange(slots.filter((x) => x.id !== s.id))} className="icon-btn text-danger" aria-label="Rimuovi attività">✕</button>
               </div>
             ))}
           </div>
@@ -285,11 +285,14 @@ export function BlocksEditor({ blocks, onChange }) {
         {blocks.map((b) => {
           const issue = issues.find((i) => i.id === b.id)
           return (
-            <div key={b.id} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${issue ? 'bg-warning-soft' : 'bg-surface-muted'}`} data-testid="swim-block">
-              <span className="flex-1 font-mono text-fg">{formatBlock(b)}</span>
-              <span className="text-xs text-muted">{expandedSegments(b).length} tratti</span>
-              <span className="text-fg-soft">{fmtNum(blockTotal(b), 0)} m</span>
-              <button onClick={() => onChange(blocks.filter((x) => x.id !== b.id))} className="text-danger" aria-label={`Rimuovi blocco ${formatBlock(b)}`}>✕</button>
+            <div key={b.id} className={`flex items-center gap-2 rounded-lg py-0.5 pl-3 pr-1 text-sm ${issue ? 'bg-warning-soft' : 'bg-surface-muted'}`} data-testid="swim-block">
+              <span className="min-w-0 flex-1">
+                <span className="block break-all font-mono text-fg">{formatBlock(b)}</span>
+                <span className="block text-xs text-muted">
+                  {expandedSegments(b).length} tratti · {fmtNum(blockTotal(b), 0)} m
+                </span>
+              </span>
+              <button onClick={() => onChange(blocks.filter((x) => x.id !== b.id))} className="icon-btn w-9 text-danger" aria-label={`Rimuovi blocco ${formatBlock(b)}`}>✕</button>
             </div>
           )
         })}
@@ -342,7 +345,7 @@ function TemplateEditor({ template: t, sessions, onChange }) {
     <div className="space-y-4">
       <p className="rounded-xl bg-surface-muted/60 p-3 text-xs text-fg-soft">
         Revisione {t.revision}
-        {t.revisionInUse ? ' — già usata: la prossima modifica crea una nuova revisione.' : '.'} {used} sedute svolte con questa scheda mantengono gli obiettivi del momento.
+        {t.revisionInUse ? ' — già usata: la prossima modifica crea una nuova revisione.' : '.'} {used === 1 ? '1 seduta svolta con questa scheda mantiene' : `${used} sedute svolte con questa scheda mantengono`} gli obiettivi del momento.
         {t.history?.length ? ` Revisioni precedenti: ${t.history.map((h) => `${h.revision} (${h.savedAt.slice(0, 10)})`).join(', ')}.` : ''}
       </p>
       <div className="grid grid-cols-[5rem_1fr] gap-3">
@@ -364,11 +367,11 @@ function TemplateEditor({ template: t, sessions, onChange }) {
           {t.exercises.map((ex, i) => (
             <div key={ex.id} className="space-y-3 rounded-xl bg-surface-muted/60 p-3">
               <div className="flex items-center gap-2">
-                <span className="w-5 text-sm font-semibold text-muted">{i + 1}</span>
+                <span className="w-5 shrink-0 text-sm font-semibold text-muted">{i + 1}</span>
                 <input value={ex.name} onChange={(e) => updEx(ex.id, { name: e.target.value })} aria-label="Nome esercizio" className="min-w-0 flex-1 bg-transparent font-semibold text-fg outline-none" />
-                <button onClick={() => move(i, -1)} className="px-1 text-muted" aria-label="Sposta su">↑</button>
-                <button onClick={() => move(i, 1)} className="px-1 text-muted" aria-label="Sposta giù">↓</button>
-                <button onClick={() => confirm(`Eliminare "${ex.name}" dalla scheda?`) && set({ exercises: t.exercises.filter((e) => e.id !== ex.id) })} className="px-1 text-danger" aria-label="Elimina esercizio">✕</button>
+                <button onClick={() => move(i, -1)} className="icon-btn h-11 w-9" aria-label="Sposta su">↑</button>
+                <button onClick={() => move(i, 1)} className="icon-btn h-11 w-9" aria-label="Sposta giù">↓</button>
+                <button onClick={() => confirm(`Eliminare "${ex.name}" dalla scheda?`) && set({ exercises: t.exercises.filter((e) => e.id !== ex.id) })} className="icon-btn h-11 w-9 text-danger" aria-label="Elimina esercizio">✕</button>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 <Field label="Gruppo">
@@ -438,8 +441,8 @@ function CardioTemplate({ title, items, onChange }) {
     <Section title={title}>
       <div className="space-y-2">
         {items.map((c) => (
-          <div key={c.id} className="grid grid-cols-[1fr_5rem_5rem_2rem] items-end gap-2">
-            <Field label="Attività">
+          <div key={c.id} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.75rem] items-end gap-2">
+            <Field label="Attività" className="col-span-3">
               <TextInput value={c.name} onChange={(name) => upd(c.id, { name })} />
             </Field>
             <Field label="Min">
@@ -448,7 +451,7 @@ function CardioTemplate({ title, items, onChange }) {
             <Field label="km/h">
               <NumberInput value={c.speed} onChange={(speed) => upd(c.id, { speed })} step={0.5} />
             </Field>
-            <button onClick={() => onChange(items.filter((x) => x.id !== c.id))} className="pb-2 text-danger" aria-label="Rimuovi attività">✕</button>
+            <button onClick={() => onChange(items.filter((x) => x.id !== c.id))} className="icon-btn text-danger" aria-label="Rimuovi attività">✕</button>
           </div>
         ))}
         <button onClick={() => onChange([...items, newCardio()])} className="btn-ghost w-full text-sm">+ Aggiungi attività</button>

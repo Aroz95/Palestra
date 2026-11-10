@@ -323,17 +323,17 @@ function ConsumptionForm({ option, log, onSave, onRemove, extra = false }) {
           <p className="text-sm text-muted">Modifica quantità e alimenti come li hai consumati. Nutrienti facoltativi: lasciali vuoti se non li conosci.</p>
           {items.map((it, i) => (
             <div key={i} className="space-y-2 rounded-xl bg-surface-muted/60 p-2">
-              <div className="grid grid-cols-[1fr_4.5rem_3.5rem_1.5rem] items-end gap-2">
-                <Field label="Alimento">
+              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.25rem] items-end gap-2">
+                <Field label="Alimento" className="col-span-3">
                   <TextInput value={it.name} onChange={(name) => updItem(i, { name })} />
                 </Field>
-                <Field label="Q.tà">
+                <Field label="Quantità">
                   <NumberInput value={it.quantity} onChange={(quantity) => updItem(i, { quantity })} aria-label={`Quantità ${it.name}`} />
                 </Field>
                 <Field label="Unità">
                   <TextInput value={it.unit} onChange={(unit) => updItem(i, { unit })} />
                 </Field>
-                <button onClick={() => setItems(items.filter((_, j) => j !== i))} className="h-11 w-6 text-danger" aria-label={`Rimuovi ${it.name}`}>
+                <button onClick={() => setItems(items.filter((_, j) => j !== i))} className="icon-btn w-9 text-danger" aria-label={`Rimuovi ${it.name || 'alimento'}`}>
                   ✕
                 </button>
               </div>

@@ -13,7 +13,7 @@ export default function CardioList({ title, items, onChange }) {
 
   return (
     <section>
-      <div className="mb-2 flex items-baseline justify-between px-1">
+      <div className="mb-2 flex items-baseline justify-between gap-2 px-1">
         <h2 className="text-lg font-semibold leading-tight text-fg">{title}</h2>
         <span className="text-xs text-muted">
           {fmtNum(doneMin)} min · {fmtNum(km, 2)} km
@@ -33,13 +33,13 @@ export default function CardioList({ title, items, onChange }) {
               />
               <button
                 onClick={() => confirm('Eliminare questa attività?') && remove(c.id)}
-                className="px-2 text-muted"
+                className="icon-btn -mr-2 text-muted"
                 aria-label="Elimina"
               >
                 ✕
               </button>
             </div>
-            <div className="mt-2 flex items-end gap-3">
+            <div className="mt-1 flex items-end gap-2 min-[360px]:gap-3">
               <Stepper label="Minuti" value={c.minutes} step={0.5} onChange={(minutes) => update(c.id, { minutes })} />
               <Stepper label="km/h" value={c.speed} step={0.5} onChange={(speed) => update(c.id, { speed })} />
               <button

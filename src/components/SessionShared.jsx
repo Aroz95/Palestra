@@ -42,10 +42,10 @@ export function TimesCard({ session, onChange, timers }) {
       <Card className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Inizio">
-            <input type="time" value={timeOf(session.startedAt)} onChange={(e) => setTime('startedAt', e.target.value)} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" aria-label="Ora di inizio" />
+            <input type="time" value={timeOf(session.startedAt)} onChange={(e) => setTime('startedAt', e.target.value)} className="w-full min-w-0 rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" aria-label="Ora di inizio" />
           </Field>
           <Field label="Fine">
-            <input type="time" value={timeOf(session.endedAt)} onChange={(e) => setTime('endedAt', e.target.value)} className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" aria-label="Ora di fine" />
+            <input type="time" value={timeOf(session.endedAt)} onChange={(e) => setTime('endedAt', e.target.value)} className="w-full min-w-0 rounded-lg border border-line-strong bg-surface px-3 py-2 text-fg" aria-label="Ora di fine" />
           </Field>
         </div>
         <div className="text-sm text-fg-soft">
@@ -137,7 +137,7 @@ export function EnergyCard({ session, onChange, measurements }) {
             <div className="text-xs text-muted">
               {e.source === 'estimate' ? `Stima — ${e.method}, peso ${e.bodyWeightKg} kg, ${e.durationMin} min` : 'Da dispositivo/inserite a mano'}
             </div>
-            <button onClick={() => onChange({ ...session, energy: null })} className="text-xs text-danger underline">Rimuovi</button>
+            <button onClick={() => onChange({ ...session, energy: null })} className="link-btn link-btn-danger -ml-2">Rimuovi</button>
           </div>
         ) : (
           <p className="text-sm text-muted">Nessun dato. Le calorie non vengono mai calcolate in automatico.</p>
@@ -145,7 +145,7 @@ export function EnergyCard({ session, onChange, measurements }) {
         <p className="text-xs text-muted">
           Attive = solo dovute all’allenamento; totali = incluse quelle a riposo. Errore realistico ±20–30%.
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <button
             disabled={!canEstimate}
             onClick={() => onChange({ ...session, energy: estimateEnergy(session, bw.weightKg, d.min) })}

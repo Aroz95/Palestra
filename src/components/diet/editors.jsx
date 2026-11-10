@@ -101,7 +101,7 @@ export function GuidelinesEditor({ guidelines, onChange }) {
                       key={c}
                       onClick={() => setGuidance(k, { mealCategories: on ? g[k].mealCategories.filter((x) => x !== c) : [...(g[k]?.mealCategories ?? []), c] })}
                       aria-pressed={!!on}
-                      className={`rounded-lg px-2 py-1 text-xs ${on ? 'bg-swim text-on-swim' : 'bg-surface-muted text-fg-soft'}`}
+                      className={`min-h-11 rounded-xl px-3 text-sm font-medium ${on ? 'bg-swim text-on-swim' : 'bg-surface-muted text-fg-soft'}`}
                     >
                       {l}
                     </button>
@@ -159,17 +159,17 @@ function ItemsEditor({ items, onChange }) {
     <div className="space-y-2">
       {items.map((it, i) => (
         <div key={i} className="space-y-2 rounded-xl bg-surface-muted/40 p-2">
-          <div className="grid grid-cols-[1fr_4.5rem_3.5rem_1.5rem] items-end gap-2">
-            <Field label="Alimento">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.25rem] items-end gap-2">
+            <Field label="Alimento" className="col-span-3">
               <TextInput value={it.name} onChange={(name) => upd(i, { name })} />
             </Field>
-            <Field label="Q.tà">
+            <Field label="Quantità">
               <NumberInput value={it.quantity} onChange={(quantity) => upd(i, { quantity })} />
             </Field>
             <Field label="Unità">
               <TextInput value={it.unit} onChange={(unit) => upd(i, { unit })} />
             </Field>
-            <button onClick={() => onChange(items.filter((_, j) => j !== i))} className="pb-2 text-danger" aria-label="Rimuovi alimento">
+            <button onClick={() => onChange(items.filter((_, j) => j !== i))} className="icon-btn -mr-2 w-9 text-danger" aria-label="Rimuovi alimento">
               ✕
             </button>
           </div>
@@ -230,7 +230,7 @@ export function MealEditor({ meal: m, onChange, onRemove }) {
               <Field label="Nome alternativa" className="flex-1">
                 <TextInput value={a.label} onChange={(label) => updAlt(i, { label })} />
               </Field>
-              <button onClick={() => confirm('Eliminare questa alternativa?') && set({ alternatives: m.alternatives.filter((_, j) => j !== i) })} className="pb-2 text-sm text-danger">
+              <button onClick={() => confirm('Eliminare questa alternativa?') && set({ alternatives: m.alternatives.filter((_, j) => j !== i) })} className="link-btn link-btn-danger">
                 Elimina
               </button>
             </div>
@@ -243,7 +243,7 @@ export function MealEditor({ meal: m, onChange, onRemove }) {
           + Alternativa
         </button>
       </div>
-      <button onClick={() => confirm('Eliminare questo pasto?') && onRemove()} className="text-sm text-danger">Elimina pasto</button>
+      <button onClick={() => confirm('Eliminare questo pasto?') && onRemove()} className="link-btn link-btn-danger -ml-2">Elimina pasto</button>
     </Card>
   )
 }

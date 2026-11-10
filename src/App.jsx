@@ -106,6 +106,7 @@ export default function App() {
     setSummaryId(null)
     setTab(t)
     if (subId) setSub((s) => ({ ...s, [t]: subId }))
+    else if (t === 'more') setSub((s) => ({ ...s, more: null })) // "Altro" riparte sempre dall'elenco delle sezioni
     window.scrollTo(0, 0)
   }
   const openSession = (id) => {
@@ -204,7 +205,7 @@ export default function App() {
   // Cronometro e recupero completi solo nella seduta; altrove, se un allenamento sta andando, solo un richiamo compatto
   const inSession = tab === 'training' && sub.training === 'session' && !summarySession
   const timerLive = timers.running || timers.rest.active
-  const showTimer = inSession && (!!active || timerLive || timers.elapsed > 0)
+  const showTimer = inSession && ((!!active && active.status !== 'completed') || timerLive)
 
   return (
     <div className="min-h-dvh bg-bg text-fg lg:pl-60">
@@ -228,7 +229,7 @@ export default function App() {
         </button>
       )}
 
-      <main className="mx-auto max-w-2xl px-4 pb-28 pt-4 sm:px-6 lg:max-w-3xl lg:px-8 lg:pb-12">
+      <main className="mx-auto max-w-2xl px-3 pb-28 pt-4 min-[360px]:px-4 sm:px-6 lg:max-w-3xl lg:px-8 lg:pb-12">
         <SaveBadge status={status} />
         {status.migrated && !hideMigrated && (
           <div className="mb-4 rounded-2xl border border-swim/40 bg-swim-soft p-3 text-sm text-fg">
@@ -306,7 +307,10 @@ export default function App() {
             state={state}
             update={update}
             sub={sub.more}
-            setSub={(v) => setSub((s) => ({ ...s, more: v }))}
+            setSub={(v) => {
+              setSub((s) => ({ ...s, more: v }))
+              window.scrollTo(0, 0)
+            }}
             status={status}
             importProps={{
               // L'importazione è considerata applicata solo dopo il salvataggio riuscito (con snapshot dello stato precedente)
@@ -361,14 +365,14 @@ export default function App() {
                 key={t.id}
                 onClick={() => go(t.id)}
                 aria-current={on ? 'page' : undefined}
-                className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors duration-150 lg:min-h-11 lg:flex-row lg:justify-start lg:gap-3 lg:rounded-xl lg:px-3 lg:text-sm ${
+                className={`flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 text-[9px] font-medium tracking-tighter transition-colors duration-150 min-[360px]:text-[11px] min-[360px]:tracking-normal lg:min-h-11 lg:flex-row lg:justify-start lg:gap-3 lg:rounded-xl lg:px-3 lg:text-sm ${
                   on ? 'text-primary lg:bg-primary-soft lg:text-fg' : 'text-muted lg:hover:bg-surface-muted'
                 }`}
               >
                 <span className={`flex h-7 w-12 items-center justify-center rounded-full transition-colors duration-150 lg:h-auto lg:w-auto ${on ? 'bg-primary-soft lg:bg-transparent' : ''}`}>
                   <Icon name={t.id} className={`h-5 w-5 ${on ? 'lg:text-primary' : ''}`} />
                 </span>
-                {t.label}
+                <span className="max-w-full truncate">{t.label}</span>
               </button>
             )
           })}

@@ -15,6 +15,7 @@ test('tema chiaro/scuro: scelta salvata sul dispositivo e applicata prima del di
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await nav(page, /Altro/)
+  await tab(page, 'Opzioni')
   await page.getByRole('tab', { name: 'Chiaro', exact: true }).click()
   expect(await bg()).toBe('rgb(246, 248, 249)')
   await page.getByRole('tab', { name: 'Automatico', exact: true }).click()
