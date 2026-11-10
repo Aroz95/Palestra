@@ -286,7 +286,7 @@ function ExerciseStep({ ex, onChange, resting, working, timers, onComplete, onSt
         )}
 
         {ex.notes && <p className="truncate text-center text-sm text-fg-soft [@media(max-height:620px)]:hidden">Nota di oggi: “{ex.notes}”</p>}
-        <div className="flex justify-center gap-2 [@media(max-height:500px)]:hidden">{secondary}</div>
+        <div className="flex justify-center gap-2 whitespace-nowrap [@media(max-height:500px)]:hidden">{secondary}</div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-1">
@@ -448,11 +448,17 @@ function Countdown({ timers, color, title }) {
           {color === 'amber' && <span className="max-w-[70%] truncate text-xs text-muted">{label}</span>}
         </div>
       </div>
-      <div className="mt-2 flex gap-2">
-        <button onClick={() => timers.addRest(-15)} className="btn-ghost">−15s</button>
-        <button onClick={() => timers.addRest(15)} className="btn-ghost">+15s</button>
-        <button onClick={timers.stopRest} className="btn bg-fg text-bg">
-          {color === 'sky' ? 'Salta recupero' : 'Stop'}
+      <div className="mt-2 flex gap-2 whitespace-nowrap">
+        <button onClick={() => timers.addRest(-15)} className="btn-ghost px-3">−15s</button>
+        <button onClick={() => timers.addRest(15)} className="btn-ghost px-3">+15s</button>
+        <button onClick={timers.stopRest} className="btn bg-fg px-3 text-bg" aria-label={color === 'sky' ? 'Salta recupero' : 'Stop'}>
+          {color === 'sky' ? (
+            <>
+              Salta<span className="max-[359px]:hidden"> recupero</span>
+            </>
+          ) : (
+            'Stop'
+          )}
         </button>
       </div>
     </div>
