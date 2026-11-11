@@ -13,7 +13,7 @@ import TipsView from './diet/TipsView'
 import RemindersSheet from './diet/RemindersSheet'
 import { tipsForMeal } from '../lib/dietTips'
 import { TargetsEditor, GuidelinesEditor, DayTargetEditor, MealEditor } from './diet/editors'
-import { optionNutrition } from '../lib/diet'
+import { optionNutrition, optionOf } from '../lib/diet'
 import { exportDietPlan, fileNames } from '../lib/report'
 import { downloadJSON } from '../lib/download'
 import { fmtNum } from '../lib/stats'
@@ -416,7 +416,7 @@ export default function DietView({ state, update, onImport }) {
         />
       )}
 
-      <RemindersSheet open={remindersOpen} onClose={() => setRemindersOpen(false)} state={state} update={update} plan={plan} />
+      <RemindersSheet open={remindersOpen} onClose={() => setRemindersOpen(false)} state={state} update={update} plan={plan} day={day && !editing ? { dateLabel: fmtDate(date, { weekday: 'long', day: 'numeric', month: 'long' }), meals: meals.map((m) => ({ label: m.label, time: m.time, option: optionOf(m, selections[m.id]) })) } : null} />
 
       <Sheet open={manageOpen} onClose={() => setManageOpen(false)} title="Gestisci piano">
         {plan && (

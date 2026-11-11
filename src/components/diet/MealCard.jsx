@@ -5,6 +5,7 @@ import { optionsOf, optionOf, optionNutrition, optionDelta, consumptionQuality, 
 import { ADHERENCE } from '../../schema/constants'
 import { clone } from '../../schema/factories'
 import { itemText } from '../../lib/mealReminders'
+import TelegramButton from './TelegramButton'
 import { fmtNum } from '../../lib/stats'
 import * as A from '../../lib/actions'
 
@@ -217,6 +218,7 @@ export default function MealCard({ meal: m, plan, date, state, update, next, wor
       </div>
 
       {/* Su richiesta: provenienza dei valori, confronto con il principale, note, dettaglio del consumo */}
+      <TelegramButton className="-ml-2 mt-1" label={m.label} message={() => ({ label: m.label, time: m.time, option })} />
       <Disclosure open={details} onToggle={setDetails} className="mt-1" buttonClassName="text-sm font-medium text-fg-soft" summary="Dettagli">
         <div className="space-y-2 pb-1 text-sm">
           <div>

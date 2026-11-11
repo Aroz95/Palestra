@@ -59,7 +59,7 @@ test('suggerimenti: esempi, nuova alternativa per il pranzo visibile nel pasto, 
 test('promemoria: file del calendario con il contenuto del pasto e avviso; notifiche attivabili', async ({ page }, info) => {
   await openPlan(page, info)
   await main(page).getByRole('button', { name: 'Promemoria dei pasti' }).click()
-  const sheet = page.getByRole('dialog', { name: 'Promemoria dei pasti' })
+  const sheet = page.getByRole('dialog', { name: 'Promemoria e invio' })
   await expect(sheet).toContainText('Esempio di avviso')
   await sheet.getByLabel('Quando avvisare').selectOption({ label: '30 minuti prima' })
   const [download] = await Promise.all([page.waitForEvent('download'), sheet.getByRole('button', { name: /Aggiungi al calendario \(\d+\)/ }).click()])
@@ -68,7 +68,7 @@ test('promemoria: file del calendario con il contenuto del pasto e avviso; notif
   expect(ics).toContain('DTSTART:20261031T130000') // pranzo di oggi (sabato 31/10)
   expect(ics).toMatch(/SUMMARY:Pranzo: Pasta di semola 80 g/)
   expect(ics).toContain('TRIGGER:-PT30M')
-  await expect(sheet.getByRole('status')).toContainText('File del calendario creato')
+  await expect(sheet.getByRole('status').filter({ hasText: 'File del calendario creato' })).toBeVisible()
   // notifiche dell'app
   await sheet.getByRole('switch', { name: 'Avvisami quando è ora di un pasto' }).click()
   await expect(sheet.getByRole('switch', { name: 'Avvisami quando è ora di un pasto' })).toHaveAttribute('aria-checked', 'true')

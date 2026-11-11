@@ -23,7 +23,8 @@ export function mealEvents(state, plan, from, days = 28) {
     const sel = selectionsFor(state, date, plan.id)
     for (const m of sortedMeals(day)) {
       if (!m.time) continue
-      out.push({ id: `${plan.id}-${date}-${m.id}`, date, time: m.time, mealId: m.id, label: m.label, text: mealText(optionOf(m, sel[m.id])) })
+      const option = optionOf(m, sel[m.id])
+      out.push({ id: `${plan.id}-${date}-${m.id}`, date, time: m.time, mealId: m.id, label: m.label, text: mealText(option), option })
     }
   }
   return out

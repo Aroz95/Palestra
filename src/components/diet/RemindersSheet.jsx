@@ -4,11 +4,13 @@ import { Select, Sheet, Toggle } from '../ui'
 import { DEFAULT_REMINDERS, LEAD_OPTIONS, mealEvents, notificationPermission, notificationsSupported, showMealNotification, toICS } from '../../lib/mealReminders'
 import { downloadBlob } from '../../lib/download'
 import { todayISO } from '../../lib/dates'
+import TelegramButton from './TelegramButton'
+import TelegramSettings from './TelegramSettings'
 
 const DAYS = 14
 const leadLabel = (m) => (m === 0 ? 'All’orario del pasto' : `${m} minuti prima`)
 
-export default function RemindersSheet({ open, onClose, state, update, plan }) {
+export default function RemindersSheet({ open, onClose, state, update, plan, day }) {
   const cfg = { ...DEFAULT_REMINDERS, ...(state.settings.mealReminders ?? {}) }
   const set = (patch) => update((s) => ({ ...s, settings: { ...s.settings, mealReminders: { ...cfg, ...patch } } }))
   const [perm, setPerm] = useState(notificationPermission)
@@ -35,7 +37,7 @@ export default function RemindersSheet({ open, onClose, state, update, plan }) {
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Promemoria dei pasti">
+    <Sheet open={open} onClose={onClose} title="Promemoria e invio">
       <div className="space-y-5 text-sm">
         <label className="block space-y-1">
           <span className="text-[13px] font-medium text-muted">Quando avvisare</span>
@@ -77,7 +79,14 @@ export default function RemindersSheet({ open, onClose, state, update, plan }) {
             </button>
           )}
         </section>
-        <p role="status" className="min-h-5 text-fg-soft">{msg}</p>
+        <p role="status" className={msg ? 'text-fg-soft' : 'sr-only'}>{msg}</p>
+
+        {open && day?.meals.length > 0 && (
+          <TelegramButton className="-ml-2 -mt-2" message={() => ({ day })}>
+            {`Invia su Telegram il menù di ${day.dateLabel}`}
+          </TelegramButton>
+        )}
+        {open && <TelegramSettings leadMin={cfg.leadMin} />}
       </div>
     </Sheet>
   )

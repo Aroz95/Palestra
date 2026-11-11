@@ -1,6 +1,10 @@
-// Notifiche dei pasti mentre l'app è aperta: controllo ogni mezzo minuto, una sola notifica per pasto e per giorno.
+// Promemoria dei pasti mentre l'app è aperta: controllo ogni mezzo minuto.
+// - notifica del telefono (se attivata e consentita);
+// - messaggio Telegram tramite il bot personale (se configurato con invio automatico).
+// Ogni pasto viene ricordato una sola volta al giorno per canale; i pasti già registrati vengono saltati.
 import { useEffect, useRef } from 'react'
 import { DEFAULT_REMINDERS, dueMeals, mealEvents, notificationPermission, showMealNotification } from './mealReminders'
+import { asText, botReady, loadTelegram, markSent, mealMessage, sendText, sentToday } from './telegram'
 import { todayISO } from './dates'
 
 const KEY = 'palestra:meal-notified'
@@ -16,27 +20,43 @@ const readNotified = (date) => {
 export function useMealReminders(state) {
   const ref = useRef(state)
   ref.current = state
-  const enabled = !!state?.settings.mealReminders?.enabled
   useEffect(() => {
-    if (!enabled) return
+    let busy = false
     const check = async () => {
       const st = ref.current
       const plan = st?.dietPlans.find((d) => d.active && !d.archived)
-      if (!plan || notificationPermission() !== 'granted') return
-      const date = todayISO()
+      if (!plan || busy) return
       const cfg = { ...DEFAULT_REMINDERS, ...st.settings.mealReminders }
-      const notified = readNotified(date)
-      const due = dueMeals(mealEvents(st, plan, date, 1), {
-        date,
-        hhmm: new Date().toTimeString().slice(0, 5),
-        leadMin: cfg.leadMin,
-        loggedMealIds: st.dietLog.filter((l) => l.date === date && l.planId === plan.id).map((l) => l.mealId),
-        notified,
-      })
-      for (const e of due) {
-        if (await showMealNotification(`${e.label} · ${e.time}`, e.text || 'Apri il piano per i dettagli.', e.id)) notified.push(e.id)
+      const tg = loadTelegram()
+      const notify = cfg.enabled && notificationPermission() === 'granted'
+      const telegram = tg.auto && botReady(tg)
+      if (!notify && !telegram) return
+      busy = true
+      try {
+        const date = todayISO()
+        const events = mealEvents(st, plan, date, 1)
+        const base = { date, hhmm: new Date().toTimeString().slice(0, 5), leadMin: cfg.leadMin, loggedMealIds: st.dietLog.filter((l) => l.date === date && l.planId === plan.id).map((l) => l.mealId) }
+        if (notify) {
+          const notified = readNotified(date)
+          const due = dueMeals(events, { ...base, notified })
+          for (const e of due) if (await showMealNotification(`${e.label} · ${e.time}`, e.text || 'Apri il piano per i dettagli.', e.id)) notified.push(e.id)
+          if (due.length) localStorage.setItem(KEY, JSON.stringify({ date, ids: notified }))
+        }
+        if (telegram) {
+          const sent = sentToday(date)
+          for (const e of dueMeals(events, { ...base, notified: sent })) {
+            try {
+              await sendText(tg, asText(mealMessage({ label: e.label, time: e.time, option: e.option })))
+              sent.push(e.id)
+              markSent(date, sent)
+            } catch (err) {
+              console.warn('Invio Telegram non riuscito', err) // riprova al controllo successivo, finché il pasto è nella finestra
+            }
+          }
+        }
+      } finally {
+        busy = false
       }
-      if (due.length) localStorage.setItem(KEY, JSON.stringify({ date, ids: notified }))
     }
     check()
     const id = setInterval(check, 30_000)
@@ -45,5 +65,5 @@ export function useMealReminders(state) {
       clearInterval(id)
       document.removeEventListener('visibilitychange', check)
     }
-  }, [enabled])
+  }, [])
 }
