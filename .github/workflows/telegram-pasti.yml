@@ -1,0 +1,45 @@
+name: Pasti su Telegram
+
+# Ogni 5 minuti controlla se è ora di inviare un pasto (GitHub può ritardare le esecuzioni di qualche minuto).
+# Senza il segreto PALESTRA_TELEGRAM non fa nulla. Il registro non contiene mai il testo dei messaggi.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      prova:
+        description: Invia subito un messaggio di prova
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: telegram-pasti
+  cancel-in-progress: false
+
+jobs:
+  invio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+      # pasti già inviati (per non mandarli due volte)
+      - uses: actions/cache/restore@v4
+        with:
+          path: .tg-sent
+          key: tg-sent-${{ github.run_id }}
+          restore-keys: tg-sent-
+      - id: invio
+        run: node scripts/telegram-pasti.mjs
+        env:
+          PALESTRA_TELEGRAM: ${{ secrets.PALESTRA_TELEGRAM }}
+          PROVA: ${{ github.event_name == 'workflow_dispatch' && inputs.prova }}
+      - if: steps.invio.outputs.sent == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .tg-sent
+          key: tg-sent-${{ github.run_id }}

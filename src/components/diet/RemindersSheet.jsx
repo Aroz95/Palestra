@@ -86,7 +86,7 @@ export default function RemindersSheet({ open, onClose, state, update, plan, day
             {`Invia su Telegram il menù di ${day.dateLabel}`}
           </TelegramButton>
         )}
-        {open && <TelegramSettings leadMin={cfg.leadMin} />}
+        {open && <TelegramSettings leadMin={cfg.leadMin} state={state} plan={plan} />}
       </div>
     </Sheet>
   )

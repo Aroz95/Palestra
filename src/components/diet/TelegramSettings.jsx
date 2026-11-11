@@ -2,9 +2,10 @@
 import { useState } from 'react'
 import { Toggle } from '../ui'
 import { TelegramIcon } from './TelegramButton'
-import { DEFAULT_TELEGRAM, asText, botInfo, botReady, findChats, isToken, saveTelegram, sendText, useTelegram } from '../../lib/telegram'
+import { DEFAULT_TELEGRAM, SECRET_NAME, asText, botInfo, botReady, buildSchedule, findChats, isToken, repoUrl, saveTelegram, sendText, serverActive, useTelegram } from '../../lib/telegram'
+import { fmtDate, todayISO } from '../../lib/dates'
 
-export default function TelegramSettings({ leadMin }) {
+export default function TelegramSettings({ leadMin, state, plan }) {
   const cfg = useTelegram()
   const [chats, setChats] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -61,10 +62,13 @@ export default function TelegramSettings({ leadMin }) {
           <p className="rounded-xl bg-primary-soft px-3 py-2 text-fg">
             ✓ Collegato a <b className="font-semibold">{cfg.chatName || cfg.chatId}</b>
           </p>
-          <Toggle checked={cfg.auto} onChange={(auto) => set({ auto })} label="Invia ogni pasto in automatico all’ora prevista" />
-          <p className="text-xs text-muted">
-            Come le notifiche, l’invio automatico parte solo con l’app aperta (o appena messa in secondo piano): il telefono sospende le app web chiuse. Un pasto già registrato non viene inviato.
-          </p>
+          <GithubSender cfg={cfg} set={set} state={state} plan={plan} leadMin={leadMin} />
+          {!serverActive(cfg, todayISO()) && (
+            <>
+              <Toggle checked={cfg.auto} onChange={(auto) => set({ auto })} label="Invia ogni pasto in automatico all’ora prevista (con l’app aperta)" />
+              <p className="text-xs text-muted">Senza GitHub l’invio automatico parte solo con l’app aperta o appena messa in secondo piano: il telefono sospende le app web chiuse. Un pasto già registrato non viene inviato.</p>
+            </>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <button onClick={test} disabled={busy} className="btn-ghost text-sm">Messaggio di prova</button>
             <button
@@ -97,7 +101,9 @@ export default function TelegramSettings({ leadMin }) {
             />
             {cfg.token && !tokenOk && <span className="block text-xs text-warning">Il token ha la forma “numero:lettere”, es. 123456789:AAH…</span>}
           </li>
-          <li>Apri il tuo bot e tocca <b className="text-fg">Avvia</b> (o aggiungilo a un gruppo e scrivi un messaggio).</li>
+          <li>
+            Apri il tuo bot e tocca <b className="text-fg">Avvia</b>. Per scrivere a più persone con un solo messaggio crea un <b className="text-fg">gruppo</b> con loro e il bot, poi scrivi <code className="rounded bg-surface-muted px-1">/start</code> nel gruppo.
+          </li>
           <li className="space-y-2">
             <button onClick={search} disabled={!tokenOk || busy} className="btn-primary w-full">
               {busy ? 'Ricerca…' : 'Cerca la chat'}
@@ -135,5 +141,77 @@ export default function TelegramSettings({ leadMin }) {
         {msg?.error ? `Non riuscito: ${msg.error}` : msg?.ok ?? ''}
       </p>
     </section>
+  )
+}
+
+// Invio anche ad app chiusa: GitHub Actions legge il programma dal segreto del repository e invia all'ora dei pasti
+function GithubSender({ cfg, set, state, plan, leadMin }) {
+  const [copied, setCopied] = useState(null) // { json, until, count, fallback }
+  const [err, setErr] = useState('')
+  const today = todayISO()
+  const active = serverActive(cfg, today)
+  const repo = repoUrl()
+  const copy = async () => {
+    setErr('')
+    let out
+    try {
+      out = buildSchedule(state, plan, cfg, { from: today, leadMin })
+    } catch (e) {
+      return setErr(e.message)
+    }
+    if (!out.count) return setErr('nessun pasto con orario nei prossimi giorni: aggiungi gli orari ai pasti')
+    let fallback = false
+    try {
+      await navigator.clipboard.writeText(out.json)
+    } catch {
+      fallback = true // appunti non disponibili: il testo si seleziona a mano
+    }
+    setCopied({ ...out, fallback })
+    set({ serverUntil: out.until, serverCopiedAt: today, auto: false })
+  }
+  const left = active ? Math.round((Date.parse(cfg.serverUntil) - Date.parse(today)) / 86400000) + 1 : 0
+
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <h4 className="font-semibold text-fg">Invio automatico anche ad app chiusa</h4>
+      {active ? (
+        <p className={left <= 3 ? 'text-warning' : 'text-fg-soft'}>
+          {left <= 3 ? '⏳ ' : '✓ '}Ci pensa GitHub fino al {fmtDate(cfg.serverUntil, { day: 'numeric', month: 'long' })}
+          {left <= 3 ? `: mancano ${left} giorni, copia di nuovo il programma.` : '.'} Ricopialo anche quando cambi il piano, le alternative o l’anticipo.
+        </p>
+      ) : (
+        <p className="text-fg-soft">GitHub (gratuito, nel repository dell’app) controlla ogni 5 minuti e invia i pasti dei prossimi 28 giorni, con qualche minuto di possibile ritardo. Non sa quali pasti hai già registrato.</p>
+      )}
+      <ol className="list-decimal space-y-2 pl-5 text-fg-soft">
+        <li className="space-y-1">
+          <button onClick={copy} className="btn-primary w-full">{active ? 'Copia il programma aggiornato' : 'Copia il programma'}</button>
+          {copied && !copied.fallback && <span className="block text-xs text-primary">✓ Copiato: {copied.count} pasti fino al {fmtDate(copied.until, { day: 'numeric', month: 'long' })}.</span>}
+          {copied?.fallback && (
+            <textarea readOnly value={copied.json} rows={3} onFocus={(e) => e.target.select()} aria-label="Programma da copiare" className="w-full rounded-lg border border-line-strong bg-surface p-2 font-mono text-xs text-fg" />
+          )}
+          {err && <span className="block text-xs text-danger">Non riuscito: {err}</span>}
+        </li>
+        <li>
+          Apri{' '}
+          <a href={`${repo}/settings/secrets/actions`} target="_blank" rel="noreferrer" className="font-medium text-primary underline underline-offset-4">
+            i segreti del repository
+          </a>
+          : la prima volta <b className="text-fg">New repository secret</b>, nome <code className="rounded bg-surface-muted px-1">{SECRET_NAME}</code>, incolla e salva; le volte dopo matita accanto al nome → incolla → aggiorna.
+        </li>
+        <li>
+          Per una prova subito:{' '}
+          <a href={`${repo}/actions/workflows/telegram-pasti.yml`} target="_blank" rel="noreferrer" className="font-medium text-primary underline underline-offset-4">
+            Pasti su Telegram
+          </a>{' '}
+          → Run workflow.
+        </li>
+      </ol>
+      <p className="text-xs text-muted">Il programma contiene il token del bot, la chat e i pasti: su GitHub resta cifrato tra i segreti e non compare mai nei registri pubblici.</p>
+      {active && (
+        <button onClick={() => set({ serverUntil: null, serverCopiedAt: null })} className="link-btn link-btn-muted -ml-2">
+          Non uso più GitHub (poi elimina il segreto)
+        </button>
+      )}
+    </div>
   )
 }

@@ -4,7 +4,7 @@
 // Ogni pasto viene ricordato una sola volta al giorno per canale; i pasti già registrati vengono saltati.
 import { useEffect, useRef } from 'react'
 import { DEFAULT_REMINDERS, dueMeals, mealEvents, notificationPermission, showMealNotification } from './mealReminders'
-import { asText, botReady, loadTelegram, markSent, mealMessage, sendText, sentToday } from './telegram'
+import { asText, botReady, loadTelegram, markSent, mealMessage, sendText, sentToday, serverActive } from './telegram'
 import { todayISO } from './dates'
 
 const KEY = 'palestra:meal-notified'
@@ -29,7 +29,8 @@ export function useMealReminders(state) {
       const cfg = { ...DEFAULT_REMINDERS, ...st.settings.mealReminders }
       const tg = loadTelegram()
       const notify = cfg.enabled && notificationPermission() === 'granted'
-      const telegram = tg.auto && botReady(tg)
+      // se l'invio lo fa GitHub, l'app non invia (niente doppioni)
+      const telegram = tg.auto && botReady(tg) && !serverActive(tg, todayISO())
       if (!notify && !telegram) return
       busy = true
       try {

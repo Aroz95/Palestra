@@ -6,13 +6,14 @@ import { useSyncExternalStore } from 'react'
 import { readJSON, writeJSON } from './storage'
 import { MAIN_KEYS, optionNutrition } from './diet'
 import { fmtNum } from './stats'
-import { itemText } from './mealReminders'
+import { itemText, mealEvents } from './mealReminders'
+import { addDays } from './dates'
 
 const KEY = 'palestra:telegram'
 const SENT_KEY = 'palestra:telegram-sent'
 const API = 'https://api.telegram.org'
 
-export const DEFAULT_TELEGRAM = { token: '', chatId: '', chatName: '', auto: false }
+export const DEFAULT_TELEGRAM = { token: '', chatId: '', chatName: '', auto: false, serverUntil: null, serverCopiedAt: null }
 export const loadTelegram = () => ({ ...DEFAULT_TELEGRAM, ...readJSON(KEY, {}) })
 // Configurazione condivisa tra i componenti: chi la usa si aggiorna appena cambia
 const listeners = new Set()
@@ -86,6 +87,34 @@ export async function findChats(token) {
   }
   return [...chats.values()]
 }
+
+// ---- Invio da GitHub (anche ad app chiusa) ----
+// Programma per il segreto PALESTRA_TELEGRAM: token, chat, anticipo e i pasti dei prossimi giorni già risolti
+// (variante allenamento/riposo, alternative scelte). Testi uguali salvati una volta sola (limite dei segreti: 48 KB).
+export const SECRET_NAME = 'PALESTRA_TELEGRAM'
+export const SECRET_MAX = 47_000
+export function buildSchedule(state, plan, cfg, { from, leadMin = 10, days = 28, tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Rome' }) {
+  for (let d = days; d >= 3; d -= 3) {
+    const texts = []
+    const index = new Map()
+    const events = mealEvents(state, plan, from, d).map((e) => {
+      const t = asText(mealMessage({ label: e.label, time: e.time, option: e.option }))
+      if (!index.has(t)) index.set(t, texts.push(t) - 1)
+      return [e.date, e.time, index.get(t)]
+    })
+    const s = { v: 1, token: cfg.token, chatId: cfg.chatId, tz, leadMin, until: addDays(from, d - 1), texts, events }
+    const json = JSON.stringify(s)
+    if (new TextEncoder().encode(json).length <= SECRET_MAX) return { json, until: s.until, count: events.length }
+  }
+  throw new Error('piano troppo grande per un segreto di GitHub')
+}
+// Indirizzo del repository dell'app (pubblicata su <utente>.github.io/<repository>)
+export function repoUrl(loc = typeof location !== 'undefined' ? location : null) {
+  const m = loc?.hostname?.match(/^([^.]+)\.github\.io$/)
+  const repo = loc?.pathname?.split('/').filter(Boolean)[0]
+  return m && repo ? `https://github.com/${m[1]}/${repo}` : 'https://github.com/Aroz95/Palestra'
+}
+export const serverActive = (cfg, today) => !!cfg?.serverUntil && cfg.serverUntil >= today
 
 export const sendText = (cfg, text) => call(cfg.token, 'sendMessage', { chat_id: cfg.chatId, text, disable_web_page_preview: true })
 
