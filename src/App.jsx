@@ -10,6 +10,7 @@ import DietView from './components/DietView'
 import ProgressView from './components/ProgressView'
 import MoreView from './components/MoreView'
 import WorkoutMode from './components/WorkoutMode'
+import ErrorBoundary from './components/ErrorBoundary'
 import { Empty, Segmented } from './components/ui'
 import { usePersistentState } from './lib/persist'
 import { useLocalStorage } from './lib/storage'
@@ -47,7 +48,9 @@ export default function App() {
   const [state, setState, status, commit] = usePersistentState()
   const [tab, setTab] = useLocalStorage('palestra:tab', 'today')
   const [sub, setSub] = useLocalStorage('palestra:subtabs', { training: 'session', more: 'profile' })
-  const [workout, setWorkout] = useLocalStorage('palestra:workout-mode', false)
+  // all'apertura dell'app si riparte dalla seduta ("Riprendi allenamento"), mai direttamente a schermo intero:
+  // se la modalità allenamento avesse un problema, non si resta bloccati a ogni avvio
+  const [workout, setWorkout] = useState(false)
   const [undo, setUndo] = useState(null)
   const [ending, setEnding] = useState(null) // fine allenamento: { sessionId, step: 'incomplete' | 'saved', pending, exportState }
   const [summaryId, setSummaryId] = useState(null) // riepilogo dell'allenamento appena concluso
@@ -339,7 +342,9 @@ export default function App() {
       </main>
 
       {workout && active?.kind === 'strength' && (
-        <WorkoutMode session={active} onChange={updateSession} timers={sessionTimers} onClose={() => setWorkout(false)} onFinish={requestFinish} previousFor={previousFor} />
+        <ErrorBoundary compact onReset={() => setWorkout(false)}>
+          <WorkoutMode session={active} onChange={updateSession} timers={sessionTimers} onClose={() => setWorkout(false)} onFinish={requestFinish} previousFor={previousFor} />
+        </ErrorBoundary>
       )}
 
       <IncompleteSheet open={ending?.step === 'incomplete'} pending={ending?.pending} onBack={() => setEnding(null)} onConfirm={() => completeSession(ending.sessionId)} />

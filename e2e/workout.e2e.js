@@ -111,7 +111,8 @@ test('E2E-13 (emulato) app in background e poi chiusa durante il recupero: nessu
   p2.on('dialog', (d) => d.accept())
   await p2.clock.install({ time: new Date(NOW.getTime() + 160_000) })
   await p2.goto('/')
-  // la modalità allenamento riprende dov'era, il recupero è terminato
+  // si riapre sulla seduta; "Riprendi allenamento" torna all'esercizio dov'era, il recupero è terminato
+  await p2.getByRole('main').getByRole('button', { name: /Riprendi allenamento/ }).click()
   await expect(wm(p2).getByRole('heading', { name: 'Leg Press' })).toBeVisible()
   await expect(wm(p2).getByText(/Serie 2 di 2/)).toBeVisible()
   await expect(wm(p2).getByRole('button', { name: 'Salta recupero' })).toHaveCount(0)
@@ -245,4 +246,15 @@ test('modalità allenamento: + Serie (cerchio), nota dal pannello “Ultima volt
   await waitSaved(page)
   ex = (await savedState(page)).sessions[0].exercises[0]
   expect(ex.sets[0].done).toBe(false)
+})
+
+test('riaprendo l’app durante l’allenamento si torna alla seduta (mai bloccati a schermo intero), dati intatti', async ({ page }) => {
+  await startA(page)
+  await wm(page).getByRole('button', { name: /Segna fatto senza timer/ }).click() // riscaldamento
+  await waitSaved(page)
+  await page.reload()
+  await expect(page.getByRole('dialog', { name: 'Modalità allenamento' })).toHaveCount(0)
+  await expect(main(page).getByRole('button', { name: /Riprendi allenamento/ })).toBeVisible()
+  await main(page).getByRole('button', { name: /Riprendi allenamento/ }).click()
+  await expect(wm(page).getByRole('heading', { name: 'Leg Press' })).toBeVisible()
 })
