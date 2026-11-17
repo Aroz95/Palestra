@@ -258,3 +258,14 @@ test('riaprendo l’app durante l’allenamento si torna alla seduta (mai blocca
   await main(page).getByRole('button', { name: /Riprendi allenamento/ }).click()
   await expect(wm(page).getByRole('heading', { name: 'Leg Press' })).toBeVisible()
 })
+
+test('riapertura con un recupero scaduto mentre l’app era chiusa: nessun errore, si riprende la seduta', async ({ page }) => {
+  // stato del timer come lo lascia l'app chiusa durante un recupero, scaduto da un minuto
+  await page.addInitScript((endsAt) => {
+    localStorage.setItem('palestra:rest', JSON.stringify({ endsAt, duration: 90, label: 'Recupero', kind: 'rest', target: { type: 'rest', sessionId: 'x', exId: 'y', setIdx: 0 } }))
+  }, NOW.getTime() - 60_000)
+  await openApp(page)
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await expect(page.getByText('Qualcosa si è bloccato')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Oggi', level: 1 })).toBeVisible()
+})

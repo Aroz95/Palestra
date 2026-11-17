@@ -156,7 +156,12 @@ export function usePersistentState() {
     return () => document.removeEventListener('visibilitychange', retry)
   }, [])
 
-  return [state, setState, status, commit]
+  // Le modifiche arrivate prima che i dati siano caricati (es. un recupero scaduto mentre l'app era chiusa,
+  // che il timer chiude appena riaperta) non possono applicarsi a uno stato che non c'è ancora: si ignorano
+  // invece di mandare in errore l'app a ogni avvio.
+  const safeSetState = useCallback((v) => setState(typeof v === 'function' ? (s) => (s == null ? s : v(s)) : v), [])
+
+  return [state, safeSetState, status, commit]
 }
 
 export async function getLegacySnapshot() {
