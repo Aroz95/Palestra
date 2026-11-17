@@ -231,6 +231,8 @@ export function Sheet({ open, onClose, title, children }) {
     <div
       className={`fixed inset-0 z-[60] flex items-end justify-center bg-[var(--backdrop)] sm:items-center sm:p-4 ${open ? 'anim-backdrop' : 'anim-backdrop-out pointer-events-none'}`}
       onClick={open ? onClose : undefined}
+      // chiusura: si smonta a fine animazione anche se il timer è stato sospeso (app in secondo piano)
+      onAnimationEnd={(e) => !open && e.target === e.currentTarget && setClosing(false)}
     >
       <div
         ref={ref}
